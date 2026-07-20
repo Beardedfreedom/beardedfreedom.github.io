@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flag Hunter — Claude Code Internals</title>
+  <meta name="description" content="Flag Hunter — a CTF minesweeper for terminal dwellers. Grep the grid, capture hidden FLAG{...} cells, dodge the honeypots before the timer burns down.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <script src="/assets/js/nav.js" defer></script>
+
+  <!-- Page-scoped layout for the game cabinet. Uses theme.css tokens only. -->
+  <style>
+    .fh-wrap { margin-top: var(--sp-6); }
+
+    /* HUD readout strip */
+    .fh-hud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-3) var(--sp-5);
+      align-items: baseline;
+      margin-bottom: var(--sp-5);
+    }
+    .fh-stat { display: flex; flex-direction: column; gap: 2px; }
+    .fh-stat__k {
+      font-size: var(--fs-300);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .fh-stat__k::before { content: "[ "; color: var(--muted); }
+    .fh-stat__k::after  { content: " ]"; color: var(--muted); }
+    .fh-stat__v {
+      font-size: var(--fs-700);
+      font-weight: 700;
+      color: var(--green);
+      font-variant-numeric: tabular-nums;
+      min-width: 4ch;
+    }
+    .fh-stat--danger .fh-stat__v { color: var(--danger); }
+    .fh-stat--amber  .fh-stat__v { color: var(--amber); }
+    .fh-stat__v.is-low { color: var(--danger); animation: fh-pulse 0.8s steps(2) infinite; }
+    @keyframes fh-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .fh-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-3);
+      align-items: center;
+      margin-left: auto;
+    }
+
+    /* the grid itself */
+    .fh-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 10), 1fr);
+      gap: 4px;
+      background: var(--panel-2);
+      border: var(--border) solid var(--line);
+      border-radius: var(--radius);
+      padding: var(--sp-3);
+    }
+    .fh-cell {
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: clamp(0.7rem, 2.2vw, 1rem);
+      font-weight: 700;
+      color: var(--muted);
+      background: var(--panel);
+      border: var(--border) solid var(--line-faint);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s var(--ease), color 0.12s var(--ease),
+                  border-color 0.12s var(--ease), transform 0.06s var(--ease),
+                  box-shadow 0.12s var(--ease);
+    }
+    .fh-cell::before { content: "?"; color: rgba(138,163,155,0.45); }
+    .fh-cell:hover { border-color: var(--line-strong); background: var(--green-fill); }
+    .fh-cell.is-cursor {
+      border-color: var(--amber);
+      box-shadow: 0 0 0 1px var(--amber), 0 0 14px -3px rgba(255,176,0,0.5);
+    }
+    .fh-cell:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+    /* revealed states wipe the "?" placeholder */
+    .fh-cell.is-open { cursor: default; }
+    .fh-cell.is-open::before { content: none; }
+
+    .fh-cell.is-empty {
+      color: rgba(138,163,155,0.6);
+      background: var(--panel-2);
+      border-color: var(--line-faint);
+    }
+    .fh-cell.is-flag {
+      color: var(--bg);
+      background: var(--green);
+      border-color: var(--green);
+      box-shadow: 0 0 18px -2px var(--green-glow);
+      animation: fh-pop 0.3s var(--ease);
+    }
+    .fh-cell.is-honey {
+      color: var(--bg);
+      background: var(--danger);
+      border-color: var(--danger);
+      animation: fh-shake 0.32s var(--ease);
+    }
+    @keyframes fh-pop {
+      0%   { transform: scale(0.7); }
+      60%  { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+    @keyframes fh-shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-4px); }
+      40% { transform: translateX(4px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+    }
+
+    /* live capture log */
+    .fh-log {
+      margin-top: var(--sp-5);
+      background: var(--panel-2);
+      border: var(--border) solid var(--line);
+      border-radius: var(--radius);
+      padding: var(--sp-3) var(--sp-4);
+      height: 9.5rem;
+      overflow-y: auto;
+      font-size: var(--fs-400);
+      line-height: 1.55;
+    }
+    .fh-log__line { margin: 0; white-space: pre-wrap; word-break: break-word; }
+    .fh-log__line::before { content: "> "; color: var(--green); }
+    .fh-log__line--flag  { color: var(--green); }
+    .fh-log__line--honey { color: var(--danger); }
+    .fh-log__line--sys   { color: var(--muted); }
+    .fh-log__line--win   { color: var(--amber); }
+
+    /* end-of-round overlay */
+    .fh-board { position: relative; }
+    .fh-overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sp-4);
+      text-align: center;
+      padding: var(--sp-5);
+      background: rgba(10, 14, 11, 0.92);
+      backdrop-filter: blur(3px);
+      border-radius: var(--radius);
+      z-index: 5;
+    }
+    .fh-board.is-over .fh-overlay { display: flex; }
+    .fh-overlay__title { font-size: var(--fs-800); margin: 0; }
+    .fh-overlay__sub { color: var(--muted); margin: 0; max-width: 36ch; }
+
+    .fh-help {
+      margin-top: var(--sp-4);
+      font-size: var(--fs-300);
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .fh-help kbd {
+      display: inline-block;
+      padding: 1px 6px;
+      color: var(--green);
+      background: var(--panel);
+      border: var(--border) solid var(--line);
+      border-radius: var(--radius-sm);
+      font-size: 0.85em;
+    }
+  </style>
+  <script defer src="/assets/js/matrix-rain.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__brand" href="/index.html">
+        <span class="sigil">&gt;_</span> claude code <b>internals</b>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu">[ menu ]</button>
+      <ul class="nav__list" id="nav-menu">
+        <li><a class="nav__link" href="/index.html">HOME</a></li>
+        <li><a class="nav__link" href="/forum.html">FORUM</a></li>
+        <li><a class="nav__link" href="/games.html">GAMES</a></li>
+        <li><a class="nav__link" href="/illuminate.html">HUNT</a></li>
+        <li><a class="nav__link" href="/skills.html">SKILLS</a></li>
+        <li><a class="nav__link" href="/index.html#subscribe">SUBSCRIBE</a></li>
+        <li><a class="nav__link" href="/about.html">ABOUT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="section container">
+      <span class="eyebrow">arcade // 01</span>
+      <h1 class="prompt">Flag Hunter<span class="cursor" aria-hidden="true"></span></h1>
+      <p class="lead">
+        A CTF minesweeper. The grid is a haystack — somewhere in it,
+        <code>FLAG{...}</code> tokens are buried. Probe cells to capture them.
+        Trip a <span class="text-danger">honeypot</span> and it costs you. Beat
+        the clock, beat the high score.
+      </p>
+
+      <div class="fh-wrap panel" data-title="flag-hunter">
+        <div class="fh-hud" aria-hidden="false">
+          <div class="fh-stat">
+            <span class="fh-stat__k">score</span>
+            <span class="fh-stat__v" id="fh-score">0</span>
+          </div>
+          <div class="fh-stat fh-stat--amber">
+            <span class="fh-stat__k">flags</span>
+            <span class="fh-stat__v" id="fh-flags">0/0</span>
+          </div>
+          <div class="fh-stat fh-stat--danger">
+            <span class="fh-stat__k">honeypots</span>
+            <span class="fh-stat__v" id="fh-honey">0</span>
+          </div>
+          <div class="fh-stat">
+            <span class="fh-stat__k">time</span>
+            <span class="fh-stat__v" id="fh-time">60</span>
+          </div>
+          <div class="fh-stat">
+            <span class="fh-stat__k">best</span>
+            <span class="fh-stat__v" id="fh-best">0</span>
+          </div>
+
+          <div class="fh-toolbar">
+            <button class="btn btn--accent" id="fh-restart" type="button">&gt; RESTART</button>
+          </div>
+        </div>
+
+        <div class="fh-board" id="fh-board">
+          <div class="fh-grid" id="fh-grid" role="grid"
+               aria-label="Flag Hunter grid — probe cells to find hidden flags">
+          </div>
+
+          <div class="fh-overlay" id="fh-overlay" role="alertdialog" aria-live="assertive">
+            <h2 class="fh-overlay__title" id="fh-overlay-title">[ round over ]</h2>
+            <p class="fh-overlay__sub" id="fh-overlay-sub">Recompiling haystack…</p>
+            <button class="btn btn--primary" id="fh-again" type="button">&gt; HUNT AGAIN</button>
+          </div>
+        </div>
+
+        <p class="fh-help">
+          <kbd>← ↑ ↓ →</kbd> move &nbsp;·&nbsp; <kbd>Enter</kbd>/<kbd>Space</kbd> probe
+          &nbsp;·&nbsp; <kbd>R</kbd> restart &nbsp;·&nbsp; mouse works too.
+          Each numbered cell shows how many flags sit orthogonally adjacent —
+          read the grep, then dig.
+        </p>
+
+        <div class="fh-log" id="fh-log" aria-live="polite" aria-label="Capture log"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="site-footer__brand"><span class="sigil">&gt;_</span> claude code internals</span>
+      <span class="site-footer__tag">The changelog Anthropic doesn't publish.</span>
+      <span class="site-footer__meta">
+        by <a href="/about.html">beardedfreedom</a> · unaffiliated with Anthropic · &copy; 2026
+      </span>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // ---- config -----------------------------------------------------------
+    var COLS = 10, ROWS = 8, TOTAL = COLS * ROWS;
+    var FLAGS = 8;        // capturable FLAG{...} cells
+    var HONEY = 10;       // honeypots (penalty)
+    var ROUND = 60;       // seconds
+    var FLAG_PTS = 100;   // points per flag
+    var HONEY_PTS = -60;  // penalty per honeypot
+    var BEST_KEY = "fh_best_v1";
+
+    // CTF flavor strings for the log
+    var FLAG_NAMES = [
+      "FLAG{tengu_door_unlocked}", "FLAG{proxyauth_helper_pwn}",
+      "FLAG{velvet_hammer_skip}",  "FLAG{heron_brook_control}",
+      "FLAG{cold_compact_arm}",    "FLAG{rotunda_pennant}",
+      "FLAG{iron_gate_failclosed}","FLAG{dunwich_bell_share}",
+      "FLAG{amber_moleskin_table}","FLAG{multistore_traversal}"
+    ];
+
+    // ---- elements ---------------------------------------------------------
+    var gridEl    = document.getElementById("fh-grid");
+    var boardEl   = document.getElementById("fh-board");
+    var scoreEl   = document.getElementById("fh-score");
+    var flagsEl   = document.getElementById("fh-flags");
+    var honeyEl   = document.getElementById("fh-honey");
+    var timeEl    = document.getElementById("fh-time");
+    var bestEl    = document.getElementById("fh-best");
+    var logEl     = document.getElementById("fh-log");
+    var overlayEl = document.getElementById("fh-overlay");
+    var oTitle    = document.getElementById("fh-overlay-title");
+    var oSub      = document.getElementById("fh-overlay-sub");
+
+    gridEl.style.setProperty("--cols", COLS);
+
+    // ---- state ------------------------------------------------------------
+    var cells = [];       // DOM nodes
+    var kind = [];        // "empty" | "flag" | "honey"
+    var adj = [];         // adjacent-flag count
+    var opened = [];      // bool
+    var score, flagsLeft, flagsTotal, honeyHit, timeLeft, cursor, running, timer, flagPool;
+
+    function best() {
+      var v = 0;
+      try { v = parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0; } catch (e) {}
+      return v;
+    }
+    function saveBest(v) {
+      try { localStorage.setItem(BEST_KEY, String(v)); } catch (e) {}
+    }
+
+    function shuffle(a) {
+      for (var i = a.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var t = a[i]; a[i] = a[j]; a[j] = t;
+      }
+      return a;
+    }
+
+    function neighbors(i) {
+      var r = Math.floor(i / COLS), c = i % COLS, out = [];
+      var d = [[-1,0],[1,0],[0,-1],[0,1]];
+      for (var k = 0; k < d.length; k++) {
+        var nr = r + d[k][0], nc = c + d[k][1];
+        if (nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS) out.push(nr * COLS + nc);
+      }
+      return out;
+    }
+
+    function log(msg, cls) {
+      var p = document.createElement("p");
+      p.className = "fh-log__line" + (cls ? " fh-log__line--" + cls : "");
+      p.textContent = msg;
+      logEl.appendChild(p);
+      logEl.scrollTop = logEl.scrollHeight;
+      // keep the buffer trim
+      while (logEl.children.length > 60) logEl.removeChild(logEl.firstChild);
+    }
+
+    function render() {
+      scoreEl.textContent = score;
+      flagsEl.textContent = (flagsTotal - flagsLeft) + "/" + flagsTotal;
+      honeyEl.textContent = honeyHit;
+      timeEl.textContent = timeLeft;
+      bestEl.textContent = best();
+      timeEl.classList.toggle("is-low", timeLeft <= 10 && running);
+    }
+
+    function setCursor(i) {
+      if (cursor >= 0 && cells[cursor]) cells[cursor].classList.remove("is-cursor");
+      cursor = i;
+      if (cells[cursor]) {
+        cells[cursor].classList.add("is-cursor");
+        cells[cursor].focus({ preventScroll: true });
+      }
+    }
+
+    function probe(i) {
+      if (!running || opened[i]) return;
+      opened[i] = true;
+      var cell = cells[i];
+      cell.classList.add("is-open");
+      cell.setAttribute("aria-disabled", "true");
+
+      if (kind[i] === "flag") {
+        cell.classList.add("is-flag");
+        cell.textContent = "⚑";
+        cell.setAttribute("aria-label", "Flag captured");
+        score += FLAG_PTS;
+        flagsLeft--;
+        var name = flagPool.length ? flagPool.pop() : "FLAG{captured}";
+        log("CAPTURE  +" + FLAG_PTS + "  " + name, "flag");
+        if (flagsLeft === 0) { render(); return endRound(true); }
+      } else if (kind[i] === "honey") {
+        cell.classList.add("is-honey");
+        cell.textContent = "☠";
+        cell.setAttribute("aria-label", "Honeypot — penalty");
+        score += HONEY_PTS;
+        honeyHit++;
+        log("HONEYPOT " + HONEY_PTS + "  decoy token — context poisoned", "honey");
+      } else {
+        cell.classList.add("is-empty");
+        cell.textContent = adj[i] > 0 ? String(adj[i]) : "·";
+        cell.setAttribute("aria-label", adj[i] > 0
+          ? adj[i] + " adjacent flags" : "clear, no adjacent flags");
+      }
+      render();
+    }
+
+    function buildGrid() {
+      gridEl.innerHTML = "";
+      cells = [];
+      // assign kinds
+      kind = new Array(TOTAL).fill("empty");
+      var idx = shuffle(Array.from({ length: TOTAL }, function (_, n) { return n; }));
+      var f = idx.slice(0, FLAGS);
+      var h = idx.slice(FLAGS, FLAGS + HONEY);
+      f.forEach(function (n) { kind[n] = "flag"; });
+      h.forEach(function (n) { kind[n] = "honey"; });
+
+      // adjacency counts (flags only)
+      adj = new Array(TOTAL).fill(0);
+      for (var i = 0; i < TOTAL; i++) {
+        adj[i] = neighbors(i).filter(function (n) { return kind[n] === "flag"; }).length;
+      }
+
+      opened = new Array(TOTAL).fill(false);
+
+      for (var j = 0; j < TOTAL; j++) {
+        var el = document.createElement("button");
+        el.type = "button";
+        el.className = "fh-cell";
+        el.setAttribute("role", "gridcell");
+        el.setAttribute("aria-label", "unprobed cell");
+        el.dataset.i = j;
+        el.tabIndex = -1;
+        el.addEventListener("click", onCellClick);
+        gridEl.appendChild(el);
+        cells.push(el);
+      }
+    }
+
+    function onCellClick(e) {
+      var i = parseInt(e.currentTarget.dataset.i, 10);
+      setCursor(i);
+      probe(i);
+    }
+
+    function tick() {
+      if (!running) return;
+      timeLeft--;
+      if (timeLeft <= 0) { timeLeft = 0; render(); return endRound(false); }
+      if (timeLeft === 10) log("WARNING  10s on the clock — dig faster", "sys");
+      render();
+    }
+
+    function endRound(cleared) {
+      running = false;
+      clearInterval(timer);
+      // reveal any flags the hunter missed
+      for (var i = 0; i < TOTAL; i++) {
+        if (!opened[i] && kind[i] === "flag") {
+          cells[i].classList.add("is-open", "is-empty");
+          cells[i].textContent = "⚑";
+          cells[i].style.color = "var(--green-dim)";
+        }
+        cells[i].classList.remove("is-cursor");
+        cells[i].tabIndex = -1;
+      }
+      var isBest = false;
+      if (score > best()) { saveBest(score); isBest = true; }
+      render();
+
+      if (cleared) {
+        oTitle.textContent = "[ haystack cleared ]";
+        oTitle.style.color = "var(--green)";
+        oSub.textContent = "All " + flagsTotal + " flags captured with "
+          + timeLeft + "s to spare. Final score " + score + "."
+          + (isBest ? " New personal best." : "");
+        log("ROUND WON  every flag captured. score=" + score, "win");
+      } else {
+        oTitle.textContent = "[ time ]";
+        oTitle.style.color = "var(--amber)";
+        oSub.textContent = "Clock hit zero. " + (flagsTotal - flagsLeft) + "/"
+          + flagsTotal + " flags captured. Final score " + score + "."
+          + (isBest ? " New personal best." : "");
+        log("ROUND END  time expired. score=" + score, "sys");
+      }
+      boardEl.classList.add("is-over");
+      document.getElementById("fh-again").focus({ preventScroll: true });
+    }
+
+    function start() {
+      clearInterval(timer);
+      boardEl.classList.remove("is-over");
+      score = 0;
+      flagsTotal = FLAGS;
+      flagsLeft = FLAGS;
+      honeyHit = 0;
+      timeLeft = ROUND;
+      cursor = -1;
+      running = true;
+      flagPool = shuffle(FLAG_NAMES.slice());
+      logEl.innerHTML = "";
+      buildGrid();
+      setCursor(0);
+      render();
+      log("INIT  haystack=" + TOTAL + " cells  flags=" + FLAGS
+          + "  honeypots=" + HONEY + "  t=" + ROUND + "s", "sys");
+      log("HINT  numbers count adjacent flags. capture all " + FLAGS
+          + " to clear.", "sys");
+      timer = setInterval(tick, 1000);
+    }
+
+    // ---- keyboard ---------------------------------------------------------
+    function move(dr, dc) {
+      if (cursor < 0) { setCursor(0); return; }
+      var r = Math.floor(cursor / COLS), c = cursor % COLS;
+      r = Math.min(ROWS - 1, Math.max(0, r + dr));
+      c = Math.min(COLS - 1, Math.max(0, c + dc));
+      setCursor(r * COLS + c);
+    }
+
+    document.addEventListener("keydown", function (e) {
+      var k = e.key;
+      if (k === "r" || k === "R") { e.preventDefault(); return start(); }
+      if (!running) return;
+      switch (k) {
+        case "ArrowLeft":  e.preventDefault(); move(0, -1); break;
+        case "ArrowRight": e.preventDefault(); move(0,  1); break;
+        case "ArrowUp":    e.preventDefault(); move(-1, 0); break;
+        case "ArrowDown":  e.preventDefault(); move( 1, 0); break;
+        case "Enter":
+        case " ":
+          e.preventDefault();
+          if (cursor >= 0) probe(cursor);
+          break;
+        default: break;
+      }
+    });
+
+    document.getElementById("fh-restart").addEventListener("click", start);
+    document.getElementById("fh-again").addEventListener("click", start);
+
+    start();
+  })();
+  </script>
+</body>
+</html>

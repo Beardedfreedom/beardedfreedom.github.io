@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About — Claude Code Internals</title>
+  <meta name="description" content="Who beardedfreedom is — a USAF combat veteran and HackerOne security researcher — and the green-lane / red-lane ethos behind the changelog.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <script src="/assets/js/nav.js" defer></script>
+  <style>
+    /* Page-scoped: two-lane ethos grid + story rhythm. Tokens only. */
+    .prose { max-width: 68ch; }
+    .prose p { color: var(--muted); }
+    .prose strong { color: var(--ink); }
+
+    .lanes {
+      display: grid;
+      gap: var(--sp-5);
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      margin-top: var(--sp-5);
+    }
+    .lane__head {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-bottom: var(--sp-3);
+    }
+    .lane__dot {
+      width: 0.8em;
+      height: 0.8em;
+      border-radius: var(--radius-sm);
+      flex: none;
+    }
+    .lane--green .lane__dot  { background: var(--green); box-shadow: 0 0 8px var(--green-glow); }
+    .lane--red   .lane__dot  { background: var(--danger); box-shadow: 0 0 8px rgba(255,92,92,0.45); }
+    .lane__title { margin: 0; font-size: var(--fs-700); }
+    .lane--green .lane__title { color: var(--green); }
+    .lane--red   .lane__title { color: var(--danger); }
+    .lane p { color: var(--muted); font-size: var(--fs-400); margin-bottom: 0; }
+
+    .creds {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .creds li {
+      padding-left: var(--sp-5);
+      position: relative;
+      margin-bottom: var(--sp-3);
+      color: var(--muted);
+    }
+    .creds li::before {
+      content: "+";
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700;
+    }
+    .creds strong { color: var(--ink); }
+
+    blockquote.callout {
+      margin: var(--sp-5) 0 0;
+      padding: var(--sp-4) var(--sp-5);
+      border-left: 2px solid var(--amber);
+      background: var(--amber-fill);
+      color: var(--ink);
+      font-size: var(--fs-600);
+    }
+    blockquote.callout cite {
+      display: block;
+      margin-top: var(--sp-2);
+      font-size: var(--fs-300);
+      font-style: normal;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+  </style>
+  <script defer src="/assets/js/matrix-rain.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__brand" href="/index.html">
+        <span class="sigil">&gt;_</span> claude code <b>internals</b>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu">[ menu ]</button>
+      <ul class="nav__list" id="nav-menu">
+        <li><a class="nav__link" href="/index.html">HOME</a></li>
+        <li><a class="nav__link" href="/forum.html">FORUM</a></li>
+        <li><a class="nav__link" href="/games.html">GAMES</a></li>
+        <li><a class="nav__link" href="/illuminate.html">HUNT</a></li>
+        <li><a class="nav__link" href="/skills.html">SKILLS</a></li>
+        <li><a class="nav__link" href="/index.html#subscribe">SUBSCRIBE</a></li>
+        <li><a class="nav__link" href="/about.html">ABOUT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <!-- ===================== WHOAMI ===================== -->
+    <section class="section container">
+      <span class="eyebrow">whoami</span>
+      <h1 class="prompt">beardedfreedom<span class="cursor" aria-hidden="true"></span></h1>
+      <p class="lead" style="max-width: 60ch;">
+        Security researcher. USAF combat veteran. The person who reads the
+        binary so you don't have to.
+      </p>
+
+      <div class="prose flow" style="margin-top: var(--sp-5);">
+        <p>
+          I spent my service learning that the boring details are the ones
+          that get people hurt — the undocumented setting, the assumption
+          nobody wrote down, the gap between what a system <em>says</em> it
+          does and what it <strong>actually</strong> does. That instinct never
+          turned off. It just changed targets.
+        </p>
+        <p>
+          These days I hunt bugs on <strong>HackerOne</strong> and pull apart
+          tools I depend on — and I depend on <strong>Claude Code</strong>.
+          It's in my pipeline, my terminal, my muscle memory. So when a new
+          build drops, I do what I'd do with any black box in a position of
+          trust: I read it. The flags, the strings, the native modules, the
+          things that changed between this version and the last.
+        </p>
+        <p>
+          Most of what I find isn't a vulnerability. It's just
+          <em>undocumented</em> — a flag that flips behavior, a model that
+          quietly rotated out, a hook that now fires earlier. Useful to know,
+          published nowhere. This site is where I write it down, version by
+          version, in plain language. <strong>The changelog Anthropic doesn't
+          publish</strong> — not because they're hiding it, but because nobody
+          ships patch notes at the depth a power user actually needs.
+        </p>
+      </div>
+    </section>
+
+    <!-- ===================== TRACK RECORD ===================== -->
+    <section class="section--tight container">
+      <span class="eyebrow">track record</span>
+      <h2 class="prompt">Receipts</h2>
+      <ul class="creds" style="margin-top: var(--sp-4); max-width: 64ch;">
+        <li><strong>HackerOne researcher</strong> — coordinated disclosure
+          across multiple programs, including Anthropic's own surface.</li>
+        <li><strong>USAF combat veteran</strong>, 100% permanent &amp; total —
+          the discipline of doing the unglamorous work correctly, every time.</li>
+        <li><strong>Binary archaeologist</strong> — multi-agent diff swarms on
+          every Claude Code build, mapping 1400+ TENGU flags and their drift.</li>
+        <li><strong>Defender by default</strong> — I report through proper
+          channels and sit on findings until they're fixed. No exceptions.</li>
+      </ul>
+    </section>
+
+    <!-- ===================== THE ETHOS ===================== -->
+    <section class="section--tight container">
+      <span class="eyebrow">the ethos</span>
+      <h2 class="prompt">Green lane, red lane</h2>
+      <p class="lead" style="max-width: 64ch;">
+        One rule decides what goes on this site and what never does. It's
+        simple enough to state in a sentence, and I hold it without exception.
+      </p>
+
+      <div class="lanes">
+        <div class="panel lane lane--green" data-title="green">
+          <div class="lane__head">
+            <span class="lane__dot" aria-hidden="true"></span>
+            <h3 class="lane__title">Publish how it works</h3>
+          </div>
+          <p>
+            How the tool behaves. What a flag does. What changed between
+            builds. Architecture, intent, the <em>why</em> behind a design.
+            Knowledge that makes you a sharper, safer operator. This is the
+            whole site. If it helps you understand the thing you already trust,
+            it ships.
+          </p>
+        </div>
+
+        <div class="panel lane lane--red" data-title="red">
+          <div class="lane__head">
+            <span class="lane__dot" aria-hidden="true"></span>
+            <h3 class="lane__title">Never publish how to break it</h3>
+          </div>
+          <p>
+            Working exploits. Weaponized payloads. Evasions, bypasses, anything
+            whose primary use is harm. If a finding crosses into that lane it
+            goes through coordinated disclosure — quietly, to the vendor — and
+            it stays off this site until it's fixed, and even then only the
+            <em>how-it-works</em> half is told.
+          </p>
+        </div>
+      </div>
+
+      <blockquote class="callout">
+        Understanding is a public good. Exploitation is not.
+        <cite>— the line I don't cross</cite>
+      </blockquote>
+
+      <p class="prose" style="margin-top: var(--sp-5);">
+        That's the combat-engineer ethos applied to software: know the terrain
+        better than anyone, so you can <strong>protect</strong> the people
+        moving across it. I'm a guest in Anthropic's codebase, not an adversary.
+        This site is <strong>unaffiliated with Anthropic</strong> — just a
+        researcher who respects the tool enough to read it closely and report
+        the rest the right way.
+      </p>
+
+      <div class="input-row" style="margin-top: var(--sp-6);">
+        <a class="btn btn--primary" href="/index.html#subscribe">&gt; SUBSCRIBE</a>
+        <a class="btn btn--ghost" href="/forum.html">&gt; READ THE ISSUES</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="site-footer__brand"><span class="sigil">&gt;_</span> claude code internals</span>
+      <span class="site-footer__tag">The changelog Anthropic doesn't publish.</span>
+      <span class="site-footer__meta">
+        by <a href="/about.html">beardedfreedom</a> · unaffiliated with Anthropic · &copy; 2026
+      </span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,464 @@
+{
+  "public_count": 56,
+  "private_count": 33,
+  "quarantined": [],
+  "categories": {
+    "AI Media": 9,
+    "Blender": 26,
+    "Content": 1,
+    "Hunting": 3,
+    "Scraping": 2,
+    "Tooling": 2,
+    "WordPress": 13
+  },
+  "skills": [
+    {
+      "id": "ad-studio",
+      "title": "ad studio",
+      "desc": "> Build a polished AI product commercial / promo / pitch video from 3D renders or product photos. Use this WHENEVER Steven wants a commercial, ad, promo video, hype reel, pitch video, \"make a 30 second video\", marketing clip, or product-in-use footage \u2014 especially when starting f",
+      "category": "AI Media",
+      "lines": 138,
+      "src": "/skills-src/ad-studio.md"
+    },
+    {
+      "id": "capcut-video-editing",
+      "title": "capcut video editing",
+      "desc": "Use when editing video in CapCut desktop app via computer-use. Covers UI layout, keyboard shortcuts, timeline operations, adding text/effects/transitions/filters, and export workflows. Triggers on \"CapCut\", \"edit video\", \"add transition\", \"add effect\", \"split clip\", \"video editin",
+      "category": "AI Media",
+      "lines": 320,
+      "src": "/skills-src/capcut-video-editing.md"
+    },
+    {
+      "id": "higgsfield-generate",
+      "title": "higgsfield generate",
+      "desc": "| Generate images/videos via Higgsfield AI. Default: GPT Image 2 for images/design/text, Seedance 2.0 for video, Nano Banana 2/Pro for character/reference image work, Marketing Studio for ads with avatars/products/hooks, settings, plus Soul V2/Cinema/Cast/Location and Kling 3.0. ",
+      "category": "AI Media",
+      "lines": 298,
+      "src": "/skills-src/higgsfield-generate.md"
+    },
+    {
+      "id": "higgsfield-marketplace-cards",
+      "title": "higgsfield marketplace cards",
+      "desc": "| Generate marketplace product image cards through Higgsfield: compliant main image, secondary product images, and A+ style content modules. Use when the user asks for marketplace listing images, product detail cards, secondary product images, product infographics, lifestyle list",
+      "category": "AI Media",
+      "lines": 89,
+      "src": "/skills-src/higgsfield-marketplace-cards.md"
+    },
+    {
+      "id": "higgsfield-product-photoshoot",
+      "title": "higgsfield product photoshoot",
+      "desc": "| Generate brand-quality product images through Higgsfield product-photoshoot prompt enhancement on GPT Image 2 / gpt_image_2. Entry point for professional brand/product visuals. Use when: \"product photo\", \"studio shot\", \"lifestyle image\", \"Pinterest pin\", \"hero/banner\", \"carouse",
+      "category": "AI Media",
+      "lines": 216,
+      "src": "/skills-src/higgsfield-product-photoshoot.md"
+    },
+    {
+      "id": "higgsfield-soul-id",
+      "title": "higgsfield soul id",
+      "desc": "| Train a Soul Character \u2014 a personalized model on a person's face that Higgsfield uses for identity-faithful image and video generation. Use when: \"create my Soul\", \"train my face\", \"make my digital twin\", \"build me an avatar\", \"learn my appearance\", \"create a character of me\", ",
+      "category": "AI Media",
+      "lines": 84,
+      "src": "/skills-src/higgsfield-soul-id.md"
+    },
+    {
+      "id": "meshy-api",
+      "title": "meshy api",
+      "desc": "Use when generating 3D assets through Meshy AI's REST API (api.meshy.ai) \u2014 text-to-3D, image-to-3D, retexture, remesh, auto-rigging, library animations, balance/webhooks. Covers v1/v2 endpoint mix, Bearer-token auth (msy-...), credit costs per task, polling/SSE/webhook patterns, ",
+      "category": "AI Media",
+      "lines": 161,
+      "src": "/skills-src/meshy-api.md"
+    },
+    {
+      "id": "meshy-blender-pipeline",
+      "title": "meshy blender pipeline",
+      "desc": "Use when importing Meshy AI 3D characters/assets into Blender for animation and rendering \u2014 covers the official Meshy Blender plugin (v0.6.0+, Blender 4.2+ with localhost:5324 bridge for \"Send to Blender\" web button), AND headless Python scripts that import Meshy FBX/GLB packs wi",
+      "category": "AI Media",
+      "lines": 186,
+      "src": "/skills-src/meshy-blender-pipeline.md"
+    },
+    {
+      "id": "pixel-claude-avatar",
+      "title": "pixel claude avatar",
+      "desc": "Use when building, animating, or rendering the Pixel-Claude character in Blender \u2014 voxel-style pixel-art mascot with optional cape, top hat, mouth, lip-sync to audio, family of color variants (orange/pink/yellow/cyan), or multi-scene narrative videos. Codifies framing rules, char",
+      "category": "AI Media",
+      "lines": 174,
+      "src": "/skills-src/pixel-claude-avatar.md"
+    },
+    {
+      "id": "blender-agents-code-validator",
+      "title": "blender agents code validator",
+      "desc": "> Use when reviewing, validating, or auditing Blender Python code for correctness. Runs systematic checks for deprecated API usage, context errors, version compatibility issues, threading violations, data reference invalidation, incorrect operator calls, and addon structure compl",
+      "category": "Blender",
+      "lines": 389,
+      "src": "/skills-src/blender-agents-code-validator.md"
+    },
+    {
+      "id": "blender-agents-version-migrator",
+      "title": "blender agents version migrator",
+      "desc": "> Use when migrating, porting, or upgrading Blender Python scripts and addons across major versions (3.x to 4.x to 5.x). Provides a systematic migration process covering API renames, removed functions, changed parameters, extension system migration, BGL to GPU module conversion, ",
+      "category": "Blender",
+      "lines": 342,
+      "src": "/skills-src/blender-agents-version-migrator.md"
+    },
+    {
+      "id": "blender-core-api",
+      "title": "blender core api",
+      "desc": "> Use when writing Blender Python scripts that access bpy module structure, RNA data, the context system, dependency graph, or operator invocation. Prevents the common mistake of accessing context attributes outside their valid scope or calling operators without checking poll(). ",
+      "category": "Blender",
+      "lines": 242,
+      "src": "/skills-src/blender-core-api.md"
+    },
+    {
+      "id": "blender-core-gpu",
+      "title": "blender core gpu",
+      "desc": "> Use when drawing custom overlays, viewport visualizations, or offscreen renders in Blender Python. Prevents the critical mistake of using the deprecated bgl module (removed in Blender 5.0) instead of the gpu module. Covers gpu.shader, gpu.batch, gpu.state, SpaceView3D draw hand",
+      "category": "Blender",
+      "lines": 373,
+      "src": "/skills-src/blender-core-gpu.md"
+    },
+    {
+      "id": "blender-core-runtime",
+      "title": "blender core runtime",
+      "desc": "> Use when dealing with Blender Python runtime behavior -- mathutils, threading, handlers, timers, or crashes after undo/redo. Prevents the #1 runtime crash: using threading for bpy operations instead of bpy.app.timers, or caching bpy.data references across undo boundaries. Cover",
+      "category": "Blender",
+      "lines": 353,
+      "src": "/skills-src/blender-core-runtime.md"
+    },
+    {
+      "id": "blender-core-versions",
+      "title": "blender core versions",
+      "desc": "> Use when writing Blender Python code that must work across multiple versions (3.x/4.x/5.x), or when migrating scripts between Blender versions. Prevents breakage from renamed APIs, removed modules (bgl in 5.0), and changed function signatures. Provides the complete breaking cha",
+      "category": "Blender",
+      "lines": 362,
+      "src": "/skills-src/blender-core-versions.md"
+    },
+    {
+      "id": "blender-errors-context",
+      "title": "blender errors context",
+      "desc": "> Use when debugging Blender RuntimeError from restricted context, operator poll() failures, or wrong context for bpy.ops calls. Prevents the #1 Blender Python error: calling operators or accessing context attributes from wrong areas (e.g., timer callbacks, draw handlers). Covers",
+      "category": "Blender",
+      "lines": 418,
+      "src": "/skills-src/blender-errors-context.md"
+    },
+    {
+      "id": "blender-errors-data",
+      "title": "blender errors data",
+      "desc": "> Use when debugging Blender ReferenceError from removed objects, undo-invalidated bpy.data references, or stale ID pointers. Prevents the common crash of caching bpy.data references across undo/redo operations (references become invalid). Covers safe data access patterns, ID ref",
+      "category": "Blender",
+      "lines": 296,
+      "src": "/skills-src/blender-errors-data.md"
+    },
+    {
+      "id": "blender-errors-version",
+      "title": "blender errors version",
+      "desc": "> Use when debugging Blender AttributeError from removed APIs, ImportError from deprecated modules (bgl in 5.0), or breaking changes in operator signatures between versions. Prevents silent failures from using APIs that were renamed or removed in newer Blender versions. Provides ",
+      "category": "Blender",
+      "lines": 254,
+      "src": "/skills-src/blender-errors-version.md"
+    },
+    {
+      "id": "blender-impl-addons",
+      "title": "blender impl addons",
+      "desc": "> Use when building a production Blender addon -- project structure, testing, CI/CD, or packaging for extensions.blender.org. Prevents the common mistake of hardcoding paths or skipping the extension manifest for Blender 4.2+. Covers multi-file addon structure, testing strategies",
+      "category": "Blender",
+      "lines": 498,
+      "src": "/skills-src/blender-impl-addons.md"
+    },
+    {
+      "id": "blender-impl-animation",
+      "title": "blender impl animation",
+      "desc": "> Use when implementing AEC-specific animations -- construction sequences, camera walkthroughs, solar studies, or phasing visualizations in Blender. Prevents the common mistake of keyframing visibility instead of using proper collection visibility for construction phases. Covers ",
+      "category": "Blender",
+      "lines": 499,
+      "src": "/skills-src/blender-impl-animation.md"
+    },
+    {
+      "id": "blender-impl-automation",
+      "title": "blender impl automation",
+      "desc": "> Use when automating Blender workflows -- batch rendering, headless processing via blender --background, file format conversion, or pipeline integration. Prevents the common mistake of using viewport operators in background mode (no UI context available). Covers command-line ren",
+      "category": "Blender",
+      "lines": 361,
+      "src": "/skills-src/blender-impl-automation.md"
+    },
+    {
+      "id": "blender-impl-mesh",
+      "title": "blender impl mesh",
+      "desc": "> Use when generating mesh geometry for AEC applications -- buildings from vertices, IFC geometry visualization, parametric elements, or custom mesh tools. Prevents the performance mistake of creating vertices one-by-one instead of using from_pydata or BMesh batch operations. Cov",
+      "category": "Blender",
+      "lines": 377,
+      "src": "/skills-src/blender-impl-mesh.md"
+    },
+    {
+      "id": "blender-impl-nodes",
+      "title": "blender impl nodes",
+      "desc": "> Use when building Geometry Nodes or Shader Nodes setups programmatically for AEC applications -- parametric modeling, material generation, or procedural geometry. Prevents the common mistake of not using node_tree.interface for Geometry Nodes modifier inputs (4.0+). Covers crea",
+      "category": "Blender",
+      "lines": 451,
+      "src": "/skills-src/blender-impl-nodes.md"
+    },
+    {
+      "id": "blender-impl-operators",
+      "title": "blender impl operators",
+      "desc": "> Use when implementing complex Blender operators -- modal operators with timer callbacks, file browsers, batch processing, or multi-step workflows. Prevents the common mistake of blocking the UI thread in long operations instead of using modal + timer pattern. Covers modal opera",
+      "category": "Blender",
+      "lines": 496,
+      "src": "/skills-src/blender-impl-operators.md"
+    },
+    {
+      "id": "blender-syntax-addons",
+      "title": "blender syntax addons",
+      "desc": "> Use when creating a Blender addon or extension, or migrating from legacy bl_info to blender_manifest.toml (required in 5.0). Prevents the common mistake of using bl_info in Blender 5.0+ where only the manifest format is supported. Covers register/unregister lifecycle, multi-fil",
+      "category": "Blender",
+      "lines": 419,
+      "src": "/skills-src/blender-syntax-addons.md"
+    },
+    {
+      "id": "blender-syntax-animation",
+      "title": "blender syntax animation",
+      "desc": "> Use when creating animations programmatically in Blender -- keyframes, FCurves, Actions, NLA strips, drivers, or armature operations. Prevents the breaking change pitfall of using bone.layers (removed in 4.0) instead of BoneCollection. Covers keyframe_insert, FCurve access, Act",
+      "category": "Blender",
+      "lines": 438,
+      "src": "/skills-src/blender-syntax-animation.md"
+    },
+    {
+      "id": "blender-syntax-data",
+      "title": "blender syntax data",
+      "desc": "> Use when managing Blender data blocks -- collections, linked libraries, library overrides, or the asset system. Prevents the common mistake of not handling fake users when removing data blocks, or using append when link+override is needed. Covers bpy.data collections, BlendData",
+      "category": "Blender",
+      "lines": 457,
+      "src": "/skills-src/blender-syntax-data.md"
+    },
+    {
+      "id": "blender-syntax-materials",
+      "title": "blender syntax materials",
+      "desc": "> Use when creating or modifying Blender materials and shader nodes via Python. Prevents the breaking change of using old Principled BSDF input names (e.g., \"Subsurface\" renamed to \"Subsurface Weight\" in 4.0). Covers material creation, node tree setup, Principled BSDF input mappi",
+      "category": "Blender",
+      "lines": 381,
+      "src": "/skills-src/blender-syntax-materials.md"
+    },
+    {
+      "id": "blender-syntax-mesh",
+      "title": "blender syntax mesh",
+      "desc": "> Use when creating or editing mesh geometry in Blender Python -- vertices, edges, faces, BMesh operations, or bulk data access. Prevents the performance mistake of accessing vertices one-by-one instead of using foreach_get/foreach_set for bulk operations. Covers from_pydata, BMe",
+      "category": "Blender",
+      "lines": 421,
+      "src": "/skills-src/blender-syntax-mesh.md"
+    },
+    {
+      "id": "blender-syntax-modifiers",
+      "title": "blender syntax modifiers",
+      "desc": "> Use when working with Blender modifiers via Python -- adding, configuring, or applying modifiers, or accessing Geometry Nodes inputs. Prevents the common mistake of reading mesh data before applying modifiers (getting unmodified geometry) instead of using depsgraph.evaluated_ge",
+      "category": "Blender",
+      "lines": 365,
+      "src": "/skills-src/blender-syntax-modifiers.md"
+    },
+    {
+      "id": "blender-syntax-nodes",
+      "title": "blender syntax nodes",
+      "desc": "> Use when building node trees via Python -- Geometry Nodes, Shader Nodes, or Compositor Nodes. Prevents the breaking change of using node.inputs/outputs by index instead of NodeTreeInterface (4.0+) for node group I/O. Covers node creation, linking, group management, and the Node",
+      "category": "Blender",
+      "lines": 373,
+      "src": "/skills-src/blender-syntax-nodes.md"
+    },
+    {
+      "id": "blender-syntax-operators",
+      "title": "blender syntax operators",
+      "desc": "> Use when creating custom Blender operators -- bpy.types.Operator subclasses with execute, invoke, or modal methods. Prevents the common mistake of not implementing poll() (causing silent failures) or using wrong bl_idname format. Covers operator lifecycle, bl_options, return va",
+      "category": "Blender",
+      "lines": 418,
+      "src": "/skills-src/blender-syntax-operators.md"
+    },
+    {
+      "id": "blender-syntax-panels",
+      "title": "blender syntax panels",
+      "desc": "> Use when creating custom Blender UI panels, menus, or UIList elements. Prevents the common mistake of using wrong bl_space_type/bl_region_type combinations (panel won't show). Covers bpy.types.Panel, draw() method, UILayout API (row/column/box/split), bl_category, sub-panels, d",
+      "category": "Blender",
+      "lines": 492,
+      "src": "/skills-src/blender-syntax-panels.md"
+    },
+    {
+      "id": "blender-syntax-properties",
+      "title": "blender syntax properties",
+      "desc": "> Use when adding custom properties to Blender objects -- BoolProperty, IntProperty, FloatProperty, EnumProperty, PointerProperty, or PropertyGroup. Prevents the common mistake of not using update callbacks (changes not reflected in UI) or returning stale items from dynamic EnumP",
+      "category": "Blender",
+      "lines": 455,
+      "src": "/skills-src/blender-syntax-properties.md"
+    },
+    {
+      "id": "blender-syntax-rendering",
+      "title": "blender syntax rendering",
+      "desc": "> Use when configuring render settings or automating renders in Blender Python. Prevents the version pitfall of using 'BLENDER_EEVEE' (renamed to 'BLENDER_EEVEE_NEXT' in 4.2). Covers render engine selection (EEVEE/Cycles/Workbench), output format setup, camera configuration, batc",
+      "category": "Blender",
+      "lines": 348,
+      "src": "/skills-src/blender-syntax-rendering.md"
+    },
+    {
+      "id": "seo-content",
+      "title": "seo content",
+      "desc": "| Write SEO-optimized blog posts and web content using Google-approved best practices with natural keyword integration \u2014 no stuffing, no shortcuts, no tricks that get penalized. After drafting, automatically spawns a tough SEO Editor agent that challenges the content for quality,",
+      "category": "Content",
+      "lines": 338,
+      "src": "/skills-src/seo-content.md"
+    },
+    {
+      "id": "illuminate",
+      "title": "illuminate",
+      "desc": "Replaces every special character in code or text with a period, processing one character at a time. Use when you need to neutralize brackets, parentheses, braces, and punctuation before a full read of the content. Invoke with /illuminate followed by the text or code block.",
+      "category": "Hunting",
+      "lines": 56,
+      "src": "/skills-src/illuminate.md"
+    },
+    {
+      "id": "illuminate-deep",
+      "title": "illuminate deep",
+      "desc": "Four-pass deep illumination that defeats invisible-Unicode steganography, Trojan Source attacks, zero-width prompt injection, hidden command lines, and ANSI-escape-glued payloads in code. Extends /illuminate by also redacting every letter \"e\", every third letter, and surfacing M-",
+      "category": "Hunting",
+      "lines": 180,
+      "src": "/skills-src/illuminate-deep.md"
+    },
+    {
+      "id": "rainboweffect",
+      "title": "rainboweffect",
+      "desc": "Apply rainbow text rendering to any text, output, code, or finding. Words (letter sequences) get one solid random rainbow color per word. Non-letter characters, symbols, numbers, and punctuation each get their own individual random color. Use whenever the user says /rainboweffect",
+      "category": "Hunting",
+      "lines": 42,
+      "src": "/skills-src/rainboweffect.md"
+    },
+    {
+      "id": "scrapling",
+      "title": "scrapling",
+      "desc": "| Use this skill for web scraping tasks using the Scrapling framework. Triggers when user mentions \"scrapling\", \"scrape a website\", \"web scraping with python\", \"bypass Cloudflare\", \"anti-bot bypass\", \"adaptive scraping\", \"StealthyFetcher\", \"DynamicFetcher\", \"browser automation fo",
+      "category": "Scraping",
+      "lines": 421,
+      "src": "/skills-src/scrapling.md"
+    },
+    {
+      "id": "scrapling-official",
+      "title": "scrapling official",
+      "desc": "Scrape web pages using Scrapling with anti-bot bypass (like Cloudflare Turnstile), stealth headless browsing, spiders framework, adaptive scraping, and JavaScript rendering. Use when asked to scrape, crawl, or extract data from websites; web_fetch fails; the site has anti-bot pro",
+      "category": "Scraping",
+      "lines": 402,
+      "src": "/skills-src/scrapling-official.md"
+    },
+    {
+      "id": "cua-driver",
+      "title": "cua driver",
+      "desc": "Drive a native macOS app via the cua-driver CLI (default) or MCP server \u2014 snapshot its AX tree, click/type/scroll by element_index, verify via re-snapshot. Use when the user asks you to operate, drive, automate, or perform a GUI task in a real macOS application on the host (e.g. ",
+      "category": "Tooling",
+      "lines": 888,
+      "src": "/skills-src/cua-driver.md"
+    },
+    {
+      "id": "find-skills",
+      "title": "find skills",
+      "desc": "Helps users discover and install agent skills when they ask questions like \"how do I do X\", \"find a skill for X\", \"is there a skill that can...\", or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist a",
+      "category": "Tooling",
+      "lines": 143,
+      "src": "/skills-src/find-skills.md"
+    },
+    {
+      "id": "wordpress-router",
+      "title": "wordpress router",
+      "desc": "Use when the user asks about WordPress codebases (plugins, themes, block themes, Gutenberg blocks, WP core checkouts) and you need to quickly classify the repo and route to the correct workflow/skill (blocks, theme.json, REST API, WP-CLI, performance, security, testing, release p",
+      "category": "WordPress",
+      "lines": 52,
+      "src": "/skills-src/wordpress-router.md"
+    },
+    {
+      "id": "wp-abilities-api",
+      "title": "wp abilities api",
+      "desc": "Use when working with the WordPress Abilities API (wp_register_ability, wp_register_ability_category, /wp-json/wp-abilities/v1/*, @wordpress/abilities) including defining abilities, categories, meta, REST exposure, and permissions checks for clients.",
+      "category": "WordPress",
+      "lines": 96,
+      "src": "/skills-src/wp-abilities-api.md"
+    },
+    {
+      "id": "wp-block-development",
+      "title": "wp block development",
+      "desc": "Use when developing WordPress (Gutenberg) blocks: block.json metadata, register_block_type(_from_metadata), attributes/serialization, supports, dynamic rendering (render.php/render_callback), deprecations/migrations, viewScript vs viewScriptModule, and @wordpress/scripts/@wordpre",
+      "category": "WordPress",
+      "lines": 175,
+      "src": "/skills-src/wp-block-development.md"
+    },
+    {
+      "id": "wp-block-themes",
+      "title": "wp block themes",
+      "desc": "Use when developing WordPress block themes: theme.json (global settings/styles), templates and template parts, patterns, style variations, and Site Editor troubleshooting (style hierarchy, overrides, caching).",
+      "category": "WordPress",
+      "lines": 117,
+      "src": "/skills-src/wp-block-themes.md"
+    },
+    {
+      "id": "wp-interactivity-api",
+      "title": "wp interactivity api",
+      "desc": "Use when building or debugging WordPress Interactivity API features (data-wp-* directives, @wordpress/interactivity store/state/actions, block viewScriptModule integration, wp_interactivity_*()) including performance, hydration, and directive behavior.",
+      "category": "WordPress",
+      "lines": 180,
+      "src": "/skills-src/wp-interactivity-api.md"
+    },
+    {
+      "id": "wp-performance",
+      "title": "wp performance",
+      "desc": "Use when investigating or improving WordPress performance (backend-only agent): profiling and measurement (WP-CLI profile/doctor, Server-Timing, Query Monitor via REST headers), database/query optimization, autoloaded options, object caching, cron, HTTP API calls, and safe verifi",
+      "category": "WordPress",
+      "lines": 147,
+      "src": "/skills-src/wp-performance.md"
+    },
+    {
+      "id": "wp-phpstan",
+      "title": "wp phpstan",
+      "desc": "Use when configuring, running, or fixing PHPStan static analysis in WordPress projects (plugins/themes/sites): phpstan.neon setup, baselines, WordPress-specific typing, and handling third-party plugin classes.",
+      "category": "WordPress",
+      "lines": 98,
+      "src": "/skills-src/wp-phpstan.md"
+    },
+    {
+      "id": "wp-playground",
+      "title": "wp playground",
+      "desc": "Use for WordPress Playground workflows: fast disposable WP instances in the browser or locally via @wp-playground/cli (server, run-blueprint, build-snapshot), auto-mounting plugins/themes, switching WP/PHP versions, blueprints, and debugging (Xdebug).",
+      "category": "WordPress",
+      "lines": 102,
+      "src": "/skills-src/wp-playground.md"
+    },
+    {
+      "id": "wp-plugin-development",
+      "title": "wp plugin development",
+      "desc": "Use when developing WordPress plugins: architecture and hooks, activation/deactivation/uninstall, admin UI and Settings API, data storage, cron/tasks, security (nonces/capabilities/sanitization/escaping), and release packaging.",
+      "category": "WordPress",
+      "lines": 113,
+      "src": "/skills-src/wp-plugin-development.md"
+    },
+    {
+      "id": "wp-project-triage",
+      "title": "wp project triage",
+      "desc": "Use when you need a deterministic inspection of a WordPress repository (plugin/theme/block theme/WP core/Gutenberg/full site) including tooling/tests/version hints, and a structured JSON report to guide workflows and guardrails.",
+      "category": "WordPress",
+      "lines": 39,
+      "src": "/skills-src/wp-project-triage.md"
+    },
+    {
+      "id": "wp-rest-api",
+      "title": "wp rest api",
+      "desc": "Use when building, extending, or debugging WordPress REST API endpoints/routes: register_rest_route, WP_REST_Controller/controller classes, schema/argument validation, permission_callback/authentication, response shaping, register_rest_field/register_meta, or exposing CPTs/taxono",
+      "category": "WordPress",
+      "lines": 115,
+      "src": "/skills-src/wp-rest-api.md"
+    },
+    {
+      "id": "wp-wpcli-and-ops",
+      "title": "wp wpcli and ops",
+      "desc": "Use when working with WP-CLI (wp) for WordPress operations: safe search-replace, db export/import, plugin/theme/user/content management, cron, cache flushing, multisite, and scripting/automation with wp-cli.yml.",
+      "category": "WordPress",
+      "lines": 124,
+      "src": "/skills-src/wp-wpcli-and-ops.md"
+    },
+    {
+      "id": "wpds",
+      "title": "wpds",
+      "desc": "Use when building UIs leveraging the WordPress Design System (WPDS) and its components, tokens, patterns, etc.",
+      "category": "WordPress",
+      "lines": 59,
+      "src": "/skills-src/wpds.md"
+    }
+  ]
+}

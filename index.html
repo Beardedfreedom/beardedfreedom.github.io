@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home — Claude Code Internals</title>
+  <meta name="description" content="The changelog Anthropic doesn't publish — a researcher's field notes on Claude Code internals, flags, and behavior, for developers and power users.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <script src="/assets/js/nav.js" defer></script>
+  <style>
+    /* Page-scoped: boot-sequence hero. Tokens only, no raw hex.
+       The real tagline lives in the DOM; the boot log is aria-hidden
+       decoration that respects prefers-reduced-motion. */
+    .hero { padding-block: var(--sp-8) var(--sp-7); }
+    .hero__title {
+      font-size: var(--fs-900);
+      margin-bottom: var(--sp-3);
+    }
+    .hero__tag {
+      font-size: var(--fs-600);
+      color: var(--green);
+      margin-bottom: var(--sp-5);
+    }
+    .hero__sub { max-width: 56ch; }
+
+    /* The boot terminal */
+    .boot {
+      margin-top: var(--sp-6);
+      background: var(--panel-2);
+      font-size: var(--fs-400);
+      line-height: 1.7;
+    }
+    .boot__line { display: block; white-space: pre-wrap; }
+    .boot__line .ok   { color: var(--green); }
+    .boot__line .warn { color: var(--amber); }
+    .boot__line .dim  { color: var(--muted); }
+
+    /* Reveal each boot line in sequence. Hidden until its turn. */
+    .boot--animate .boot__line {
+      opacity: 0;
+      animation: boot-in 0.18s var(--ease) forwards;
+    }
+    .boot--animate .boot__line:nth-child(1) { animation-delay: 0.10s; }
+    .boot--animate .boot__line:nth-child(2) { animation-delay: 0.35s; }
+    .boot--animate .boot__line:nth-child(3) { animation-delay: 0.60s; }
+    .boot--animate .boot__line:nth-child(4) { animation-delay: 0.95s; }
+    .boot--animate .boot__line:nth-child(5) { animation-delay: 1.25s; }
+    .boot--animate .boot__line:nth-child(6) { animation-delay: 1.55s; }
+    .boot--animate .boot__line:nth-child(7) { animation-delay: 1.95s; }
+    @keyframes boot-in {
+      from { opacity: 0; transform: translateY(2px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* If JS never runs OR motion is reduced, show all lines plainly. */
+    @media (prefers-reduced-motion: reduce) {
+      .boot--animate .boot__line { opacity: 1; animation: none; }
+    }
+
+    .issue__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-2) var(--sp-4);
+      font-size: var(--fs-300);
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      margin-bottom: var(--sp-4);
+    }
+    .subscribe__panel { max-width: 640px; }
+    .feature-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .feature-list li {
+      padding-left: var(--sp-5);
+      position: relative;
+      margin-bottom: var(--sp-3);
+      color: var(--muted);
+    }
+    .feature-list li::before {
+      content: ">";
+      position: absolute;
+      left: 0;
+      color: var(--green);
+      font-weight: 700;
+    }
+    .feature-list strong { color: var(--ink); font-weight: 700; }
+  </style>
+  <script defer src="/assets/js/matrix-rain.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__brand" href="/index.html">
+        <span class="sigil">&gt;_</span> claude code <b>internals</b>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu">[ menu ]</button>
+      <ul class="nav__list" id="nav-menu">
+        <li><a class="nav__link" href="/index.html">HOME</a></li>
+        <li><a class="nav__link" href="/forum.html">FORUM</a></li>
+        <li><a class="nav__link" href="/games.html">GAMES</a></li>
+        <li><a class="nav__link" href="/illuminate.html">HUNT</a></li>
+        <li><a class="nav__link" href="/skills.html">SKILLS</a></li>
+        <li><a class="nav__link" href="/index.html#subscribe">SUBSCRIBE</a></li>
+        <li><a class="nav__link" href="/about.html">ABOUT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <!-- ========================= HERO ========================= -->
+    <section class="section hero container">
+      <span class="eyebrow">cold boot</span>
+      <h1 class="hero__title prompt">claude code internals<span class="cursor" aria-hidden="true"></span></h1>
+      <p class="hero__tag">The changelog Anthropic doesn't publish.</p>
+      <p class="lead hero__sub">
+        Field notes from inside the CLI — flags, models, hooks, and behavior
+        changes, reverse-engineered and written down before the patch notes
+        ever mention them. By a security researcher who actually reads the bytes.
+      </p>
+
+      <!-- Boot log: decorative. Real content above is already readable. -->
+      <div class="panel boot" data-title="dmesg" aria-hidden="true" id="boot">
+        <code class="boot__line"><span class="dim">[ 0.001 ]</span> mounting <span class="ok">claude-code-internals</span> ...</code>
+        <code class="boot__line"><span class="dim">[ 0.118 ]</span> probing tengu flag table .......... <span class="ok">1422 found</span></code>
+        <code class="boot__line"><span class="dim">[ 0.402 ]</span> diffing v2.1.179 against v2.1.178 . <span class="ok">9 new, 1 removed</span></code>
+        <code class="boot__line"><span class="dim">[ 0.733 ]</span> scanning for hidden payloads ...... <span class="ok">clean</span></code>
+        <code class="boot__line"><span class="dim">[ 0.991 ]</span> loading green-lane / red-lane ethos <span class="ok">ok</span></code>
+        <code class="boot__line"><span class="dim">[ 1.204 ]</span> author: beardedfreedom (usaf vet) .. <span class="warn">verified</span></code>
+        <code class="boot__line"><span class="dim">[ 1.560 ]</span> ready. <span class="ok">$</span> <span class="cursor" aria-hidden="true"></span></code>
+      </div>
+
+      <div class="input-row" style="margin-top: var(--sp-6);">
+        <a class="btn btn--primary" href="#subscribe">&gt; SUBSCRIBE</a>
+        <a class="btn btn--ghost" href="/about.html">&gt; READ THE STORY</a>
+      </div>
+    </section>
+
+    <!-- ===================== WHAT THIS IS ===================== -->
+    <section class="section--tight container">
+      <span class="eyebrow">what this is</span>
+      <h2 class="prompt">A logbook for people who live in the CLI</h2>
+      <p class="lead" style="max-width: 64ch;">
+        Claude Code ships fast and quiet. New flags appear, models rotate,
+        behaviors shift — and most of it never lands in a public changelog.
+        This is where it gets written down.
+      </p>
+      <ul class="feature-list" style="margin-top: var(--sp-5); max-width: 64ch;">
+        <li><strong>Binary-grounded.</strong> Findings come from reading the
+          actual artifact — flags, strings, native modules — not from guessing
+          at marketing copy.</li>
+        <li><strong>Version-tracked.</strong> Every issue diffs the new build
+          against the last, so you know exactly what moved.</li>
+        <li><strong>Defender-first.</strong> We publish how things work. We do
+          not publish how to break them. (See the
+          <a href="/about.html">ethos</a>.)</li>
+        <li><strong>For builders.</strong> If you script around the CLI, hook
+          it, or trust it in a pipeline, this is your early-warning feed.</li>
+      </ul>
+    </section>
+
+    <!-- ===================== LATEST ISSUE ===================== -->
+    <section class="section--tight container">
+      <span class="eyebrow">latest issue</span>
+      <h2 class="prompt">This week in the binary</h2>
+
+      <article class="card" style="max-width: 720px;">
+        <span class="card__index">[ ISSUE 047 · 2026-06-18 ]</span>
+        <h3 class="card__title">v2.1.179 — background precompute &amp; the iron gate</h3>
+        <div class="issue__meta">
+          <span><span class="badge">1422 flags</span></span>
+          <span><span class="badge badge--amber">9 new</span></span>
+          <span><span class="badge badge--danger">1 removed</span></span>
+        </div>
+        <p class="card__desc">
+          This build's theme is background-precompute compaction —
+          <code>amber_moleskin</code> ships an arm-table and a
+          <code>CLAUDE_CODE_COLD_COMPACT</code> path. <code>heron_brook</code>
+          opens a remote-fillable system-prompt slot worth watching. And
+          <code>iron_gate</code> didn't change behavior so much as get
+          <em>removed</em> — folded into a hardcoded fail-closed default.
+          Hardening, not regression. Zero reportable issues this cycle.
+        </p>
+        <div class="card__foot">
+          <a class="btn btn--primary" href="/forum.html">&gt; READ THE FULL DIFF</a>
+          <a class="btn btn--ghost" href="/forum.html">&gt; ARCHIVE</a>
+        </div>
+      </article>
+
+      <p class="text-muted" style="margin-top: var(--sp-5);">
+        <span class="badge badge--amber">cadence</span>
+        New issue whenever a build drops worth diffing — usually weekly.
+        Subscribe below and it lands in your inbox, raw.
+      </p>
+    </section>
+
+    <!-- ====================== SUBSCRIBE ======================= -->
+    <section class="section container" id="subscribe">
+      <span class="eyebrow">subscribe</span>
+      <h2 class="prompt">Pipe the changelog to your inbox</h2>
+      <p class="lead" style="max-width: 60ch;">
+        One email per issue. No tracking pixels, no growth-hacking, no
+        "we've updated our newsletter." Just the diff. Unsubscribe is a single
+        click — as it should be.
+      </p>
+
+      <div class="panel subscribe__panel" data-title="stdin" style="margin-top: var(--sp-5);">
+        <form class="flow" onsubmit="return false;" novalidate>
+          <div class="field" style="margin-bottom: var(--sp-2);">
+            <label class="field__label" for="sub-email">email</label>
+            <div class="input-row">
+              <input
+                class="input"
+                type="email"
+                id="sub-email"
+                name="email"
+                inputmode="email"
+                autocomplete="email"
+                placeholder="you@yourshell.dev"
+                aria-describedby="sub-hint">
+              <button class="btn btn--accent" type="submit">&gt; SUBSCRIBE</button>
+            </div>
+            <p class="field__hint" id="sub-hint">
+              Placeholder form — submission is wired to WordPress.com +
+              Stripe later. Nothing is sent yet; your keystrokes go nowhere.
+            </p>
+          </div>
+          <p class="text-muted" role="status" aria-live="polite" id="sub-status"></p>
+        </form>
+      </div>
+
+      <p class="text-muted" style="margin-top: var(--sp-5);">
+        Prefer to lurk? The
+        <a href="/forum.html">forum</a> is open, the
+        <a href="/games.html">arcade</a> is free, and the
+        <a href="/about.html">story</a> is short.
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="site-footer__brand"><span class="sigil">&gt;_</span> claude code internals</span>
+      <span class="site-footer__tag">The changelog Anthropic doesn't publish.</span>
+      <span class="site-footer__meta">
+        by <a href="/about.html">beardedfreedom</a> · unaffiliated with Anthropic · &copy; 2026
+      </span>
+    </div>
+  </footer>
+
+  <script>
+    /* Progressive enhancement only. The hero tagline + boot log are already
+       in the DOM and readable without this. We just (a) opt the boot log
+       into its staggered reveal, and (b) give the placeholder form honest
+       feedback so a click isn't a dead end. Respects reduced-motion. */
+    (function () {
+      "use strict";
+      var reduce = window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var boot = document.getElementById("boot");
+      if (boot && !reduce) boot.classList.add("boot--animate");
+
+      var form = document.querySelector("#subscribe form");
+      var status = document.getElementById("sub-status");
+      var input = document.getElementById("sub-email");
+      if (form && status && input) {
+        form.addEventListener("submit", function () {
+          var v = input.value.trim();
+          if (!v) {
+            status.className = "text-danger";
+            status.textContent = "> stdin empty — enter an email first.";
+            return;
+          }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+            status.className = "text-danger";
+            status.textContent = "> parse error — that doesn't look like an address.";
+            return;
+          }
+          status.className = "text-amber";
+          status.textContent =
+            "> queued (demo). Backend lands with WordPress.com + Stripe — nothing sent yet.";
+          input.value = "";
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

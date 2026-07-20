@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Games — Claude Code Internals</title>
+  <meta name="description" content="Terminal arcade for Claude Code power users — flag hunting, snake, and prompt-injection defense.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <script src="/assets/js/nav.js" defer></script>
+  <script defer src="/assets/js/matrix-rain.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__brand" href="/index.html">
+        <span class="sigil">&gt;_</span> claude code <b>internals</b>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu">[ menu ]</button>
+      <ul class="nav__list" id="nav-menu">
+        <li><a class="nav__link" href="/index.html">HOME</a></li>
+        <li><a class="nav__link" href="/forum.html">FORUM</a></li>
+        <li><a class="nav__link" href="/games.html">GAMES</a></li>
+        <li><a class="nav__link" href="/illuminate.html">HUNT</a></li>
+        <li><a class="nav__link" href="/skills.html">SKILLS</a></li>
+        <li><a class="nav__link" href="/index.html#subscribe">SUBSCRIBE</a></li>
+        <li><a class="nav__link" href="/about.html">ABOUT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="section container">
+      <span class="eyebrow">arcade</span>
+      <h1 class="prompt">Games<span class="cursor" aria-hidden="true"></span></h1>
+      <p class="lead">
+        Three browser toys for people who live in a terminal. No installs, no
+        trackers — just you, the green phosphor, and a high score to beat.
+      </p>
+
+      <div class="card-grid" style="margin-top: var(--sp-6);">
+
+        <article class="card">
+          <span class="card__index">[ 01 ]</span>
+          <h2 class="card__title">Flag Hunter</h2>
+          <p class="card__desc">
+            Grep the haystack. Spot the hidden <code>TENGU_*</code> flag before
+            the timer burns down. Pattern-matching under pressure.
+          </p>
+          <div class="card__foot">
+            <a class="btn btn--primary" href="games/flag-hunter.html">&gt; PLAY</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="card__index">[ 02 ]</span>
+          <h2 class="card__title">Terminal Snake</h2>
+          <p class="card__desc">
+            The classic, rendered in ASCII glyphs. Eat the tokens, grow the
+            buffer, don't bite your own stack trace.
+          </p>
+          <div class="card__foot">
+            <a class="btn btn--primary" href="games/terminal-snake.html">&gt; PLAY</a>
+          </div>
+        </article>
+
+        <article class="card">
+          <span class="card__index">[ 03 ]</span>
+          <h2 class="card__title">Injection Defender</h2>
+          <p class="card__desc">
+            Untrusted content is incoming. Quarantine the prompt-injection
+            payloads, pass the clean tokens. Tower-defense for your context window.
+          </p>
+          <div class="card__foot">
+            <a class="btn btn--primary" href="games/injection-defender.html">&gt; PLAY</a>
+          </div>
+        </article>
+
+      </div>
+
+      <p class="text-muted" style="margin-top: var(--sp-6);">
+        <span class="badge badge--amber">wip</span>
+        More cabinets land as contributors ship them. Want to add one?
+        <a href="/forum.html">Pitch it in the forum.</a>
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="site-footer__brand"><span class="sigil">&gt;_</span> claude code internals</span>
+      <span class="site-footer__tag">The changelog Anthropic doesn't publish.</span>
+      <span class="site-footer__meta">
+        by <a href="/about.html">beardedfreedom</a> · unaffiliated with Anthropic · &copy; 2026
+      </span>
+    </div>
+  </footer>
+</body>
+</html>

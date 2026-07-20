@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hunt — Claude Code Internals</title>
+  <meta name="description" content="Payload hunter — illuminate, deep-scan, and rainbow any untrusted string to surface hidden Unicode, bidi overrides, and homoglyph attacks.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <script src="/assets/js/nav.js" defer></script>
+  <script defer src="/assets/js/matrix-rain.js"></script>
+  <script defer src="/assets/js/illuminate.js"></script>
+  <style>
+    .ill-grid { display: grid; gap: var(--sp-4); }
+    .ill-toolbar { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+    .ill-toolbar .badge { font-size: 1rem; }
+    .ill-actions { display: flex; gap: var(--sp-2); }
+    /* slider / scanner dial */
+    .ill-dial { margin: var(--sp-2) 0 var(--sp-4); }
+    .ill-dial-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: var(--sp-2); }
+    .ill-dial-head .mode { color: var(--green); font-weight: 800; letter-spacing: .06em; }
+    input[type="range"].ill-range {
+      -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
+      background: linear-gradient(90deg, var(--line), var(--green-dim)); border-radius: 2px; outline: none;
+    }
+    input[type="range"].ill-range::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 18px; height: 22px; border-radius: 3px;
+      background: var(--green); border: 1px solid var(--bg); cursor: pointer;
+      box-shadow: 0 0 12px -1px var(--green-glow);
+    }
+    input[type="range"].ill-range::-moz-range-thumb {
+      width: 18px; height: 22px; border-radius: 3px; background: var(--green);
+      border: 1px solid var(--bg); cursor: pointer; box-shadow: 0 0 12px -1px var(--green-glow);
+    }
+    .ill-scale { display: flex; justify-content: space-between; margin-top: var(--sp-2); font-size: .72rem; letter-spacing: .08em; }
+    .ill-scale span { color: var(--muted); cursor: pointer; padding: 2px 4px; transition: color .15s; user-select: none; }
+    .ill-scale span:hover { color: var(--text); }
+    .ill-scale span.on { color: var(--green); text-shadow: 0 0 8px var(--green-glow); }
+    /* output */
+    .ill-out {
+      margin: 0; padding: var(--sp-3); background: var(--panel-2); border: 1px solid var(--line);
+      border-radius: var(--radius, 4px); white-space: pre-wrap; word-break: break-word;
+      max-height: 22rem; overflow: auto; font-size: .92rem; line-height: 1.55; color: var(--text);
+    }
+    .ill-rainbow { font-weight: 700; }
+    .ill-mark { font-weight: 700; padding: 0 2px; border-radius: 3px; }
+    .ill-mark.ill-zerowidth { color: var(--bg); background: var(--danger); }
+    .ill-mark.ill-bidi { color: var(--bg); background: var(--amber); }
+    .ill-mark.ill-tag, .ill-mark.ill-control { color: var(--bg); background: var(--danger); }
+    .ill-mark.ill-nonascii, .ill-mark.ill-whitespace { color: var(--amber); border: 1px dashed rgba(255,176,0,.5); }
+    .ill-stats { display: flex; flex-wrap: wrap; gap: var(--sp-3); margin-top: var(--sp-3); font-size: .82rem; color: var(--muted); }
+    .ill-stat b { color: var(--green); font-weight: 700; }
+    /* report table */
+    .ill-table { margin-top: var(--sp-2); border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+    .ill-row { display: grid; grid-template-columns: 4rem 6rem 7rem 1fr; gap: var(--sp-2); padding: 6px var(--sp-3); font-size: .82rem; border-top: 1px solid var(--line); }
+    .ill-row:first-child { border-top: none; }
+    .ill-row--head { color: var(--muted); letter-spacing: .08em; background: var(--panel-2); }
+    .ill-row.ill-zerowidth, .ill-row.ill-bidi, .ill-row.ill-tag, .ill-row.ill-control { color: var(--danger); }
+    .ill-row.ill-nonascii, .ill-row.ill-whitespace { color: var(--amber); }
+    @media (max-width: 640px) { .ill-row { grid-template-columns: 3rem 5rem; } .ill-row span:nth-child(3), .ill-row span:nth-child(4) { grid-column: 1 / -1; } }
+    /* PITH ILLUMINATE — danger score gauge + heatmap */
+    .pith-gauge { margin-bottom: var(--sp-4); }
+    .pith-meter { height: 12px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden;
+      background: linear-gradient(90deg, #16241a 0%, #2a2912 45%, #2e1c12 70%, #2e1414 100%); }
+    .pith-fill { height: 100%; transition: width .25s ease; box-shadow: 0 0 12px -1px currentColor; }
+    .pith-head { display: flex; align-items: baseline; gap: var(--sp-2); margin-top: var(--sp-2); flex-wrap: wrap; }
+    .pith-score { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+    .pith-zone { font-weight: 800; letter-spacing: .07em; }
+    .pith-safe { color: var(--green); } .pith-fill.pith-safe { background: var(--green); }
+    .pith-elev { color: #e8d44d; } .pith-fill.pith-elev { background: #e8d44d; }
+    .pith-high { color: var(--amber); } .pith-fill.pith-high { background: var(--amber); }
+    .pith-crit { color: var(--danger); } .pith-fill.pith-crit { background: var(--danger); }
+    .pith-map { line-height: 1.75; }
+    .pith-cool { color: var(--muted); }
+    .pith-h1 { color: var(--amber); }
+    .pith-h2 { background: rgba(255,176,0,.22); border-radius: 2px; padding: 0 1px; }
+    .pith-h3 { background: rgba(255,92,92,.34); color: #fff; font-weight: 700; border-radius: 2px; padding: 0 1px; box-shadow: 0 0 8px -2px var(--danger); }
+    .pith-row { grid-template-columns: 1fr 4rem 5rem; }
+    .ill-row.pith-sev1 { color: var(--amber); }
+    .ill-row.pith-sev2 { color: var(--amber); }
+    .ill-row.pith-sev3 { color: var(--danger); }
+    .pith-legend { display: flex; gap: var(--sp-3); flex-wrap: wrap; margin-top: var(--sp-2); font-size: .72rem; color: var(--muted); letter-spacing: .04em; }
+    .pith-leg { display: inline-flex; align-items: center; gap: 5px; }
+    .pith-swatch { display: inline-block; width: 14px; height: 11px; border-radius: 2px; border: 1px solid var(--line); }
+    .pith-swatch.pith-cool { background: transparent; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__brand" href="/index.html">
+        <span class="sigil">&gt;_</span> claude code <b>internals</b>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu">[ menu ]</button>
+      <ul class="nav__list" id="nav-menu">
+        <li><a class="nav__link" href="/index.html">HOME</a></li>
+        <li><a class="nav__link" href="/forum.html">FORUM</a></li>
+        <li><a class="nav__link" href="/games.html">GAMES</a></li>
+        <li><a class="nav__link" href="/illuminate.html">HUNT</a></li>
+        <li><a class="nav__link" href="/skills.html">SKILLS</a></li>
+        <li><a class="nav__link" href="/index.html#subscribe">SUBSCRIBE</a></li>
+        <li><a class="nav__link" href="/about.html">ABOUT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="container">
+    <p class="eyebrow">TOOL // PAYLOAD HUNTER</p>
+    <h1 class="prompt">Illuminate</h1>
+    <p class="text-muted" style="max-width:62ch;">
+      Paste any untrusted string — a suspicious <code>.md</code>, an AI response, a string-slice
+      pulled from a binary. Scrub the slider to inspect it through four lenses. Surfaces hidden
+      zero-width characters, bidi overrides (Trojan Source), control chars, and homoglyph attacks.
+      Everything runs in your browser — nothing leaves the page.
+    </p>
+
+    <section class="panel" data-title="input" style="margin-top:var(--sp-4);">
+      <div class="ill-toolbar">
+        <span class="text-muted" style="font-size:.82rem;">VERDICT &rarr;</span>
+        <span id="ill-verdict" class="badge">…</span>
+        <span style="flex:1;"></span>
+        <span class="ill-actions">
+          <button id="ill-demo" class="btn btn--ghost" type="button">&gt; load sample</button>
+          <button id="ill-clear" class="btn btn--ghost" type="button">&gt; clear</button>
+        </span>
+      </div>
+      <label class="field" style="display:block;">
+        <span class="text-muted" style="font-size:.8rem;">untrusted input</span>
+        <textarea id="ill-input" class="textarea" spellcheck="false" autocapitalize="off"
+          autocomplete="off" aria-label="Untrusted input string"></textarea>
+      </label>
+
+      <div class="ill-dial">
+        <div class="ill-dial-head">
+          <span class="text-muted" style="font-size:.8rem;">scanner lens</span>
+          <span class="mode" id="ill-mode">RAW</span>
+        </div>
+        <input type="range" min="0" max="4" step="1" value="0" id="ill-slider" class="ill-range"
+          aria-label="Scanner lens: 0 raw, 1 illuminate, 2 deep scan, 3 rainbow, 4 pith danger score">
+        <div class="ill-scale" aria-hidden="false">
+          <span>RAW</span><span>ILLUMINATE</span><span>DEEP&nbsp;SCAN</span><span>RAINBOW</span><span>PITH</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" data-title="output" style="margin-top:var(--sp-4);">
+      <div id="ill-output"></div>
+      <div id="ill-stats" class="ill-stats"></div>
+      <div id="ill-report" style="margin-top:var(--sp-3);"></div>
+    </section>
+
+    <div class="ill-toolbar" style="margin-top:var(--sp-4);">
+      <span class="text-muted" style="font-size:.82rem;">
+        DEEPER &rarr; walk the <b class="text-amber">PITH</b> danger zones one at a time, full-screen
+      </span>
+      <a class="btn btn--accent" href="/danger-map.html">&gt; open danger map</a>
+    </div>
+
+    <p class="text-muted" style="font-size:.8rem; margin-top:var(--sp-4);">
+      <b class="text-amber">Why a hunter cares:</b> attackers smuggle instructions into content an LLM
+      will read — a zero-width run, a right-to-left override that reorders what a human sees vs. what
+      the machine parses, a Cyrillic <code>а</code> wearing a Latin <code>a</code>'s face. RAW shows what
+      you think you have; ILLUMINATE strips it to a skeleton; DEEP&nbsp;SCAN names every hidden byte;
+      RAINBOW makes anomalies pop. Defensive only — surface it, disclose it, never weaponize it.
+    </p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="site-footer__brand"><span class="sigil">&gt;_</span> claude code internals</span>
+      <span class="site-footer__tag">The changelog Anthropic doesn't publish.</span>
+      <span class="site-footer__meta">
+        by <a href="/about.html">beardedfreedom</a> · unaffiliated with Anthropic · &copy; 2026
+      </span>
+    </div>
+  </footer>
+</body>
+</html>

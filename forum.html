@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forum — Claude Code Internals</title>
+  <meta name="description" content="Community boards for Claude Code power users — flag watch, hooks &amp; workflows, and CTF / bounty writeups. Client-side, no tracking.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <script src="/assets/js/nav.js" defer></script>
+  <script defer src="/assets/js/matrix-rain.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__brand" href="/index.html">
+        <span class="sigil">&gt;_</span> claude code <b>internals</b>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu">[ menu ]</button>
+      <ul class="nav__list" id="nav-menu">
+        <li><a class="nav__link" href="/index.html">HOME</a></li>
+        <li><a class="nav__link" href="/forum.html">FORUM</a></li>
+        <li><a class="nav__link" href="/games.html">GAMES</a></li>
+        <li><a class="nav__link" href="/illuminate.html">HUNT</a></li>
+        <li><a class="nav__link" href="/skills.html">SKILLS</a></li>
+        <li><a class="nav__link" href="/index.html#subscribe">SUBSCRIBE</a></li>
+        <li><a class="nav__link" href="/about.html">ABOUT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="section container">
+      <span class="eyebrow">community</span>
+      <h1 class="prompt">Forum<span class="cursor" aria-hidden="true"></span></h1>
+      <p class="lead">
+        Boards for people who read the binary so you don't have to. Post a
+        finding, trade a hooks config, drop a CTF writeup. Everything lives in
+        your browser — no account, no backend, no telemetry.
+      </p>
+
+      <!-- Breadcrumb / status bar -->
+      <nav class="forum-crumbs" id="forum-crumbs" aria-label="Forum breadcrumb"></nav>
+
+      <!-- The whole forum renders here. -->
+      <div id="forum-root" aria-live="polite"></div>
+
+      <p class="text-muted forum-localnote" style="margin-top: var(--sp-6);">
+        <span class="badge badge--amber">local</span>
+        Posts are stored in <code>localStorage</code> on this device only.
+        Clearing site data resets the boards to seed.
+        <a href="#" id="forum-reset">[ reset to seed ]</a>
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="site-footer__brand"><span class="sigil">&gt;_</span> claude code internals</span>
+      <span class="site-footer__tag">The changelog Anthropic doesn't publish.</span>
+      <span class="site-footer__meta">
+        by <a href="/about.html">beardedfreedom</a> · unaffiliated with Anthropic · &copy; 2026
+      </span>
+    </div>
+  </footer>
+
+  <!-- Page script: shell head is byte-frozen, so the forum engine loads here. -->
+  <script src="/assets/js/forum.js" defer></script>
+
+  <!-- Page-scoped layout nudges only (tokens, no raw hex). -->
+  <style>
+    .forum-crumbs {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sp-2);
+      margin-top: var(--sp-6);
+      margin-bottom: var(--sp-5);
+      font-size: var(--fs-400);
+      color: var(--muted);
+      min-height: 1.5rem;
+    }
+    .forum-crumbs a { color: var(--muted); }
+    .forum-crumbs a:hover { color: var(--amber); }
+    .forum-crumbs .crumb-sep { color: var(--line-strong); }
+    .forum-crumbs .crumb-current { color: var(--green); }
+
+    /* board / thread meta rows inside cards */
+    .board-meta,
+    .thread-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-2) var(--sp-4);
+      font-size: var(--fs-300);
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .board-meta .text-amber,
+    .thread-meta .text-amber { letter-spacing: 0; }
+
+    .card--link { cursor: pointer; }
+    .card__title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: var(--sp-3);
+    }
+    .card__title-row .card__title { margin: 0; }
+
+    /* thread row: tighter than the marketing card grid */
+    .thread-row {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+      padding: var(--sp-4) var(--sp-5);
+    }
+    .thread-row .thread-title {
+      font-size: var(--fs-600);
+      color: var(--ink);
+      margin: 0;
+      line-height: var(--lh-tight);
+    }
+    .thread-row:hover .thread-title,
+    .thread-row:focus-within .thread-title { color: var(--green); }
+    .thread-row .thread-excerpt {
+      color: var(--muted);
+      font-size: var(--fs-400);
+      margin: 0;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    /* posts */
+    .post {
+      padding: var(--sp-5);
+    }
+    .post + .post { margin-top: var(--sp-5); }
+    .post__head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sp-2) var(--sp-3);
+      font-size: var(--fs-300);
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-bottom: var(--sp-3);
+      padding-bottom: var(--sp-3);
+      border-bottom: var(--border) solid var(--line-faint);
+    }
+    .post__author { color: var(--green); font-weight: 700; letter-spacing: 0.02em; }
+    .post__op-tag { color: var(--amber); }
+    .post__body {
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: var(--lh-body);
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .forum-stack > * + * { margin-top: var(--sp-5); }
+
+    .forum-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-3);
+      align-items: center;
+      margin-bottom: var(--sp-5);
+    }
+    .forum-toolbar .spacer { flex: 1; }
+
+    .forum-section-label {
+      display: block;
+      font-size: var(--fs-300);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: var(--sp-6) 0 var(--sp-4);
+    }
+    .forum-section-label::before { content: "// "; color: var(--green); }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: var(--fs-500);
+    }
+    .empty-state::before { content: "> "; color: var(--green); }
+
+    .form-error {
+      color: var(--danger);
+      font-size: var(--fs-300);
+      margin-top: var(--sp-2);
+      min-height: 1rem;
+    }
+    .form-error:empty { min-height: 0; }
+
+    .reply-ok {
+      color: var(--green);
+      font-size: var(--fs-300);
+      margin-top: var(--sp-2);
+    }
+
+    /* a noscript / JS-off fallback message */
+    .forum-noscript {
+      color: var(--danger);
+    }
+  </style>
+</body>
+</html>

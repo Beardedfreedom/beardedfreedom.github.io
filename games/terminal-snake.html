@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terminal Snake — Claude Code Internals</title>
+  <meta name="description" content="Terminal Snake — eat the tokens, grow the buffer, don't bite your own stack trace. A CRT-green arcade toy for Claude Code power users.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <script src="/assets/js/nav.js" defer></script>
+  <style>
+    /* page-scoped layout only — colors via tokens, never raw hex */
+    .snake-wrap {
+      display: grid;
+      gap: var(--sp-5);
+      grid-template-columns: minmax(0, 1fr);
+      max-width: 560px;
+      margin-top: var(--sp-6);
+    }
+    .snake-hud {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sp-3) var(--sp-5);
+    }
+    .snake-hud__stat {
+      display: inline-flex;
+      align-items: baseline;
+      gap: var(--sp-2);
+      font-size: var(--fs-400);
+      color: var(--muted);
+    }
+    .snake-hud__stat b {
+      font-size: var(--fs-600);
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+    .snake-hud__stat .text-amber { color: var(--amber); }
+    .snake-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      background: var(--panel-2);
+      border: var(--border) solid var(--line);
+      border-radius: var(--radius);
+      padding: var(--sp-3);
+    }
+    .snake-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      outline: none;
+    }
+    .snake-canvas:focus-visible {
+      box-shadow: 0 0 0 2px var(--amber);
+    }
+    /* overlay for pause / game-over messaging — pointer-events off so it
+       never steals focus from the canvas underneath */
+    .snake-overlay {
+      position: absolute;
+      inset: var(--sp-3);
+      display: grid;
+      place-content: center;
+      gap: var(--sp-3);
+      text-align: center;
+      background: rgba(10, 14, 11, 0.82);
+      border-radius: var(--radius-sm);
+      pointer-events: none;
+    }
+    .snake-overlay[hidden] { display: none; }
+    .snake-overlay__title {
+      margin: 0;
+      font-size: var(--fs-700);
+    }
+    .snake-overlay__sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: var(--fs-400);
+      max-width: 30ch;
+    }
+    .snake-overlay kbd {
+      display: inline-block;
+      padding: 1px var(--sp-2);
+      color: var(--green);
+      border: var(--border) solid var(--line-strong);
+      border-radius: var(--radius-sm);
+      font-size: var(--fs-300);
+    }
+    .snake-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-3);
+    }
+    .snake-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--sp-2) var(--sp-5);
+      font-size: var(--fs-400);
+      color: var(--muted);
+    }
+    .snake-legend span { display: inline-flex; align-items: center; gap: var(--sp-2); }
+    .snake-legend .swatch {
+      width: 0.9em; height: 0.9em; border-radius: var(--radius-sm);
+      display: inline-block;
+    }
+    .swatch--snake { background: var(--green); box-shadow: 0 0 6px var(--green-glow); }
+    .swatch--flag  { background: var(--amber); box-shadow: 0 0 6px var(--amber-fill); }
+  </style>
+  <script defer src="/assets/js/matrix-rain.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__brand" href="/index.html">
+        <span class="sigil">&gt;_</span> claude code <b>internals</b>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu">[ menu ]</button>
+      <ul class="nav__list" id="nav-menu">
+        <li><a class="nav__link" href="/index.html">HOME</a></li>
+        <li><a class="nav__link" href="/forum.html">FORUM</a></li>
+        <li><a class="nav__link" href="/games.html">GAMES</a></li>
+        <li><a class="nav__link" href="/illuminate.html">HUNT</a></li>
+        <li><a class="nav__link" href="/skills.html">SKILLS</a></li>
+        <li><a class="nav__link" href="/index.html#subscribe">SUBSCRIBE</a></li>
+        <li><a class="nav__link" href="/about.html">ABOUT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="section container">
+      <span class="eyebrow">arcade · 02</span>
+      <h1 class="prompt">Terminal Snake<span class="cursor" aria-hidden="true"></span></h1>
+      <p class="lead">
+        Eat the tokens, grow the buffer, don't bite your own stack trace.
+        Every <code class="text-amber">$</code> flag bumps the score and the clock —
+        the longer you live, the faster the phosphor scrolls.
+      </p>
+
+      <div class="snake-wrap">
+        <div class="panel" data-title="snake">
+          <div class="snake-hud" aria-live="polite">
+            <span class="snake-hud__stat">[ score ]&nbsp; <b id="score">0</b></span>
+            <span class="snake-hud__stat">[ best ]&nbsp;&nbsp; <b id="best">0</b></span>
+            <span class="snake-hud__stat">[ speed ]&nbsp; <b id="speed" class="text-amber">1.0x</b></span>
+          </div>
+
+          <div class="snake-stage" style="margin-top: var(--sp-4);">
+            <canvas id="board" class="snake-canvas" width="420" height="420"
+                    tabindex="0" role="img"
+                    aria-label="Snake game board. Use arrow keys or WASD to steer, space to pause."></canvas>
+
+            <div class="snake-overlay" id="overlay" hidden>
+              <h2 class="snake-overlay__title" id="overlay-title">[ paused ]</h2>
+              <p class="snake-overlay__sub" id="overlay-sub">
+                Press <kbd>SPACE</kbd> to resume.
+              </p>
+            </div>
+          </div>
+
+          <div class="snake-controls" style="margin-top: var(--sp-4);">
+            <button class="btn btn--primary" id="btn-start" type="button">&gt; START</button>
+            <button class="btn btn--accent" id="btn-pause" type="button" disabled>&gt; PAUSE</button>
+          </div>
+        </div>
+
+        <div class="snake-legend" aria-hidden="true">
+          <span><span class="swatch swatch--snake"></span> snake = your buffer</span>
+          <span><span class="swatch swatch--flag"></span> $ = token flag</span>
+        </div>
+
+        <p class="text-muted" style="font-size: var(--fs-400);">
+          <span class="badge">controls</span>
+          Steer with <code>↑ ↓ ← →</code> or <code>W A S D</code> ·
+          <code>SPACE</code> pauses · on a game-over, hit <code>SPACE</code> or
+          <code>START</code> to redeploy. Walls are hard — no wraparound, this is
+          a strict context window.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="site-footer__brand"><span class="sigil">&gt;_</span> claude code internals</span>
+      <span class="site-footer__tag">The changelog Anthropic doesn't publish.</span>
+      <span class="site-footer__meta">
+        by <a href="/about.html">beardedfreedom</a> · unaffiliated with Anthropic · &copy; 2026
+      </span>
+    </div>
+  </footer>
+
+  <script>
+  (() => {
+    "use strict";
+
+    // --- pull palette from theme.css so it stays the single source of truth ---
+    const css = getComputedStyle(document.documentElement);
+    const tok = (n) => css.getPropertyValue(n).trim();
+    const C = {
+      bg:       tok("--bg"),
+      panel2:   tok("--panel-2"),
+      green:    tok("--green"),
+      greenDim: tok("--green-dim"),
+      amber:    tok("--amber"),
+      muted:    tok("--muted"),
+      ink:      tok("--ink"),
+      line:     tok("--line"),
+      lineFaint:tok("--line-faint"),
+    };
+
+    const COLS = 21, ROWS = 21;       // odd → snake can spawn dead-center
+    const canvas = document.getElementById("board");
+    const ctx = canvas.getContext("2d");
+    const CELL = canvas.width / COLS; // square board
+
+    const elScore   = document.getElementById("score");
+    const elBest    = document.getElementById("best");
+    const elSpeed   = document.getElementById("speed");
+    const elStart   = document.getElementById("btn-start");
+    const elPause   = document.getElementById("btn-pause");
+    const overlay   = document.getElementById("overlay");
+    const ovTitle   = document.getElementById("overlay-title");
+    const ovSub     = document.getElementById("overlay-sub");
+
+    const BASE_MS = 140, MIN_MS = 60, STEP_MS = 6; // speed ramp per flag
+
+    let snake, dir, nextDir, food, score, best, alive, running, paused, tickMs, timer;
+
+    best = (() => {
+      try { return parseInt(localStorage.getItem("cci-snake-best") || "0", 10) || 0; }
+      catch (e) { return 0; }
+    })();
+    elBest.textContent = best;
+
+    function reset() {
+      const cx = (COLS / 2) | 0, cy = (ROWS / 2) | 0;
+      snake = [{ x: cx, y: cy }, { x: cx - 1, y: cy }, { x: cx - 2, y: cy }];
+      dir = { x: 1, y: 0 };
+      nextDir = { x: 1, y: 0 };
+      score = 0;
+      tickMs = BASE_MS;
+      alive = true;
+      placeFood();
+      updateHud();
+    }
+
+    function placeFood() {
+      let p;
+      do {
+        p = { x: (Math.random() * COLS) | 0, y: (Math.random() * ROWS) | 0 };
+      } while (snake.some((s) => s.x === p.x && s.y === p.y));
+      food = p;
+    }
+
+    function updateHud() {
+      elScore.textContent = score;
+      elBest.textContent = best;
+      elSpeed.textContent = (BASE_MS / tickMs).toFixed(1) + "x";
+    }
+
+    function step() {
+      dir = nextDir;
+      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+      // hard walls — no wraparound
+      if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) return die();
+      // self-collision (ignore the tail cell it's about to vacate)
+      for (let i = 0; i < snake.length - 1; i++) {
+        if (snake[i].x === head.x && snake[i].y === head.y) return die();
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        if (score > best) { best = score; persistBest(); }
+        if (tickMs > MIN_MS) {
+          tickMs = Math.max(MIN_MS, tickMs - STEP_MS);
+          schedule(); // re-arm at the faster cadence
+        }
+        placeFood();
+        updateHud();
+      } else {
+        snake.pop();
+      }
+      draw();
+    }
+
+    function persistBest() {
+      try { localStorage.setItem("cci-snake-best", String(best)); } catch (e) {}
+    }
+
+    function die() {
+      alive = false;
+      running = false;
+      paused = false;
+      clearTimeout(timer);
+      elPause.disabled = true;
+      elStart.textContent = "> REDEPLOY";
+      showOverlay("[ stack overflow ]",
+        "You bit your own buffer at score " + score + ". " +
+        "Press SPACE or REDEPLOY to spin up a fresh process.", true);
+      draw();
+    }
+
+    function schedule() {
+      clearTimeout(timer);
+      if (running && !paused) timer = setTimeout(loop, tickMs);
+    }
+    function loop() {
+      if (!running || paused) return;
+      step();
+      if (alive) schedule();
+    }
+
+    // --- rendering ---
+    function draw() {
+      ctx.fillStyle = C.bg;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // faint TUI grid
+      ctx.strokeStyle = C.lineFaint;
+      ctx.lineWidth = 1;
+      for (let i = 1; i < COLS; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * CELL + 0.5, 0); ctx.lineTo(i * CELL + 0.5, canvas.height); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * CELL + 0.5); ctx.lineTo(canvas.width, i * CELL + 0.5); ctx.stroke();
+      }
+
+      // food — glowing "$" flag
+      drawGlyph(food.x, food.y, "$", C.amber, true);
+
+      // snake — chain of green blocks, head brightest
+      for (let i = snake.length - 1; i >= 0; i--) {
+        const s = snake[i];
+        const head = i === 0;
+        ctx.fillStyle = head ? C.green : C.greenDim;
+        if (head) { ctx.shadowColor = C.green; ctx.shadowBlur = 10; }
+        roundCell(s.x, s.y);
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    function roundCell(cx, cy) {
+      const pad = CELL * 0.10;
+      const x = cx * CELL + pad, y = cy * CELL + pad, s = CELL - pad * 2;
+      ctx.fillRect(x, y, s, s);
+    }
+
+    function drawGlyph(cx, cy, ch, color, glow) {
+      ctx.save();
+      if (glow) { ctx.shadowColor = color; ctx.shadowBlur = 12; }
+      ctx.fillStyle = color;
+      ctx.font = "700 " + (CELL * 0.82 | 0) + "px " + tok("--mono");
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(ch, cx * CELL + CELL / 2, cy * CELL + CELL / 2 + 1);
+      ctx.restore();
+    }
+
+    // --- overlay helpers ---
+    // sub is always plain text built from literals + the numeric score, so
+    // textContent is correct and immune to injection (no untrusted HTML path).
+    function showOverlay(title, sub, danger) {
+      ovTitle.textContent = title;
+      ovTitle.className = "snake-overlay__title" + (danger ? " text-danger" : "");
+      ovSub.textContent = sub;
+      overlay.hidden = false;
+    }
+    function hideOverlay() { overlay.hidden = true; }
+
+    // --- game lifecycle ---
+    function start() {
+      reset();
+      running = true;
+      paused = false;
+      elStart.textContent = "> RESTART";
+      elPause.disabled = false;
+      elPause.textContent = "> PAUSE";
+      hideOverlay();
+      draw();
+      canvas.focus();
+      schedule();
+    }
+
+    function togglePause() {
+      if (!running) return;
+      paused = !paused;
+      if (paused) {
+        clearTimeout(timer);
+        elPause.textContent = "> RESUME";
+        showOverlay("[ paused ]", "Press SPACE to resume.", false);
+      } else {
+        elPause.textContent = "> PAUSE";
+        hideOverlay();
+        canvas.focus();
+        schedule();
+      }
+    }
+
+    function setDir(x, y) {
+      // block 180° reversals
+      if (dir.x === -x && dir.y === -y) return;
+      if (nextDir.x === -x && nextDir.y === -y) return;
+      nextDir = { x, y };
+    }
+
+    // --- input ---
+    const KEYS = {
+      ArrowUp: [0, -1], KeyW: [0, -1],
+      ArrowDown: [0, 1], KeyS: [0, 1],
+      ArrowLeft: [-1, 0], KeyA: [-1, 0],
+      ArrowRight: [1, 0], KeyD: [1, 0],
+    };
+
+    window.addEventListener("keydown", (e) => {
+      // never trap Tab — let users reach the nav
+      if (e.key === "Tab") return;
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        if (!running && !alive) { start(); }   // redeploy from game-over
+        else { togglePause(); }
+        return;
+      }
+      if (KEYS[e.code]) {
+        e.preventDefault();
+        if (!running) return;
+        setDir(KEYS[e.code][0], KEYS[e.code][1]);
+      }
+    });
+
+    elStart.addEventListener("click", start);
+    elPause.addEventListener("click", togglePause);
+
+    // first paint — idle board with a "press start" prompt
+    reset();
+    running = false;
+    draw();
+    showOverlay("[ ready ]",
+      "Press START or SPACE to deploy the snake.", false);
+  })();
+  </script>
+</body>
+</html>
