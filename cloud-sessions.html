@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cloud Sessions — Claude Code Internals</title>
+  <meta name="description" content="Field guide to Claude Code cloud sessions — --cloud, --teleport, repo bundles, auto-fix PRs, the isolation model, and an error decoder, distilled from the official docs.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/theme.css">
+  <script src="/assets/js/nav.js" defer></script>
+  <style>
+    /* Page-scoped: long-form reference layout — jump table, tables, command
+       blocks, callouts, error decoder. Tokens only, no raw hex. Wide things
+       (tables, <pre>) scroll inside their own box, never the page. */
+    /* Inline command chips stay on one line so "--remote-control" never
+       splits at a hyphen; the few long ones opt back into wrapping. */
+    .cs code {
+      color: var(--ink);
+      background: var(--panel-2);
+      border: var(--border) solid var(--line-faint);
+      border-radius: var(--radius-sm);
+      padding: 0 0.3em;
+      white-space: nowrap;
+      overflow-wrap: anywhere;
+    }
+    .cs code.wrap { white-space: normal; }
+    .cs-prose { max-width: 68ch; }
+    .cs-subhead { font-size: var(--fs-600); margin-top: var(--sp-6); }
+
+    .cs-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--sp-2) var(--sp-3);
+      margin-top: var(--sp-5);
+      font-size: var(--fs-300);
+      letter-spacing: 0.06em;
+      color: var(--muted);
+    }
+
+    /* jump table */
+    .cs-toc { margin-top: var(--sp-6); }
+    .cs-toc ol {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      columns: 2 15rem;
+      column-gap: var(--sp-6);
+      font-size: var(--fs-400);
+    }
+    .cs-toc li { break-inside: avoid; padding: 2px 0; }
+    .cs-toc .n { color: var(--muted); margin-right: var(--sp-2); }
+
+    /* ">" bullets, "[ ]" checklist, "[n]" ladder */
+    .cs-list, .cs-check, .cs-ladder {
+      list-style: none;
+      margin: var(--sp-4) 0 0;
+      padding: 0;
+      max-width: 72ch;
+    }
+    .cs-list li, .cs-check li, .cs-ladder li {
+      position: relative;
+      margin-bottom: var(--sp-3);
+      color: var(--muted);
+    }
+    .cs-list li::before, .cs-check li::before, .cs-ladder li::before {
+      position: absolute;
+      left: 0;
+      font-weight: 700;
+    }
+    .cs-list li { padding-left: var(--sp-5); }
+    .cs-list li::before { content: ">"; color: var(--green); }
+    .cs-check li { padding-left: 2.6em; }
+    .cs-check li::before { content: "[ ]"; color: var(--green); }
+    .cs-ladder { counter-reset: step; }
+    .cs-ladder li { counter-increment: step; padding-left: 2.6em; }
+    .cs-ladder li::before { content: "[" counter(step) "]"; color: var(--amber); }
+    .cs-list strong, .cs-check strong, .cs-ladder strong { color: var(--ink); }
+
+    /* reference tables (stack into labelled blocks on phones, below) */
+    .cs-table-wrap {
+      overflow-x: auto;
+      margin-top: var(--sp-5);
+      padding: var(--sp-4) var(--sp-4) var(--sp-2);
+      background: var(--panel);
+      border: var(--border) solid var(--line);
+      border-radius: var(--radius);
+    }
+    .cs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: var(--fs-400);
+    }
+    .cs-table th, .cs-table td {
+      text-align: left;
+      vertical-align: top;
+      padding: var(--sp-3);
+      border-top: var(--border) solid var(--line);
+    }
+    .cs-table thead th {
+      border-top: 0;
+      padding-top: 0;
+      font-size: var(--fs-300);
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      color: var(--green);
+      white-space: nowrap;
+    }
+    .cs-table tbody th { width: 26%; color: var(--ink); font-weight: 700; }
+    .cs-table td { color: var(--muted); }
+    .cs-table .yes { color: var(--green); }
+    .cs-table .no { color: var(--danger); }
+    @media (max-width: 640px) {
+      .cs-table, .cs-table tbody, .cs-table tr, .cs-table th, .cs-table td {
+        display: block;
+        width: auto;
+      }
+      .cs-table thead {
+        position: absolute; width: 1px; height: 1px;
+        overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+      }
+      .cs-table tr { border-top: var(--border) solid var(--line); padding: var(--sp-3) 0; }
+      .cs-table tr:first-child { border-top: 0; padding-top: 0; }
+      .cs-table th, .cs-table td { border-top: 0; padding: var(--sp-1) 0; }
+      .cs-table tbody th { width: auto; }
+      .cs-table td[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: var(--fs-300);
+        letter-spacing: 0.12em;
+        color: var(--green);
+      }
+    }
+
+    /* command blocks + the ASCII handoff map */
+    .cs-cmd {
+      margin: var(--sp-5) 0 0;
+      padding: var(--sp-4);
+      background: var(--panel-2);
+      border: var(--border) solid var(--line);
+      border-radius: var(--radius);
+      font-size: var(--fs-400);
+      line-height: 1.7;
+      color: var(--ink);
+      overflow-x: auto;
+    }
+    .cs-cmd .c { color: var(--muted); }
+    .cs-cmd .p { color: var(--green); user-select: none; }
+    .cs-map { color: var(--green); line-height: 1.25; }
+    .cs-map .k { color: var(--ink); }
+    .cs-map .d { color: var(--muted); }
+    .cs-map--tall { display: none; }
+    @media (max-width: 640px) {
+      .cs-map--wide { display: none; }
+      .cs-map--tall { display: block; font-size: var(--fs-300); }
+    }
+
+    /* callouts */
+    .cs-callout {
+      margin: var(--sp-5) 0 0;
+      padding: var(--sp-4) var(--sp-5);
+      max-width: 72ch;
+      border-left: 2px solid var(--amber);
+      background: var(--amber-fill);
+      color: var(--ink);
+    }
+    .cs-callout__tag {
+      display: block;
+      margin-bottom: var(--sp-2);
+      font-size: var(--fs-300);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--amber);
+    }
+    .cs-callout--danger { border-left-color: var(--danger); background: var(--panel-2); }
+    .cs-callout--danger .cs-callout__tag { color: var(--danger); }
+
+    /* two-up panels */
+    .cs-split {
+      display: grid;
+      gap: var(--sp-6) var(--sp-5);
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      margin-top: var(--sp-6);
+    }
+    .cs-split h3 { font-size: var(--fs-600); margin-bottom: var(--sp-3); }
+    .cs-split p { color: var(--muted); font-size: var(--fs-400); }
+    .cs-split strong { color: var(--ink); }
+    .cs-split .cs-list { margin-top: 0; font-size: var(--fs-400); }
+    .cs-split .cs-list + p { margin-top: var(--sp-4); }
+
+    /* error decoder */
+    .cs-errs { display: grid; gap: var(--sp-3); margin-top: var(--sp-5); }
+    .cs-err {
+      background: var(--panel);
+      border: var(--border) solid var(--line);
+      border-radius: var(--radius);
+      padding: var(--sp-4);
+    }
+    .cs .cs-err__msg {
+      display: block;
+      margin-bottom: var(--sp-3);
+      padding: 0;
+      border: 0;
+      background: none;
+      color: var(--danger);
+      white-space: normal;
+    }
+    .cs .cs-err__msg--state { color: var(--amber); }
+    .cs-err__rows { margin: 0; }
+    .cs-err__row {
+      display: grid;
+      grid-template-columns: 4.5rem 1fr;
+      gap: var(--sp-2);
+      font-size: var(--fs-400);
+    }
+    .cs-err__row + .cs-err__row { margin-top: var(--sp-2); }
+    .cs-err__row dt { color: var(--green); letter-spacing: 0.08em; }
+    .cs-err__row dd { margin: 0; color: var(--muted); }
+    @media (max-width: 480px) {
+      .cs-err__row { grid-template-columns: 1fr; gap: 0; }
+    }
+  </style>
+  <script defer src="/assets/js/matrix-rain.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <nav class="nav" aria-label="Primary">
+      <a class="nav__brand" href="/index.html">
+        <span class="sigil">&gt;_</span> claude code <b>internals</b>
+      </a>
+      <button class="nav__toggle" aria-expanded="false" aria-controls="nav-menu">[ menu ]</button>
+      <ul class="nav__list" id="nav-menu">
+        <li><a class="nav__link" href="/index.html">HOME</a></li>
+        <li><a class="nav__link" href="/forum.html">FORUM</a></li>
+        <li><a class="nav__link" href="/games.html">GAMES</a></li>
+        <li><a class="nav__link" href="/illuminate.html">HUNT</a></li>
+        <li><a class="nav__link" href="/skills.html">SKILLS</a></li>
+        <li><a class="nav__link" href="/index.html#subscribe">SUBSCRIBE</a></li>
+        <li><a class="nav__link" href="/about.html">ABOUT</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="cs">
+
+    <!-- ========================= HERO ========================= -->
+    <section class="section container">
+      <span class="eyebrow">field guide // cloud</span>
+      <h1 class="prompt">Cloud Sessions<span class="cursor" aria-hidden="true"></span></h1>
+      <p class="lead cs-prose">
+        Claude Code on a VM that isn't your laptop. Close the lid and the
+        session keeps working; steer it from a browser, your phone, the
+        desktop app, or <code>claude</code> itself. Anthropic <em>did</em>
+        publish this one — it's just long. Here it is compressed, with the
+        sharp edges flagged.
+      </p>
+      <p class="cs-meta">
+        <span class="badge">source</span>
+        <span>distilled from <a href="https://code.claude.com/docs/en/claude-code-on-the-web">Use Claude Code in the cloud</a> (official docs) · 2026-09-24</span>
+        <span class="badge badge--amber">docs win</span>
+        <span>if this page and the docs ever disagree</span>
+      </p>
+
+      <nav class="panel cs-toc" data-title="jump" aria-label="On this page">
+        <ol>
+          <li><a href="#tldr"><span class="n">01</span>tl;dr</a></li>
+          <li><a href="#handoff"><span class="n">02</span>handoff map</a></li>
+          <li><a href="#commands"><span class="n">03</span>paste-ready commands</a></li>
+          <li><a href="#bundles"><span class="n">04</span>what the VM sees</a></li>
+          <li><a href="#github"><span class="n">05</span>github: two doors</a></li>
+          <li><a href="#teleport"><span class="n">06</span>teleport preflight</a></li>
+          <li><a href="#slash"><span class="n">07</span>slash commands up there</a></li>
+          <li><a href="#versions"><span class="n">08</span>version gates</a></li>
+          <li><a href="#autofix"><span class="n">09</span>auto-fix PRs</a></li>
+          <li><a href="#isolation"><span class="n">10</span>isolation &amp; sharing</a></li>
+          <li><a href="#errors"><span class="n">11</span>error decoder</a></li>
+          <li><a href="#limits"><span class="n">12</span>hard limits</a></li>
+        </ol>
+      </nav>
+    </section>
+
+    <!-- ======================= 01 TL;DR ======================= -->
+    <section class="section--tight container" id="tldr">
+      <span class="eyebrow">01 · tl;dr</span>
+      <h2 class="prompt">The 60-second version</h2>
+      <ul class="cs-list">
+        <li><strong>Same agent, different iron.</strong> A cloud session is a
+          Claude Code session running on cloud infrastructure — an
+          Anthropic-managed VM by default, or your org's self-hosted
+          environment when it's routed there.</li>
+        <li><strong>Five ways in.</strong>
+          <a href="https://claude.ai/code">claude.ai/code</a> (a.k.a. Claude
+          Code on the web), the <strong>Code</strong> tab in the Claude mobile
+          app, the desktop app with <strong>Cloud</strong> picked instead of
+          <strong>Local</strong>, <code>claude --cloud</code> in a terminal,
+          and routines — every scheduled or triggered run is its own cloud
+          session.</li>
+        <li><strong>Every session runs in an environment</strong> — a saved
+          config for network access, env vars, and a setup script. Onboarding
+          leaves you a <strong>Default</strong> one with
+          <strong>Trusted</strong> network access, and the same environments
+          apply whichever surface launched the session.</li>
+        <li><strong>GitHub is the wire.</strong> The VM clones your remote. It
+          never sees your disk unless you're in bundle mode
+          (<a href="#bundles">§04</a>).</li>
+        <li><strong>No meter on the VM.</strong> There's no separate compute
+          charge — but sessions draw from the same rate limits as the rest of
+          your Claude and Claude Code usage, and parallel sessions draw
+          proportionally faster.</li>
+        <li><strong>Who gets it.</strong> Pro, Max, and Team plans, plus
+          Enterprise users on premium or Chat + Claude Code seats. Not orgs
+          with Zero Data Retention, and not through Bedrock, Google Cloud's
+          Agent Platform, or any other third-party provider.</li>
+        <li><strong>Herding a dozen?</strong> A <em>project</em> is one
+          conversation where Claude starts and tracks many cloud sessions for
+          a single body of work.</li>
+      </ul>
+    </section>
+
+    <!-- ===================== 02 HANDOFF MAP ===================== -->
+    <section class="section--tight container" id="handoff">
+      <span class="eyebrow">02 · handoff map</span>
+      <h2 class="prompt">What moves, and which way</h2>
+      <p class="lead cs-prose">
+        The CLI starts new cloud sessions, messages running ones, and drags
+        one down to your terminal. What it can't do is push a session that's
+        already running locally up to the cloud.
+      </p>
+
+      <pre class="cs-cmd cs-map cs-map--wide" aria-hidden="true"><span class="d">  YOUR MACHINE                                        CLOUD</span>
+ ┌────────────┐                                  ┌─────────────┐
+ │  terminal  │─── <span class="k">claude --cloud "task"</span> ───────&gt;│    cloud    │
+ │            │    <span class="d">(new session)</span>                 │   session   │
+ │  your repo │─── <span class="k">claude -p "…" --cloud ID</span> ────&gt;│             │
+ │  checkout  │    <span class="d">(queues one message)</span>          │   (a VM)    │
+ │            │&lt;──────── <span class="k">claude --teleport ID</span> ───│             │
+ │            │    <span class="d">(branch + transcript)</span>         │             │
+ └────────────┘                                  └─────────────┘
+
+<span class="d">  The CLI only pulls. To push an EXISTING local session</span>
+<span class="d">  up, use the desktop app's "Continue in" menu.</span></pre>
+      <pre class="cs-cmd cs-map cs-map--tall" aria-hidden="true">  ┌───────────────────────┐
+  │  <span class="k">terminal · your repo</span> │
+  └───┬───────┬───────▲───┘
+      │ <span class="d">new</span>   │ <span class="d">msg</span>   │ <span class="d">teleport</span>
+      │       │       │
+  ┌───▼───────▼───────┴───┐
+  │  <span class="k">cloud session (a VM)</span> │
+  └───────────────────────┘
+
+  <span class="d">new       </span><span class="k">claude --cloud "task"</span>
+  <span class="d">msg       </span><span class="k">claude -p "…" --cloud ID</span>
+  <span class="d">teleport  </span><span class="k">claude --teleport ID</span>
+
+<span class="d">  The CLI only pulls. To push an</span>
+<span class="d">  EXISTING local session up, use</span>
+<span class="d">  the desktop app's "Continue in".</span></pre>
+
+      <div class="cs-table-wrap">
+        <table class="cs-table">
+          <caption class="sr-only">Handoff moves</caption>
+          <thead>
+            <tr><th scope="col">move</th><th scope="col">how</th><th scope="col">what actually happens</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">terminal → cloud, new</th>
+              <td data-label="how"><code>claude --cloud "task"</code></td>
+              <td data-label="what actually happens">A fresh session for the current repo. The VM clones your
+                <strong>GitHub remote at your current branch</strong> —
+                unpushed commits don't exist up there. Setup streams as a live
+                checklist; anything you type while it provisions gets
+                queued.</td>
+            </tr>
+            <tr>
+              <th scope="row">terminal → cloud, running</th>
+              <td data-label="how"><code>claude -p "msg" --cloud &lt;id&gt;</code></td>
+              <td data-label="what actually happens">Queues one message and exits — no reply, no local session
+                state sent. Works from any machine signed in with
+                <code>claude auth login</code>, in any shell (PowerShell
+                too).</td>
+            </tr>
+            <tr>
+              <th scope="row">cloud → terminal</th>
+              <td data-label="how"><code>claude --teleport [&lt;id&gt;]</code></td>
+              <td data-label="what actually happens">Checks the repo, fetches and checks out the session's branch,
+                loads the full transcript. From then on it's a fork: local
+                work stays local (<a href="#teleport">§06</a>).</td>
+            </tr>
+            <tr>
+              <th scope="row">local → cloud, running</th>
+              <td data-label="how">desktop app → <strong>Continue in</strong></td>
+              <td data-label="what actually happens">The one sanctioned way to send an <em>existing</em> local
+                session up. Not a CLI feature.</td>
+            </tr>
+            <tr>
+              <th scope="row">phone / web → local</th>
+              <td data-label="how"><code>/remote-control</code></td>
+              <td data-label="what actually happens">Not a cloud session at all — you steer a session that's still
+                running on your machine. Handy right after a teleport.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cs-callout">
+        <span class="cs-callout__tag">name collision</span>
+        <code>--remote</code> is the deprecated spelling of
+        <code>--cloud</code> and still works. <code>--remote-control</code> is
+        an unrelated feature that keeps everything on your machine. Don't let
+        tab-completion pick for you.
+      </div>
+    </section>
+
+    <!-- =================== 03 COMMAND SHEET =================== -->
+    <section class="section--tight container" id="commands">
+      <span class="eyebrow">03 · command sheet</span>
+      <h2 class="prompt">Paste-ready commands</h2>
+
+      <pre class="cs-cmd" tabindex="0"><span class="c"># ship a task (push first — it clones the remote, not your disk)</span>
+<span class="p">$ </span>claude --cloud "Fix the race in src/queue/worker.ts"
+
+<span class="c"># plan locally, execute remotely</span>
+<span class="p">$ </span>claude --permission-mode plan
+<span class="c">#   …save the plan to docs/plan.md, commit, push…</span>
+<span class="p">$ </span>claude --cloud "Execute the plan in docs/plan.md"
+
+<span class="c"># fan out: every --cloud call is its own independent session</span>
+<span class="p">$ </span>claude --cloud "Deflake tests/auth.spec.ts"
+<span class="p">$ </span>claude --cloud "Regenerate the API reference"
+
+<span class="c"># steer a running session from anywhere (queues one message, exits)</span>
+<span class="p">$ </span>claude -p "also update CHANGELOG.md" --cloud session_01AbCd…
+<span class="p">$ </span>echo "run the linters again" | claude -p --cloud claude.ai/code/session_01AbCd…
+
+<span class="c"># same send, machine-readable</span>
+<span class="p">$ </span>claude -p "status?" --cloud &lt;session-id&gt; --output-format json
+
+<span class="c"># no remote, no GitHub App on the repo, or you just want to: upload a bundle</span>
+<span class="p">$ </span>CCR_FORCE_BUNDLE=1 claude --cloud "Run the suite and fix failures"
+
+<span class="c"># pull a cloud session down into this checkout</span>
+<span class="p">$ </span>claude --teleport                <span class="c"># picker</span>
+<span class="p">$ </span>claude --teleport &lt;session-id&gt;   <span class="c"># straight to it</span></pre>
+
+      <pre class="cs-cmd" tabindex="0"><span class="c"># inside a local Claude Code session</span>
+/teleport     <span class="c"># or /tp: same picker, no restart</span>
+/tasks        <span class="c"># then press t on a background session to teleport into it</span>
+/autofix-pr   <span class="c"># on a PR's branch: spawn a cloud session with auto-fix armed</span></pre>
+
+      <ul class="cs-list">
+        <li><strong>Session IDs</strong> can be the bare
+          <code>session_…</code> or <code>cse_…</code> form, or the session's
+          <code>claude.ai/code/&lt;id&gt;</code> URL — scheme and query string
+          optional.</li>
+        <li><strong>A good send</strong> prints
+          <code>Sent to cloud session.</code>, the session ID, and a
+          <code>View:</code> link. With <code>--output-format json</code> you
+          get <code>{ok, session_id, url}</code> instead.</li>
+        <li><strong>One repo per call.</strong> <code>--cloud</code> works on
+          a single repository at a time.</li>
+        <li><strong>Done up there?</strong> Open a PR from claude.ai/code, or
+          teleport the session down and keep going locally.</li>
+      </ul>
+    </section>
+
+    <!-- ================= 04 WHAT THE VM SEES ================= -->
+    <section class="section--tight container" id="bundles">
+      <span class="eyebrow">04 · what the vm sees</span>
+      <h2 class="prompt">It clones. Sometimes it bundles.</h2>
+
+      <div class="cs-split">
+        <div class="panel" data-title="default">
+          <h3>Clone from GitHub</h3>
+          <ul class="cs-list">
+            <li>The VM clones your repo's GitHub remote at the branch you're
+              on.</li>
+            <li>Unpushed commits and uncommitted edits? Invisible. Push
+              first.</li>
+            <li>Work goes back up as a pushed branch; open a PR from
+              claude.ai/code when it's done.</li>
+          </ul>
+        </div>
+        <div class="panel" data-title="fallback">
+          <h3>Upload a bundle</h3>
+          <ul class="cs-list">
+            <li><strong>Kicks in</strong> when the repo has no git remote, or
+              it's a github.com repo the Claude GitHub App isn't installed on —
+              even if you connected through <code>/web-setup</code>. Force it
+              with <code>CCR_FORCE_BUNDLE=1</code>.</li>
+            <li><strong>Ships</strong> full history across every branch, plus
+              uncommitted changes to <em>tracked</em> files. Untracked files
+              stay home — <code>git add</code> what the session needs.</li>
+            <li><strong>Needs</strong> a git repo with at least one
+              commit.</li>
+            <li><strong>Pushes back</strong> to GitHub only if your GitHub
+              connection has push access there. GitLab, Bitbucket and friends
+              can bundle in, but can't push back.</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="cs-subhead">The 100 MB ladder</h3>
+      <ol class="cs-ladder">
+        <li><strong>Whole repo</strong> — full history, every branch — if the
+          bundle comes in under 100 MB.</li>
+        <li>Too big? <strong>Current branch only.</strong></li>
+        <li>Still too big? <strong>One squashed snapshot</strong> of the
+          working tree.</li>
+        <li>Still too big? The send <strong>fails</strong>.</li>
+      </ol>
+
+      <div class="cs-callout cs-callout--danger">
+        <span class="cs-callout__tag">secrets &amp; bundles</span>
+        <p>On macOS, Linux, and WSL, uncommitted changes to files that look
+        like credentials — <code>.env</code> files, Terraform
+        <code>*.tfvars</code>, keys like <code>id_rsa</code> and
+        <code>*.pem</code> — are held back from the upload, and the CLI names
+        what it skipped. The session gets the committed version, or no file
+        at all.</p>
+        <p>What that filter doesn't cover: linked worktrees, submodules, and
+        similar layouts (there those changes upload with everything else, and
+        the CLI names them instead); platforms beyond the three the docs list;
+        and anything already <em>committed</em>. A secret that ever landed in
+        a commit is in history — and by default, history ships.</p>
+      </div>
+    </section>
+
+    <!-- ================= 05 GITHUB: TWO DOORS ================= -->
+    <section class="section--tight container" id="github">
+      <span class="eyebrow">05 · github access</span>
+      <h2 class="prompt">GitHub: two doors in</h2>
+
+      <div class="cs-table-wrap">
+        <table class="cs-table">
+          <caption class="sr-only">GitHub connection methods</caption>
+          <thead>
+            <tr><th scope="col"><span class="sr-only">compare</span></th><th scope="col">claude github app</th><th scope="col">/web-setup</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">connect by</th>
+              <td data-label="claude github app">authorizing the App during web onboarding</td>
+              <td data-label="/web-setup">running <code>/web-setup</code> in your terminal — it sends
+                your local <code>gh</code> CLI token to your Claude
+                account</td>
+            </tr>
+            <tr>
+              <th scope="row">reaches</th>
+              <td data-label="claude github app">every public repo, plus private repos the App is installed
+                on</td>
+              <td data-label="/web-setup">anything your <code>gh</code> token can reach, App or no
+                App</td>
+            </tr>
+            <tr>
+              <th scope="row">auto-fix</th>
+              <td colspan="2" data-label="both">only on repos with the App installed, whichever
+                door you came through — installing it is what makes auto-fix
+                available</td>
+            </tr>
+            <tr>
+              <th scope="row">project threads</th>
+              <td colspan="2" data-label="both">need the App on every repo they clone, whichever
+                door you came through</td>
+            </tr>
+            <tr>
+              <th scope="row">best for</th>
+              <td data-label="claude github app">browser-first onboarding; teams that want auto-fix</td>
+              <td data-label="/web-setup">solo devs who already live in <code>gh</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="cs-list">
+        <li><strong>Team / Enterprise:</strong> <code>/web-setup</code> stays
+          hidden until an Owner flips <strong>Quick web setup</strong> (Admin
+          settings → Claude Code). The same toggle skips the App-install
+          prompt in browser onboarding and has onboarding create the Default
+          environment for members.</li>
+        <li><strong>Zero Data Retention orgs</strong> get neither door: no
+          <code>/web-setup</code>, no cloud session features at all.</li>
+      </ul>
+    </section>
+
+    <!-- ================= 06 TELEPORT PREFLIGHT ================= -->
+    <section class="section--tight container" id="teleport">
+      <span class="eyebrow">06 · teleport</span>
+      <h2 class="prompt">Teleport preflight</h2>
+      <p class="lead cs-prose">Four checks run before a cloud session lands in
+        your terminal. Clear them up front and it's one command.</p>
+
+      <ul class="cs-check">
+        <li><strong>Clean tree.</strong> No uncommitted changes — teleport
+          offers to stash them for you.</li>
+        <li><strong>Same repo, not a fork.</strong> Run it from a checkout of
+          the session's repository. Get it wrong and the error names the
+          session's repo — and, since v2.1.219, yours too. A remote it can't
+          parse into a hostname (an SSH alias like
+          <code>git@work:owner/repo.git</code>) gets a confirm prompt, and
+          passes when owner and repo name match.</li>
+        <li><strong>Branch pushed.</strong> The session's branch has to be on
+          the remote; teleport fetches and checks it out itself.</li>
+        <li><strong>Same account, subscription auth.</strong> Signed in to the
+          claude.ai account that owns the session. API-key auth doesn't cut
+          it — run <code>/login</code>.</li>
+      </ul>
+
+      <h3 class="cs-subhead">Five ways to jump</h3>
+      <ul class="cs-list">
+        <li><code>claude --teleport</code> for a picker, or
+          <code>claude --teleport &lt;id&gt;</code> to go straight there.</li>
+        <li><code>/teleport</code> (or <code>/tp</code>) inside a running CLI
+          session — same picker, no restart.</li>
+        <li><code>/tasks</code>, then <code>t</code> on a background
+          session.</li>
+        <li>On claude.ai/code: session menu → <strong>Open in →
+          Terminal</strong> copies the command.</li>
+        <li>Inside the cloud session itself, <code>/teleport</code> replies
+          with the exact <code>claude --teleport &lt;id&gt;</code> line to run
+          from a checkout (v2.1.223+ in the session's environment).</li>
+      </ul>
+
+      <div class="cs-callout">
+        <span class="cs-callout__tag">fork, not sync</span>
+        <p>Teleport gives your terminal its <em>own copy</em> of the session.
+        Nothing you do locally shows up in the cloud session on the web or
+        your phone. Want pocket control back? Run <code>/remote-control</code>
+        in the local session. And don't reach for <code>--resume</code>: it
+        only reads this machine's local history and never lists cloud
+        sessions.</p>
+      </div>
+    </section>
+
+    <!-- =============== 07 SLASH COMMANDS UP THERE =============== -->
+    <section class="section--tight container" id="slash">
+      <span class="eyebrow">07 · in-session</span>
+      <h2 class="prompt">Slash commands, up there</h2>
+      <p class="lead cs-prose">Commands that print text work. Commands that
+        need the terminal UI don't, and pickers turn into arguments.</p>
+
+      <div class="cs-table-wrap">
+        <table class="cs-table">
+          <caption class="sr-only">Slash commands in cloud sessions</caption>
+          <thead>
+            <tr><th scope="col">command</th><th scope="col">in the cloud</th><th scope="col">notes</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><code>/compact [focus]</code></th>
+              <td class="yes" data-label="in the cloud">yes</td>
+              <td data-label="notes">focus text is optional: <code>/compact keep the test output</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><code>/context</code></th>
+              <td class="yes" data-label="in the cloud">yes</td>
+              <td data-label="notes">shows what's in the context window</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>/clear</code></th>
+              <td class="no" data-label="in the cloud">no</td>
+              <td data-label="notes">start a new session from the sidebar instead</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>/model</code> <code>/effort</code> <code>/color</code> <code>/rename</code></th>
+              <td data-label="in the cloud">argument form</td>
+              <td data-label="notes"><code>/model sonnet</code> — no picker, no slider. Needs
+                v2.1.205+ in the session's environment</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>/fast</code></th>
+              <td data-label="in the cloud">toggle</td>
+              <td data-label="notes">when fast mode is available on your account. Needs
+                v2.1.271+</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>/config</code></th>
+              <td data-label="in the cloud">opens settings</td>
+              <td data-label="notes">in the browser it opens the Claude Code settings page;
+                anything after the command, <code>key=value</code> included, is
+                ignored</td>
+            </tr>
+            <tr>
+              <th scope="row"><code>/plugin</code> <code>/resume</code></th>
+              <td class="no" data-label="in the cloud">no</td>
+              <td data-label="notes">terminal-UI only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <ul class="cs-list">
+        <li><strong>Settings live elsewhere.</strong> Set environment
+          variables on the cloud environment, or — in a single-repo session —
+          commit the key to that repo's <code>.claude/settings.json</code>.</li>
+        <li><strong>Compaction fires early, on purpose.</strong> Cloud
+          sessions set <code class="wrap">CLAUDE_AUTOCOMPACT_PCT_OVERRIDE</code>
+          themselves, so compaction triggers partway through the auto-compact
+          window instead of at the brim, and their value beats any you put in
+          the environment. To move the goalposts, change the window instead:
+          <code class="wrap">CLAUDE_CODE_AUTO_COMPACT_WINDOW</code>, or
+          <code>/autocompact &lt;tokens&gt;</code> when that variable isn't
+          set.</li>
+        <li><strong>Subagents</strong> work exactly as they do locally, and
+          the repo's <code>.claude/agents/</code> is picked up automatically.
+          <strong>Agent teams</strong> are off by default — add
+          <code class="wrap">CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1</code> to the
+          environment's variables.</li>
+        <li><strong>Permission mode</strong> comes from the mode dropdown, at
+          launch or mid-run. Reopen a session whose environment expired and it
+          resumes in the mode it was in.</li>
+        <li><strong>Review in place.</strong> The <code>+42 -18</code> badge
+          opens a diff against the base branch (or any other branch, via
+          <strong>Compare against</strong>). Inline comments on lines ride
+          along with your next message.</li>
+        <li><strong>Unsend.</strong> A message sent mid-run queues; click its
+          ✕ and the text drops back into the box — unless Claude already read
+          it.</li>
+        <li><strong>Walk away mid-question.</strong> If Claude asks something
+          and you vanish, answer whenever — up to environment expiry — and it
+          picks up from your answer.</li>
+      </ul>
+    </section>
+
+    <!-- =================== 08 VERSION GATES =================== -->
+    <section class="section--tight container" id="versions">
+      <span class="eyebrow">08 · version gates</span>
+      <h2 class="prompt">Version gates</h2>
+      <p class="lead cs-prose">Minimum Claude Code builds the docs call out.
+        Most of them care about the version <em>inside the cloud
+        environment</em>, not the one on your laptop.</p>
+
+      <div class="cs-table-wrap">
+        <table class="cs-table">
+          <caption class="sr-only">Version gates</caption>
+          <thead>
+            <tr><th scope="col">min build</th><th scope="col">runs where</th><th scope="col">unlocks</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row"><span class="badge">v2.1.205</span></th>
+              <td data-label="runs where">cloud environment</td>
+              <td data-label="unlocks">argument forms of <code>/model</code>, <code>/effort</code>,
+                <code>/color</code>, <code>/rename</code></td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="badge">v2.1.219</span></th>
+              <td data-label="runs where">the CLI you teleport from</td>
+              <td data-label="unlocks">wrong-repo teleport errors name your checkout's repo, not
+                just the session's</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="badge">v2.1.223</span></th>
+              <td data-label="runs where">cloud environment</td>
+              <td data-label="unlocks"><code>/teleport</code> inside a cloud session prints the
+                resume command</td>
+            </tr>
+            <tr>
+              <th scope="row"><span class="badge">v2.1.271</span></th>
+              <td data-label="runs where">cloud environment</td>
+              <td data-label="unlocks"><code>/fast</code> toggles fast mode for the session</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== 09 AUTO-FIX ===================== -->
+    <section class="section--tight container" id="autofix">
+      <span class="eyebrow">09 · auto-fix</span>
+      <h2 class="prompt">Auto-fix: the PR babysitter</h2>
+      <p class="lead cs-prose">Claude subscribes to a pull request's GitHub
+        activity. When a check goes red or a reviewer comments, it
+        investigates and pushes a fix if one is clear. Requires the Claude
+        GitHub App on the repo.</p>
+
+      <div class="cs-split">
+        <div class="panel" data-title="arm it">
+          <ul class="cs-list">
+            <li><strong>PR born in a cloud session:</strong> open it at
+              claude.ai/code → CI status bar → <strong>Auto-fix</strong>.</li>
+            <li><strong>Terminal:</strong> <code>/autofix-pr</code> on the
+              PR's branch. It finds the PR with <code>gh</code>, spawns a
+              cloud session, and arms auto-fix in one step.</li>
+            <li><strong>Phone:</strong> just ask — "watch this PR and fix any
+              CI failures or review comments."</li>
+            <li><strong>Any PR:</strong> paste its URL into a session and
+              ask.</li>
+          </ul>
+          <p>It's a per-PR toggle. Disarm it from the same CI status bar, or
+            tell Claude to stop watching.</p>
+        </div>
+        <div class="panel" data-title="triage">
+          <ul class="cs-list">
+            <li><strong>Clear fix</strong> that doesn't clash with earlier
+              instructions → change, push, explain in the session.</li>
+            <li><strong>Ambiguous or architectural</strong> → asks you
+              first.</li>
+            <li><strong>Duplicate or no-op</strong> → notes it, moves on.</li>
+            <li><strong>Merge conflicts</strong> → invisible. GitHub sends no
+              webhook when the base branch moves and creates a conflict, so
+              open the session and ask for a rebase.</li>
+          </ul>
+          <p>Thread replies post under <em>your</em> GitHub account, labeled
+            as Claude Code.</p>
+        </div>
+      </div>
+
+      <div class="cs-callout cs-callout--danger">
+        <span class="cs-callout__tag">loaded trigger</span>
+        <p>If a PR comment can run something — Atlantis, Terraform Cloud, a
+        GitHub Action on <code>issue_comment</code> — then Claude's replies,
+        posted as you, can pull that trigger. Audit the repo's automation
+        before arming auto-fix, and leave it off anywhere a comment can deploy
+        infrastructure or run privileged operations.</p>
+      </div>
+    </section>
+
+    <!-- ================= 10 ISOLATION & SHARING ================= -->
+    <section class="section--tight container" id="isolation">
+      <span class="eyebrow">10 · threat model</span>
+      <h2 class="prompt">Isolation, and where it ends</h2>
+      <ul class="cs-list">
+        <li><strong>One VM per session</strong>, isolated and
+          Anthropic-managed. Routed to a self-hosted environment instead?
+          Then isolation is your deployment's job.</li>
+        <li><strong>Egress is limited by default</strong> and can be switched
+          off entirely — but even with network access disabled, Claude Code
+          still talks to the Anthropic API, and that channel can carry data out
+          of the VM. Self-hosted, you restrict egress at your own
+          boundary.</li>
+        <li><strong>Git credentials and signing keys never enter the
+          sandbox.</strong> A proxy outside it authenticates for the session
+          with scoped credentials. Self-hosted deployments supply their own
+          git credentials.</li>
+        <li><strong>API keys you add to an environment</strong> (Pro and Max,
+          Anthropic-hosted) stay outside the sandbox too, attached to matching
+          requests after they leave the session. Not available on self-hosted
+          environments, and not yet on Team or Enterprise.</li>
+        <li><strong>Code is analyzed and modified inside</strong> the
+          session's isolated environment before any PR gets created.</li>
+      </ul>
+
+      <h3 class="cs-subhead">Sharing a session</h3>
+      <div class="cs-split">
+        <div class="panel" data-title="pro · max">
+          <p><strong>Private</strong> or <strong>Public</strong> — and public
+          means <em>any</em> logged-in claude.ai user. Repo-access
+          verification is <strong>off</strong> by default. Sessions can hold
+          code and credentials from private repos, so scrub before you flip
+          it. <strong>Settings → Claude Code → Sharing settings</strong> can
+          require repo access and hide your name.</p>
+        </div>
+        <div class="panel" data-title="team · enterprise">
+          <p><strong>Private</strong> or <strong>Team</strong> (your claude.ai
+          org). Repo-access verification is <strong>on</strong> by default,
+          checked against the GitHub account connected to each recipient's
+          account. Your display name is visible to everyone with access.
+          Claude in Slack sessions are Team-visible automatically.</p>
+        </div>
+      </div>
+      <p class="text-muted cs-prose" style="margin-top: var(--sp-5);">
+        Shared links show the latest state when opened — not a live feed.
+        Archiving hides a session from the default list; deleting it (after a
+        confirm) is permanent.
+      </p>
+    </section>
+
+    <!-- ==================== 11 ERROR DECODER ==================== -->
+    <section class="section--tight container" id="errors">
+      <span class="eyebrow">11 · error decoder</span>
+      <h2 class="prompt">Error decoder</h2>
+      <p class="lead cs-prose">The strings you'll actually see, what they
+        mean, and the fix.</p>
+      <ul class="cs-list">
+        <li>CLI errors are prefixed <code>Error: </code>; a failed send is
+          wrapped as <code class="wrap">failed to send message to cloud session &lt;id&gt;: &lt;reason&gt;</code>.</li>
+        <li>With <code>--output-format json</code>, send failures come back as
+          <code class="wrap">{ok: false, session_id, error}</code> — but configuration
+          errors (wrong provider, policy off) go straight to stderr, no JSON.
+          <code>stream-json</code> isn't supported with
+          <code>--cloud &lt;id&gt;</code>.</li>
+      </ul>
+
+      <div class="cs-errs">
+        <div class="cs-err">
+          <code class="cs-err__msg">Cloud sessions aren't available with &lt;provider&gt;. They run on Anthropic's infrastructure and require an Anthropic account.</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>Claude Code is configured for a third-party provider. The message uses your config's label, e.g. <code>Amazon Bedrock</code> or <code>Google Vertex AI</code>.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd>Remove that provider's config (e.g. unset <code>CLAUDE_CODE_USE_BEDROCK</code>), then <code>claude auth login</code>. A gateway set only through <code>ANTHROPIC_BASE_URL</code> doesn't trip this, but you still have to log in.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">Cloud sessions are disabled by your organization's policy. Contact your organization admin to enable them.</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>The org's <code>allow_remote_sessions</code> policy is off.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd>An Owner turns it on in the Claude Code admin settings at claude.ai/admin-settings/claude-code.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">Couldn't verify your organization's policy for cloud sessions. Check your network connection and try again.</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>The policy fetch failed, so the CLI fails closed instead of assuming yes.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd>Fix the network, retry.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">Attaching to an existing cloud session is not enabled for your account.</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>You ran <code>--cloud &lt;session-id&gt;</code> without <code>-p</code>.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd><code class="wrap">claude -p "your message" --cloud &lt;session-id&gt;</code></dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">Session not found: &lt;id&gt;</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>That ID or URL doesn't match a session you can access.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd>Re-copy it from the session's claude.ai/code URL.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">cloud session &lt;id&gt; is archived and cannot accept new messages</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>Archived sessions don't take new messages.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd>Start a new session.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">Unable to get organization UUID · Error loading Claude Code sessions</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd><code>--cloud</code> and <code>--teleport</code> need a claude.ai sign-in, and you're on API-key auth or your stored account details are stale. You may instead see a note that API key authentication is not sufficient; a bare <code>claude --teleport</code> shows the second string in its picker.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd><code>/login</code> with your claude.ai account, then retry.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">Remote Control session expired · Access denied</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>Teleport rides the same Remote Control infrastructure as cloud sessions, so its auth errors use that wording. The connection token is short-lived and scoped to your account.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd><code>/login</code> to refresh, reconnect, and confirm you're on the account that owns the session.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">Remote Control may not be available for this organization</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>An Owner hasn't enabled cloud sessions for your org.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd>Ask an Owner.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">Session creation failed</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>No VM could be allocated. Same story if it stalls at provisioning.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd>Check <a href="https://status.claude.com">status.claude.com</a>, retry after a minute (capacity is provisioned on demand), and confirm your GitHub connection can actually see the repo.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err" id="err-expired">
+          <span class="cs-err__msg cs-err__msg--state">[ environment expired ]</span>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>The session sat idle and its VM was reclaimed. Waiting on you to approve an MCP connector tool call, or to sign in to an MCP server, counts as idle.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd>Reopen it from claude.ai/code: fresh VM, conversation restored. Background subagents and shell commands that were mid-run don't come back.</dd></div>
+          </dl>
+        </div>
+
+        <div class="cs-err">
+          <code class="cs-err__msg">API Error: 500 · 529 Overloaded · 429 · Prompt is too long</code>
+          <dl class="cs-err__rows">
+            <div class="cs-err__row"><dt>means</dt><dd>Runtime API errors, shared with the CLI and desktop app. Not cloud-specific.</dd></div>
+            <div class="cs-err__row"><dt>fix</dt><dd>See the official <a href="https://code.claude.com/docs/en/errors">error reference</a>.</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 12 HARD LIMITS ===================== -->
+    <section class="section--tight container" id="limits">
+      <span class="eyebrow">12 · hard limits</span>
+      <h2 class="prompt">Hard limits</h2>
+      <ul class="cs-list">
+        <li><strong>Rate limits are shared.</strong> Cloud sessions draw from
+          the same pool as all your other Claude and Claude Code usage, and
+          parallel sessions burn through it proportionately faster. There's no
+          separate compute charge for the VM itself.</li>
+        <li><strong>GitHub or bust, for pushing.</strong> Cloning and PR
+          creation require GitHub; GitHub Enterprise Server works on Team and
+          Enterprise plans. Other hosts can go up as a bundle via
+          <code>CCR_FORCE_BUNDLE=1</code>, but results can't be pushed back to
+          that remote.</li>
+        <li><strong>Same account to pull.</strong> You can only teleport a
+          session down while signed in to the account that owns it.</li>
+        <li><strong>Org IP allowlists break it.</strong> Anthropic-hosted
+          sessions call the API from Anthropic's infrastructure, not your
+          network, so with IP allowlisting on, every one of them fails auth —
+          Code Review and routines on Anthropic-hosted environments too.
+          Self-hosted environments call from your own network. The fix is
+          asking Anthropic support to exempt Anthropic-hosted services.</li>
+        <li><strong>Your diff drivers don't run.</strong> Session diffs are
+          computed from raw git blob content, so <code>textconv</code> filters
+          and custom diff drivers are ignored.</li>
+        <li><strong>Idle means reclaimed.</strong> See
+          <a href="#err-expired">environment expired</a> in the decoder.</li>
+      </ul>
+
+      <div class="panel" data-title="eof" style="margin-top: var(--sp-7);">
+        <p class="text-muted cs-prose">
+          Found a sharp edge this page missed, or a string that changed in a
+          newer build? That's what the forum is for.
+        </p>
+        <div class="input-row" style="margin-top: var(--sp-4);">
+          <a class="btn btn--primary" href="/forum.html">&gt; POST IT IN THE FORUM</a>
+          <a class="btn btn--ghost" href="https://code.claude.com/docs/en/claude-code-on-the-web">&gt; OFFICIAL DOCS</a>
+          <a class="btn btn--ghost" href="/index.html#subscribe">&gt; SUBSCRIBE</a>
+        </div>
+        <p class="text-muted" style="margin-top: var(--sp-4); font-size: var(--fs-400);">
+          Go deeper:
+          <a href="https://code.claude.com/docs/en/cloud-environments">cloud environments</a> ·
+          <a href="https://code.claude.com/docs/en/remote-control">remote control</a> ·
+          <a href="https://code.claude.com/docs/en/routines">routines</a> ·
+          <a href="https://code.claude.com/docs/en/self-hosted-environments">self-hosted environments</a>
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span class="site-footer__brand"><span class="sigil">&gt;_</span> claude code internals</span>
+      <span class="site-footer__tag">The changelog Anthropic doesn't publish.</span>
+      <span class="site-footer__meta">
+        by <a href="/about.html">beardedfreedom</a> · unaffiliated with Anthropic · &copy; 2026
+      </span>
+    </div>
+  </footer>
+</body>
+</html>
