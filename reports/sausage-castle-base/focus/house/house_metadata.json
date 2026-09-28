@@ -1,0 +1,83 @@
+{
+ "zone": "house",
+ "title": "Main house and compound (22500/22501 Robbins Rd)",
+ "bbox_ftUS": [
+  426050,
+  1577150,
+  427050,
+  1578150
+ ],
+ "crs": "EPSG:2236 ftUS",
+ "vertical": "NAVD88 ft",
+ "points": 2867626,
+ "ground_points": 1416283,
+ "dtm_ft": [
+  68.37256622314453,
+  80.16716003417969
+ ],
+ "contours": 448,
+ "trees": 206,
+ "water": [
+  {
+   "area_ac": 0.15,
+   "wse_ft": 68.8,
+   "note": "hydro-flattened to WSE in DTM/DSM",
+   "centroid": [
+    426285,
+    1577642
+   ]
+  }
+ ],
+ "buildings": [
+  {
+   "area_sf": 7423,
+   "base_ft": 73.6,
+   "eave_ft": 14.0,
+   "ridge_ft": 30.8,
+   "centroid": [
+    426828,
+    1577904
+   ]
+  },
+  {
+   "area_sf": 4479,
+   "base_ft": 73.5,
+   "eave_ft": 16.4,
+   "ridge_ft": 23.4,
+   "centroid": [
+    426249,
+    1577762
+   ]
+  },
+  {
+   "area_sf": 2198,
+   "base_ft": 72.8,
+   "eave_ft": 12.8,
+   "ridge_ft": 42.8,
+   "centroid": [
+    426745,
+    1577939
+   ]
+  },
+  {
+   "area_sf": 1368,
+   "base_ft": 73.6,
+   "eave_ft": 15.3,
+   "ridge_ft": 18.3,
+   "centroid": [
+    426397,
+    1578006
+   ]
+  },
+  {
+   "area_sf": 163,
+   "base_ft": 71.7,
+   "eave_ft": 9.2,
+   "ridge_ft": 11.4,
+   "centroid": [
+    426135,
+    1577840
+   ]
+  }
+ ]
+}

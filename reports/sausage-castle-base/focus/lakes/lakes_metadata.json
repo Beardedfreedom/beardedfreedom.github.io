@@ -1,0 +1,102 @@
+{
+ "zone": "lakes",
+ "title": "Lakes and loop track",
+ "bbox_ftUS": [
+  425750,
+  1578350,
+  427050,
+  1579550
+ ],
+ "crs": "EPSG:2236 ftUS",
+ "vertical": "NAVD88 ft",
+ "points": 4402032,
+ "ground_points": 1586968,
+ "dtm_ft": [
+  68.96311950683594,
+  87.76229095458984
+ ],
+ "contours": 776,
+ "trees": 728,
+ "water": [
+  {
+   "area_ac": 1.58,
+   "wse_ft": 69.3,
+   "note": "hydro-flattened to WSE in DTM/DSM",
+   "centroid": [
+    426006,
+    1578844
+   ]
+  },
+  {
+   "area_ac": 1.11,
+   "wse_ft": 70.0,
+   "note": "hydro-flattened to WSE in DTM/DSM",
+   "centroid": [
+    426595,
+    1579180
+   ]
+  }
+ ],
+ "buildings": [
+  {
+   "area_sf": 5378,
+   "base_ft": 77.3,
+   "eave_ft": 16.7,
+   "ridge_ft": 33.1,
+   "centroid": [
+    426876,
+    1578711
+   ]
+  },
+  {
+   "area_sf": 1869,
+   "base_ft": 73.2,
+   "eave_ft": 14.1,
+   "ridge_ft": 19.3,
+   "centroid": [
+    426266,
+    1579237
+   ]
+  },
+  {
+   "area_sf": 1530,
+   "base_ft": 76.1,
+   "eave_ft": 12.5,
+   "ridge_ft": 14.9,
+   "centroid": [
+    426649,
+    1578429
+   ]
+  },
+  {
+   "area_sf": 1243,
+   "base_ft": 72.4,
+   "eave_ft": 11.9,
+   "ridge_ft": 20.4,
+   "centroid": [
+    426303,
+    1579507
+   ]
+  },
+  {
+   "area_sf": 730,
+   "base_ft": 74.1,
+   "eave_ft": 14.2,
+   "ridge_ft": 32.5,
+   "centroid": [
+    426843,
+    1579432
+   ]
+  },
+  {
+   "area_sf": 224,
+   "base_ft": 78.6,
+   "eave_ft": 7.0,
+   "ridge_ft": 30.2,
+   "centroid": [
+    427046,
+    1578669
+   ]
+  }
+ ]
+}

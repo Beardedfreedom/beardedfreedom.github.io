@@ -21,7 +21,8 @@ A search-engine "answer" placed the address at 28.6813, -81.7272. That is 1.7 km
 | `sausage_castle_base_metadata.json` | Extents, grid, contour levels, per-building base/height, sources | Text editor |
 | `scripts/ept_clip.py` | Clips any USGS 3DEP Entwine dataset to a lon/lat box without PDAL | Python 3.11 + laspy, lazrs, pyproj |
 | `scripts/overture_pull.py` | Pulls Overture buildings / roads / water / addresses for a box straight from the public S3 bucket | Python + pyarrow, shapely |
-| `scripts/build_base.py` | Turns the clip and vectors into the files above | Python + numpy, scipy, ezdxf, contourpy, matplotlib |
+| `scripts/build_base.py` | Turns the clip and vectors into the files above |
+| `scripts/build_focus.py` | Builds the two full-resolution focus zones under `focus/` | Python + numpy, scipy, ezdxf, contourpy, matplotlib |
 
 The raw lidar clip (`sausage_site.laz`, 39.5 million points, 211 MB, EPSG:3857, Z in metres) is not in the repo because of its size. Re-create it in about five minutes with:
 
@@ -56,3 +57,21 @@ python3 scripts/ept_clip.py https://s3-us-west-2.amazonaws.com/usgs-lidar-public
 - USGS 3DEP lidar, project FL_Peninsular_Lake_2018, via the USGS Entwine Point Tile index on AWS (`s3://usgs-lidar-public`). US Government work, public domain.
 - Overture Maps release 2026-09-23.1, themes buildings, transportation, base (water), addresses. Buildings and transportation are ODbL (attribution required: "© OpenStreetMap contributors, Overture Maps Foundation"); addresses are from open government sources.
 - No Google data was used. Google's Map Tiles API policy forbids extracting, tracing or deriving 3D objects from Photorealistic 3D Tiles, and the Maps Platform terms forbid building terrain models from Elevation API values. See the research report one folder up.
+
+## Focus zones at full lidar resolution (`focus/`)
+
+Two sub-models were built at the finest resolution the point cloud supports, because the house and the lakes are the parts of the site that will be kept and designed around.
+
+| Zone | Extent (ftUS) | Contents |
+|---|---|---|
+| `focus/house/` | E 426,050 to 427,050, N 1,577,150 to 1,578,150 (23 acres) | Main house, the tall structure beside it, the 4,479 sq ft outbuilding, the pond, the pads, the ring feature and the big square enclosure southwest of the house |
+| `focus/lakes/` | E 425,750 to 427,050, N 1,578,350 to 1,579,550 (36 acres) | Both lakes, the loop track around the round lake, the orchard rows, and the 5,378 sq ft building south of the round lake |
+
+Each zone folder has:
+
+- `sausage_castle_<zone>_focus_EPSG2236_ftUS.dxf` with 0.5 ft (`C-TOPO-HALF`), 1 ft (`C-TOPO-MINR`) and 5 ft (`C-TOPO-MAJR`) contours from a 2 ft ground grid; a 5 ft terrain MESH (`C-TOPO-MESH-3D`) for plain AutoCAD 3D views; every building as a MESH whose roof is the 1 ft lidar surface inside the footprint, so hips, ridges and towers are real (`A-BLDG-ROOF-3D`), with an annotation giving area, approximate finished floor, eave and ridge heights; tree crowns as circles with height labels (`L-PLNT-TREE`, canopy-height local maxima over 12 ft); lake outlines derived from lidar no-return areas as closed polylines at the 2018 water surface elevation (`C-WATR-LIDAR`, usable as Civil 3D breaklines) next to the Overture outline (`C-WATR-OVERTURE`).
+- `<zone>_dsm_1ft.asc.gz` (first-return surface at 1 ft: roofs, trees, track), `<zone>_dtm_2ft.asc.gz` (bare earth at 2 ft), both hydro-flattened to the lake levels.
+- `<zone>_ground_pts_2ft_PNEZD.csv.gz` for a Civil 3D surface at full density.
+- `<zone>_preview.jpg` and `<zone>_metadata.json` (per-building base, eave and ridge, water areas and levels, tree counts).
+
+Measured from the lidar (2018): main house 7,423 sq ft footprint, base about 73.6 ft, eave about 14 ft, ridge about 31 ft above ground; the structure just west of it is 2,198 sq ft with a 43 ft ridge; the pond southwest of the house sits at about 68.8 ft; the elongated lake is about 1.6 acres at about 69.3 ft; the round lake is about 1.1 acres at about 70.0 ft. Ground across both zones runs 68 to 88 ft NAVD88. Contours at 0.5 ft are indicative only, since the lidar's own vertical error is about 0.33 ft.
