@@ -96,6 +96,7 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
           <select id="quality"><option value="1">Full</option><option value="2">Half</option><option value="4">Quarter</option></select></div>
         <div class="row"><label for="gridToggle">100 ft grid</label><input type="checkbox" id="gridToggle"></div>
         <div class="row" id="overlayRow" hidden><label for="overlayToggle" id="overlayLabel">Concept overlay</label><input type="checkbox" id="overlayToggle"></div>
+        <div class="row" id="unitsRow" hidden><label for="unitsToggle">Tiny homes (concept)</label><input type="checkbox" id="unitsToggle"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="btn primary" id="snap">Snapshot</button>
           <button type="button" class="btn" id="reset">Reset view</button>
@@ -161,11 +162,13 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
     document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.zone===zn));});
     var W=z.width_ft, H=z.height_ft; if(!cache[zn+'|tex']){ var t=loader.load('data/'+z.color); t.encoding=THREE.sRGBEncoding; t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); cache[zn+'|tex']=t; }
     if(z.overlay && !cache[zn+'|ovl']){ var t2=loader.load('data/'+z.overlay); t2.encoding=THREE.sRGBEncoding; t2.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); cache[zn+'|ovl']=t2; }
+    document.getElementById('unitsRow').hidden=!z.units;
     var row=document.getElementById('overlayRow'); row.hidden=!z.overlay; if(z.overlay) document.getElementById('overlayLabel').textContent=z.overlay_label||'Concept overlay';
     if(!customTex) mat.map=(z.overlay && document.getElementById('overlayToggle').checked)?cache[zn+'|ovl']:cache[zn+'|tex']; mat.needsUpdate=true;
     zoneGeometry(zn,mode).then(function(g){ if(mesh){scene.remove(mesh);} mesh=new THREE.Mesh(g,mat); mesh.scale.y=exag; scene.add(mesh);
       if(grid){scene.remove(grid);} grid=new THREE.GridHelper(Math.max(W,H),Math.round(Math.max(W,H)/100),0x8a9a86,0x8a9a86); grid.position.y=-1; grid.material.opacity=0.35; grid.material.transparent=true; grid.visible=document.getElementById('gridToggle').checked; scene.add(grid);
       if(marker){scene.remove(marker);marker=null;} if(z.target){ var mx=z.target[0]-z.x0-W/2, mz=H/2-(z.target[1]-z.y0); marker=new THREE.Mesh(new THREE.ConeGeometry(Math.max(6,W/120),Math.max(20,W/40),12),new THREE.MeshStandardMaterial({color:0xd0308a,roughness:0.6})); marker.rotation.x=Math.PI; marker.position.set(mx,(z.z_range[1]-z.z_range[0])*exag+Math.max(30,W/30),mz); scene.add(marker); }
+      placeUnits();
       target.set(0,(z.z_range[0]+8-z.z_range[0]),0); sph.r=Math.max(W,H)*1.15; sph.theta=Math.PI*0.78; sph.phi=Math.PI*0.34; home={r:sph.r,theta:sph.theta,phi:sph.phi,t:target.clone()}; applyCam();
       var wl=(z.water||[]).map(function(w){return w.acres+' ac at '+w.wse+' ft';}).join(', ');
       document.getElementById('zoneNote').textContent=z.title+' · '+z.cell_ft+' ft cells · '+W+' × '+H+' ft · ground '+z.z_range[0].toFixed(0)+'–'+z.z_range[1].toFixed(0)+' ft NAVD88'+(wl?' · water: '+wl:'');
@@ -179,14 +182,23 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
     ro.innerHTML='<b>E</b> '+E.toFixed(1)+' <b>N</b> '+N.toFixed(1)+' ftUS · <b>Z</b> '+Z.toFixed(1)+' ft NAVD88 · <b>'+(mode==='surface'?'surface':'bare earth')+'</b>'; }
   function themeColors(){ var cs=getComputedStyle(document.documentElement); var top=cs.getPropertyValue('--sky-top').trim(); renderer.setClearColor(new THREE.Color(top||'#d9e6ee'),1); render(); }
   // ---- wiring
-  var customTex=null;
+  var customTex=null, unitsData=null, unitsGroup=null, unitGeoms={};
+  function buildUnit(key){ if(unitGeoms[key]) return unitGeoms[key]; var u=unitsData.units[key]; var g=new THREE.Group();
+    u.parts.forEach(function(part){ var n=part.positions.length/3; var pos=new Float32Array(n*3); for(var i=0;i<n;i++){ pos[i*3]=part.positions[i*3]; pos[i*3+1]=part.positions[i*3+2]; pos[i*3+2]=-part.positions[i*3+1]; }
+      var geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3)); geo.setIndex(part.indices); geo.computeVertexNormals();
+      var m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(part.color),roughness:0.85,metalness:0,side:THREE.DoubleSide})); g.add(m); });
+    unitGeoms[key]=g; return g; }
+  function placeUnits(){ if(unitsGroup){ scene.remove(unitsGroup); unitsGroup=null; } if(!zone) return; var z=meta.zones[zone]; if(!z.units || !document.getElementById('unitsToggle').checked) { render(); return; }
+    var go=function(){ unitsGroup=new THREE.Group(); unitsData.placements.forEach(function(pl){ var proto=buildUnit(pl.unit); var inst=proto.clone(); inst.userData.z=pl.z; inst.position.set(pl.x-z.x0-z.width_ft/2,(pl.z-z.z_range[0])*exag,z.height_ft/2-(pl.y-z.y0)); inst.rotation.y=pl.rot_deg*Math.PI/180; unitsGroup.add(inst); }); scene.add(unitsGroup); render(); };
+    if(unitsData) go(); else fetch('data/'+z.units).then(function(r){return r.json();}).then(function(d){ unitsData=d; go(); }).catch(function(){ document.getElementById('zoneNote').textContent='Could not load the tiny home models.'; }); }
   document.querySelectorAll('.tabs button').forEach(function(b){ b.addEventListener('click',function(){ setZone(b.dataset.zone); }); });
   document.getElementById('mSurface').addEventListener('click',function(){ mode='surface'; this.setAttribute('aria-pressed','true'); document.getElementById('mGround').setAttribute('aria-pressed','false'); setZone(zone); });
   document.getElementById('mGround').addEventListener('click',function(){ mode='ground'; this.setAttribute('aria-pressed','true'); document.getElementById('mSurface').setAttribute('aria-pressed','false'); setZone(zone); });
-  document.getElementById('exag').addEventListener('input',function(){ exag=+this.value; document.getElementById('exagVal').textContent=exag.toFixed(1)+'×'; if(mesh) mesh.scale.y=exag; if(marker&&zone){ var z=meta.zones[zone]; marker.position.y=(z.z_range[1]-z.z_range[0])*exag+Math.max(30,z.width_ft/30);} render(); });
+  document.getElementById('exag').addEventListener('input',function(){ exag=+this.value; document.getElementById('exagVal').textContent=exag.toFixed(1)+'×'; if(mesh) mesh.scale.y=exag; if(unitsGroup&&zone){ var zz=meta.zones[zone]; unitsGroup.children.forEach(function(inst){ inst.position.y=(inst.userData.z-zz.z_range[0])*exag; }); } if(marker&&zone){ var z=meta.zones[zone]; marker.position.y=(z.z_range[1]-z.z_range[0])*exag+Math.max(30,z.width_ft/30);} render(); });
   document.getElementById('sunAz').addEventListener('input',sunUpdate); document.getElementById('sunAlt').addEventListener('input',sunUpdate);
   document.getElementById('quality').addEventListener('change',function(){ step=+this.value; setZone(zone); });
   document.getElementById('gridToggle').addEventListener('change',function(){ if(grid) grid.visible=this.checked; render(); });
+  document.getElementById('unitsToggle').addEventListener('change',placeUnits);
   document.getElementById('overlayToggle').addEventListener('change',function(){ if(!zone) return; var z=meta.zones[zone]; if(customTex) return; mat.map=(z.overlay && this.checked)?cache[zone+'|ovl']:cache[zone+'|tex']; mat.needsUpdate=true; render(); });
   document.getElementById('reset').addEventListener('click',function(){ if(home){ sph.r=home.r; sph.theta=home.theta; sph.phi=home.phi; target.copy(home.t); applyCam(); render(); } });
   document.getElementById('snap').addEventListener('click',function(){ render(); document.getElementById('shotImg').src=canvas.toDataURL('image/png'); document.getElementById('shot').hidden=false; });

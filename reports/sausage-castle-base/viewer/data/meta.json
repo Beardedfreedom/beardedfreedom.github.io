@@ -129,7 +129,8 @@
    ],
    "target": null,
    "overlay": "lakes_zones.jpg",
-   "overlay_label": "Lake zones concept"
+   "overlay_label": "Lake zones concept",
+   "units": "units.json"
   }
  }
 }

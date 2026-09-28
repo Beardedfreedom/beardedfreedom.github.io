@@ -86,3 +86,7 @@ Measured from the lidar (2018): main house 7,423 sq ft footprint, base about 73.
 ## Lake zones concept (`focus/lakes/LAKE-ZONES-CONCEPT.md`)
 
 First design pass around the round lake: four equal-area zones (2.04 acres each) between a 50 ft no-build water buffer and a limit 250 ft from the water, using the existing 1,640 ft loop track as the lane, with 35 × 50 ft tiny-home pads set 20 ft off the lane and 15 ft apart. Outputs: `lake_zones_concept_EPSG2236_ftUS.dxf`, `lake_zones_plan.jpg`, `lake_zones_concept.json` (rules, metrics, pad corners), and a "Lake zones concept" overlay toggle in the 3D viewer. Regenerate with `scripts/lake_zones.py` (set `ZONE_LIMIT` in the environment to test other ring depths).
+
+## Tiny home concepts (`units/`)
+
+Three themed units designed for the 35 × 50 ft pads, as parametric massing models: the Amanita cottage (mushroom, 412 sq ft), Widow's Peak (haunted house, 564 sq ft) and the Cypress stilt cracker (Florida swamp, 702 sq ft including the screened porch). Each has a sheet with plan, elevations and axon views, a DXF in local feet (3D mesh parts by material layer plus 2D plan layers), and a spec with materials and Florida wind and flood notes. `units/tiny_homes_on_pads_EPSG2236_ftUS.dxf` defines the three as blocks and inserts them on all 22 lake-zone pads (A haunted, B swamp, C mushroom, D mixed), facing the lane at the lidar ground elevation. The 3D viewer's Lakes zone has a "Tiny homes (concept)" toggle showing the same placement. Regenerate with `scripts/tiny_homes.py`. See `units/README.md` for the specs.
