@@ -82,3 +82,7 @@ Measured from the lidar (2018): main house 7,423 sq ft footprint, base about 73.
 - Heightmaps are RGB PNGs: elevation in feet = (R × 256 + G) × 0.01 + zmin, with zmin per zone in `viewer/data/meta.json`. Row 0 is north. Textures are synthetic land cover from canopy height (grass, shrub, trees by height), building footprints, road buffers and lidar water, shaded by the surface hillshade. They are not aerial photos; NAIP or a drone orthomosaic cropped to a zone's bounds can be draped instead.
 - `focus/house/house_render3d.jpg` and `focus/lakes/lakes_render3d.jpg` are static perspective renders produced by `scripts/render_static.py` from the same data.
 - `scripts/export_3d.py` regenerates `viewer/data/` from the lidar clip and the Overture files.
+
+## Lake zones concept (`focus/lakes/LAKE-ZONES-CONCEPT.md`)
+
+First design pass around the round lake: four equal-area zones (2.04 acres each) between a 50 ft no-build water buffer and a limit 250 ft from the water, using the existing 1,640 ft loop track as the lane, with 35 × 50 ft tiny-home pads set 20 ft off the lane and 15 ft apart. Outputs: `lake_zones_concept_EPSG2236_ftUS.dxf`, `lake_zones_plan.jpg`, `lake_zones_concept.json` (rules, metrics, pad corners), and a "Lake zones concept" overlay toggle in the 3D viewer. Regenerate with `scripts/lake_zones.py` (set `ZONE_LIMIT` in the environment to test other ring depths).

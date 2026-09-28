@@ -127,7 +127,9 @@
      "wse": 70.0
     }
    ],
-   "target": null
+   "target": null,
+   "overlay": "lakes_zones.jpg",
+   "overlay_label": "Lake zones concept"
   }
  }
 }

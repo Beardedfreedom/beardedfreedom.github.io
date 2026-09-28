@@ -95,6 +95,7 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
         <div class="row"><label for="quality">Mesh detail</label>
           <select id="quality"><option value="1">Full</option><option value="2">Half</option><option value="4">Quarter</option></select></div>
         <div class="row"><label for="gridToggle">100 ft grid</label><input type="checkbox" id="gridToggle"></div>
+        <div class="row" id="overlayRow" hidden><label for="overlayToggle" id="overlayLabel">Concept overlay</label><input type="checkbox" id="overlayToggle"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="btn primary" id="snap">Snapshot</button>
           <button type="button" class="btn" id="reset">Reset view</button>
@@ -159,7 +160,9 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
   function setZone(zn){ zone=zn; var z=meta.zones[zn]; document.getElementById('loading').hidden=false; document.getElementById('loading').style.opacity=1;
     document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.zone===zn));});
     var W=z.width_ft, H=z.height_ft; if(!cache[zn+'|tex']){ var t=loader.load('data/'+z.color); t.encoding=THREE.sRGBEncoding; t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); cache[zn+'|tex']=t; }
-    if(!customTex) mat.map=cache[zn+'|tex']; mat.needsUpdate=true;
+    if(z.overlay && !cache[zn+'|ovl']){ var t2=loader.load('data/'+z.overlay); t2.encoding=THREE.sRGBEncoding; t2.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); cache[zn+'|ovl']=t2; }
+    var row=document.getElementById('overlayRow'); row.hidden=!z.overlay; if(z.overlay) document.getElementById('overlayLabel').textContent=z.overlay_label||'Concept overlay';
+    if(!customTex) mat.map=(z.overlay && document.getElementById('overlayToggle').checked)?cache[zn+'|ovl']:cache[zn+'|tex']; mat.needsUpdate=true;
     zoneGeometry(zn,mode).then(function(g){ if(mesh){scene.remove(mesh);} mesh=new THREE.Mesh(g,mat); mesh.scale.y=exag; scene.add(mesh);
       if(grid){scene.remove(grid);} grid=new THREE.GridHelper(Math.max(W,H),Math.round(Math.max(W,H)/100),0x8a9a86,0x8a9a86); grid.position.y=-1; grid.material.opacity=0.35; grid.material.transparent=true; grid.visible=document.getElementById('gridToggle').checked; scene.add(grid);
       if(marker){scene.remove(marker);marker=null;} if(z.target){ var mx=z.target[0]-z.x0-W/2, mz=H/2-(z.target[1]-z.y0); marker=new THREE.Mesh(new THREE.ConeGeometry(Math.max(6,W/120),Math.max(20,W/40),12),new THREE.MeshStandardMaterial({color:0xd0308a,roughness:0.6})); marker.rotation.x=Math.PI; marker.position.set(mx,(z.z_range[1]-z.z_range[0])*exag+Math.max(30,W/30),mz); scene.add(marker); }
@@ -184,6 +187,7 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
   document.getElementById('sunAz').addEventListener('input',sunUpdate); document.getElementById('sunAlt').addEventListener('input',sunUpdate);
   document.getElementById('quality').addEventListener('change',function(){ step=+this.value; setZone(zone); });
   document.getElementById('gridToggle').addEventListener('change',function(){ if(grid) grid.visible=this.checked; render(); });
+  document.getElementById('overlayToggle').addEventListener('change',function(){ if(!zone) return; var z=meta.zones[zone]; if(customTex) return; mat.map=(z.overlay && this.checked)?cache[zone+'|ovl']:cache[zone+'|tex']; mat.needsUpdate=true; render(); });
   document.getElementById('reset').addEventListener('click',function(){ if(home){ sph.r=home.r; sph.theta=home.theta; sph.phi=home.phi; target.copy(home.t); applyCam(); render(); } });
   document.getElementById('snap').addEventListener('click',function(){ render(); document.getElementById('shotImg').src=canvas.toDataURL('image/png'); document.getElementById('shot').hidden=false; });
   document.getElementById('shotClose').addEventListener('click',function(){ document.getElementById('shot').hidden=true; });
