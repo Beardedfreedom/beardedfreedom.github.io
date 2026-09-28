@@ -1,0 +1,799 @@
+{
+ "generated": "2026-09-28 20:19:48.461907",
+ "crs": "EPSG:2236",
+ "crs_name": "NAD83 / Florida East (ftUS)",
+ "vertical": "NAVD88 ft (lidar metres x 3.2808333)",
+ "lidar_project": "FL_Peninsular_Lake_2018",
+ "lidar_source": "s3://usgs-lidar-public (USGS 3DEP EPT)",
+ "points_used": 39412497,
+ "ground_points": 11713210,
+ "aoi_lonlat": [
+  -81.7205,
+  28.67,
+  -81.7095,
+  28.681
+ ],
+ "extent_ftUS": {
+  "xmin": 425119,
+  "ymin": 1576976,
+  "xmax": 428674.0,
+  "ymax": 1581002.0
+ },
+ "cell_ft": 3.0,
+ "grid": [
+  1185,
+  1342
+ ],
+ "dtm_ft": {
+  "min": 64.33714294433594,
+  "median": 72.7032699584961,
+  "max": 91.40401458740234
+ },
+ "contours": {
+  "count": 1524,
+  "interval_ft": 1,
+  "levels": [
+   64,
+   91
+  ]
+ },
+ "buildings": [
+  {
+   "area_sf": 163,
+   "base_ft": 71.7,
+   "height_ft": 11.5,
+   "h_lidar": 11.5,
+   "h_overture": null,
+   "centroid": [
+    426134.8,
+    1577840.2
+   ]
+  },
+  {
+   "area_sf": 1368,
+   "base_ft": 74.4,
+   "height_ft": 18.0,
+   "h_lidar": 18.0,
+   "h_overture": null,
+   "centroid": [
+    426396.9,
+    1578006.1
+   ]
+  },
+  {
+   "area_sf": 4479,
+   "base_ft": 73.8,
+   "height_ft": 23.2,
+   "h_lidar": 23.2,
+   "h_overture": null,
+   "centroid": [
+    426248.8,
+    1577761.6
+   ]
+  },
+  {
+   "area_sf": 3711,
+   "base_ft": 73.7,
+   "height_ft": 33.8,
+   "h_lidar": 33.8,
+   "h_overture": 10.4,
+   "centroid": [
+    428348.3,
+    1578607.1
+   ]
+  },
+  {
+   "area_sf": 1011,
+   "base_ft": 75.8,
+   "height_ft": 28.9,
+   "h_lidar": 28.9,
+   "h_overture": 12.4,
+   "centroid": [
+    428132.2,
+    1578582.2
+   ]
+  },
+  {
+   "area_sf": 2219,
+   "base_ft": 75.4,
+   "height_ft": 39.7,
+   "h_lidar": 39.7,
+   "h_overture": 15.6,
+   "centroid": [
+    428041.5,
+    1578557.9
+   ]
+  },
+  {
+   "area_sf": 3011,
+   "base_ft": 76.3,
+   "height_ft": 18.2,
+   "h_lidar": 18.2,
+   "h_overture": 13.1,
+   "centroid": [
+    428031.0,
+    1578870.1
+   ]
+  },
+  {
+   "area_sf": 1116,
+   "base_ft": 78.6,
+   "height_ft": 29.4,
+   "h_lidar": 29.4,
+   "h_overture": 16.1,
+   "centroid": [
+    427445.0,
+    1578688.6
+   ]
+  },
+  {
+   "area_sf": 1405,
+   "base_ft": 77.1,
+   "height_ft": 39.7,
+   "h_lidar": 39.7,
+   "h_overture": 16.3,
+   "centroid": [
+    427349.8,
+    1578755.2
+   ]
+  },
+  {
+   "area_sf": 666,
+   "base_ft": 78.7,
+   "height_ft": 27.4,
+   "h_lidar": 27.4,
+   "h_overture": 9.9,
+   "centroid": [
+    427053.3,
+    1578667.4
+   ]
+  },
+  {
+   "area_sf": 7423,
+   "base_ft": 73.8,
+   "height_ft": 28.1,
+   "h_lidar": 28.1,
+   "h_overture": 16.3,
+   "centroid": [
+    426828.1,
+    1577904.4
+   ]
+  },
+  {
+   "area_sf": 2198,
+   "base_ft": 73.1,
+   "height_ft": 39.8,
+   "h_lidar": 39.8,
+   "h_overture": 18.0,
+   "centroid": [
+    426744.9,
+    1577939.0
+   ]
+  },
+  {
+   "area_sf": 2043,
+   "base_ft": 74.7,
+   "height_ft": 14.2,
+   "h_lidar": 14.2,
+   "h_overture": 11.8,
+   "centroid": [
+    426660.4,
+    1578319.0
+   ]
+  },
+  {
+   "area_sf": 1530,
+   "base_ft": 76.9,
+   "height_ft": 14.8,
+   "h_lidar": 14.8,
+   "h_overture": null,
+   "centroid": [
+    426649.0,
+    1578428.9
+   ]
+  },
+  {
+   "area_sf": 5378,
+   "base_ft": 78.5,
+   "height_ft": 31.3,
+   "h_lidar": 31.3,
+   "h_overture": 17.1,
+   "centroid": [
+    426876.5,
+    1578710.7
+   ]
+  },
+  {
+   "area_sf": 7602,
+   "base_ft": 74.8,
+   "height_ft": 22.2,
+   "h_lidar": 22.2,
+   "h_overture": 20.9,
+   "centroid": [
+    426654.6,
+    1579631.4
+   ]
+  },
+  {
+   "area_sf": 6372,
+   "base_ft": 75.6,
+   "height_ft": 15.6,
+   "h_lidar": 15.6,
+   "h_overture": 13.6,
+   "centroid": [
+    426828.9,
+    1579713.8
+   ]
+  },
+  {
+   "area_sf": 6638,
+   "base_ft": 75.0,
+   "height_ft": 23.2,
+   "h_lidar": 23.2,
+   "h_overture": 18.7,
+   "centroid": [
+    426840.4,
+    1579596.5
+   ]
+  },
+  {
+   "area_sf": 730,
+   "base_ft": 74.5,
+   "height_ft": 32.1,
+   "h_lidar": 32.1,
+   "h_overture": 17.3,
+   "centroid": [
+    426843.2,
+    1579431.9
+   ]
+  },
+  {
+   "area_sf": 6347,
+   "base_ft": 75.9,
+   "height_ft": 20.7,
+   "h_lidar": 20.7,
+   "h_overture": 13.3,
+   "centroid": [
+    426960.4,
+    1579681.2
+   ]
+  },
+  {
+   "area_sf": 647,
+   "base_ft": 75.7,
+   "height_ft": 20.2,
+   "h_lidar": 20.2,
+   "h_overture": 15.2,
+   "centroid": [
+    427077.7,
+    1579885.0
+   ]
+  },
+  {
+   "area_sf": 1321,
+   "base_ft": 82.2,
+   "height_ft": 12.7,
+   "h_lidar": 12.7,
+   "h_overture": null,
+   "centroid": [
+    427332.6,
+    1579907.8
+   ]
+  },
+  {
+   "area_sf": 1501,
+   "base_ft": 84.3,
+   "height_ft": 29.1,
+   "h_lidar": 29.1,
+   "h_overture": null,
+   "centroid": [
+    427183.0,
+    1579320.8
+   ]
+  },
+  {
+   "area_sf": 1517,
+   "base_ft": 84.3,
+   "height_ft": 12.0,
+   "h_lidar": 2.1,
+   "h_overture": null,
+   "centroid": [
+    427192.2,
+    1579280.5
+   ]
+  },
+  {
+   "area_sf": 2153,
+   "base_ft": 83.4,
+   "height_ft": 14.1,
+   "h_lidar": 14.1,
+   "h_overture": null,
+   "centroid": [
+    427200.6,
+    1579399.4
+   ]
+  },
+  {
+   "area_sf": 3641,
+   "base_ft": 78.8,
+   "height_ft": 19.1,
+   "h_lidar": 19.1,
+   "h_overture": 13.4,
+   "centroid": [
+    427478.3,
+    1579361.0
+   ]
+  },
+  {
+   "area_sf": 362,
+   "base_ft": 76.6,
+   "height_ft": 27.9,
+   "h_lidar": 27.9,
+   "h_overture": null,
+   "centroid": [
+    428058.6,
+    1578901.5
+   ]
+  },
+  {
+   "area_sf": 1082,
+   "base_ft": 77.2,
+   "height_ft": 18.0,
+   "h_lidar": 18.0,
+   "h_overture": null,
+   "centroid": [
+    428047.1,
+    1579046.4
+   ]
+  },
+  {
+   "area_sf": 445,
+   "base_ft": 82.7,
+   "height_ft": 11.2,
+   "h_lidar": 11.2,
+   "h_overture": null,
+   "centroid": [
+    428129.6,
+    1579495.5
+   ]
+  },
+  {
+   "area_sf": 1108,
+   "base_ft": 80.7,
+   "height_ft": 50.8,
+   "h_lidar": 50.8,
+   "h_overture": 24.2,
+   "centroid": [
+    428155.7,
+    1579910.1
+   ]
+  },
+  {
+   "area_sf": 2462,
+   "base_ft": 80.0,
+   "height_ft": 19.6,
+   "h_lidar": 19.6,
+   "h_overture": 13.2,
+   "centroid": [
+    427982.3,
+    1579938.9
+   ]
+  },
+  {
+   "area_sf": 3452,
+   "base_ft": 87.2,
+   "height_ft": 24.3,
+   "h_lidar": 24.3,
+   "h_overture": 12.9,
+   "centroid": [
+    427385.0,
+    1579694.3
+   ]
+  },
+  {
+   "area_sf": 2085,
+   "base_ft": 88.7,
+   "height_ft": 13.3,
+   "h_lidar": 13.3,
+   "h_overture": 11.1,
+   "centroid": [
+    427496.7,
+    1579971.6
+   ]
+  },
+  {
+   "area_sf": 679,
+   "base_ft": 80.2,
+   "height_ft": 33.0,
+   "h_lidar": 33.0,
+   "h_overture": null,
+   "centroid": [
+    427529.4,
+    1580298.7
+   ]
+  },
+  {
+   "area_sf": 1321,
+   "base_ft": 80.6,
+   "height_ft": 39.3,
+   "h_lidar": 39.3,
+   "h_overture": 15.8,
+   "centroid": [
+    428153.9,
+    1579973.6
+   ]
+  },
+  {
+   "area_sf": 1013,
+   "base_ft": 88.8,
+   "height_ft": 18.6,
+   "h_lidar": 18.6,
+   "h_overture": 9.9,
+   "centroid": [
+    427973.1,
+    1580200.6
+   ]
+  },
+  {
+   "area_sf": 1292,
+   "base_ft": 88.4,
+   "height_ft": 16.8,
+   "h_lidar": 16.8,
+   "h_overture": null,
+   "centroid": [
+    427977.4,
+    1580237.9
+   ]
+  },
+  {
+   "area_sf": 4219,
+   "base_ft": 83.4,
+   "height_ft": 14.4,
+   "h_lidar": 14.4,
+   "h_overture": null,
+   "centroid": [
+    428090.7,
+    1580974.3
+   ]
+  },
+  {
+   "area_sf": 2917,
+   "base_ft": 80.5,
+   "height_ft": 29.1,
+   "h_lidar": 29.1,
+   "h_overture": 15.9,
+   "centroid": [
+    427580.1,
+    1580920.7
+   ]
+  },
+  {
+   "area_sf": 230,
+   "base_ft": 80.0,
+   "height_ft": 23.7,
+   "h_lidar": 23.7,
+   "h_overture": 11.3,
+   "centroid": [
+    427570.6,
+    1580858.6
+   ]
+  },
+  {
+   "area_sf": 3015,
+   "base_ft": 80.5,
+   "height_ft": 34.6,
+   "h_lidar": 34.6,
+   "h_overture": 13.3,
+   "centroid": [
+    427475.8,
+    1580690.5
+   ]
+  },
+  {
+   "area_sf": 873,
+   "base_ft": 79.1,
+   "height_ft": 12.4,
+   "h_lidar": 12.4,
+   "h_overture": null,
+   "centroid": [
+    427350.3,
+    1580267.2
+   ]
+  },
+  {
+   "area_sf": 1375,
+   "base_ft": 77.5,
+   "height_ft": 39.7,
+   "h_lidar": 39.7,
+   "h_overture": 12.9,
+   "centroid": [
+    427185.3,
+    1580183.8
+   ]
+  },
+  {
+   "area_sf": 1319,
+   "base_ft": 75.7,
+   "height_ft": 33.9,
+   "h_lidar": 33.9,
+   "h_overture": 16.0,
+   "centroid": [
+    427116.6,
+    1580183.0
+   ]
+  },
+  {
+   "area_sf": 2820,
+   "base_ft": 75.4,
+   "height_ft": 17.3,
+   "h_lidar": 17.3,
+   "h_overture": 11.1,
+   "centroid": [
+    427001.8,
+    1580041.0
+   ]
+  },
+  {
+   "area_sf": 1719,
+   "base_ft": 75.1,
+   "height_ft": 25.4,
+   "h_lidar": 25.4,
+   "h_overture": 13.3,
+   "centroid": [
+    427041.0,
+    1580359.1
+   ]
+  },
+  {
+   "area_sf": 430,
+   "base_ft": 76.2,
+   "height_ft": 18.0,
+   "h_lidar": 18.0,
+   "h_overture": null,
+   "centroid": [
+    427136.2,
+    1580238.1
+   ]
+  },
+  {
+   "area_sf": 1377,
+   "base_ft": 74.1,
+   "height_ft": 64.4,
+   "h_lidar": 64.4,
+   "h_overture": 11.7,
+   "centroid": [
+    426647.2,
+    1580100.4
+   ]
+  },
+  {
+   "area_sf": 1377,
+   "base_ft": 75.8,
+   "height_ft": 36.8,
+   "h_lidar": 36.8,
+   "h_overture": 14.0,
+   "centroid": [
+    426659.7,
+    1580376.9
+   ]
+  },
+  {
+   "area_sf": 860,
+   "base_ft": 76.2,
+   "height_ft": 25.5,
+   "h_lidar": 25.5,
+   "h_overture": 11.3,
+   "centroid": [
+    426629.7,
+    1580373.7
+   ]
+  },
+  {
+   "area_sf": 3269,
+   "base_ft": 86.0,
+   "height_ft": 20.0,
+   "h_lidar": 20.0,
+   "h_overture": null,
+   "centroid": [
+    428273.6,
+    1581004.4
+   ]
+  },
+  {
+   "area_sf": 2132,
+   "base_ft": 82.4,
+   "height_ft": 16.3,
+   "h_lidar": 16.3,
+   "h_overture": 10.8,
+   "centroid": [
+    428216.3,
+    1580776.8
+   ]
+  },
+  {
+   "area_sf": 3415,
+   "base_ft": 83.6,
+   "height_ft": 35.6,
+   "h_lidar": 35.6,
+   "h_overture": 12.2,
+   "centroid": [
+    428162.0,
+    1580631.4
+   ]
+  },
+  {
+   "area_sf": 153,
+   "base_ft": 87.1,
+   "height_ft": 13.7,
+   "h_lidar": 13.7,
+   "h_overture": 9.8,
+   "centroid": [
+    428292.6,
+    1580554.1
+   ]
+  },
+  {
+   "area_sf": 1865,
+   "base_ft": 81.5,
+   "height_ft": 41.1,
+   "h_lidar": 41.1,
+   "h_overture": 15.1,
+   "centroid": [
+    428647.3,
+    1580350.2
+   ]
+  },
+  {
+   "area_sf": 3618,
+   "base_ft": 85.6,
+   "height_ft": 12.5,
+   "h_lidar": 12.5,
+   "h_overture": null,
+   "centroid": [
+    428685.6,
+    1579937.6
+   ]
+  },
+  {
+   "area_sf": 747,
+   "base_ft": 84.2,
+   "height_ft": 29.5,
+   "h_lidar": 29.5,
+   "h_overture": null,
+   "centroid": [
+    428194.2,
+    1579487.1
+   ]
+  },
+  {
+   "area_sf": 2402,
+   "base_ft": 83.0,
+   "height_ft": 15.0,
+   "h_lidar": 15.0,
+   "h_overture": null,
+   "centroid": [
+    428292.8,
+    1579497.1
+   ]
+  },
+  {
+   "area_sf": 882,
+   "base_ft": 81.1,
+   "height_ft": 41.1,
+   "h_lidar": 41.1,
+   "h_overture": 12.8,
+   "centroid": [
+    428450.7,
+    1579504.8
+   ]
+  },
+  {
+   "area_sf": 2540,
+   "base_ft": 81.2,
+   "height_ft": 16.0,
+   "h_lidar": 16.0,
+   "h_overture": null,
+   "centroid": [
+    428390.5,
+    1579503.4
+   ]
+  },
+  {
+   "area_sf": 2441,
+   "base_ft": 80.2,
+   "height_ft": 18.5,
+   "h_lidar": 18.5,
+   "h_overture": null,
+   "centroid": [
+    428501.9,
+    1579514.9
+   ]
+  },
+  {
+   "area_sf": 2722,
+   "base_ft": 78.4,
+   "height_ft": 30.8,
+   "h_lidar": 30.8,
+   "h_overture": 11.0,
+   "centroid": [
+    428513.5,
+    1579199.7
+   ]
+  },
+  {
+   "area_sf": 2787,
+   "base_ft": 72.9,
+   "height_ft": 39.3,
+   "h_lidar": 39.3,
+   "h_overture": 11.0,
+   "centroid": [
+    426331.7,
+    1580257.3
+   ]
+  },
+  {
+   "area_sf": 1129,
+   "base_ft": 73.4,
+   "height_ft": 17.0,
+   "h_lidar": 17.0,
+   "h_overture": null,
+   "centroid": [
+    426465.3,
+    1580272.3
+   ]
+  },
+  {
+   "area_sf": 1243,
+   "base_ft": 72.7,
+   "height_ft": 19.4,
+   "h_lidar": 19.4,
+   "h_overture": 11.7,
+   "centroid": [
+    426303.2,
+    1579507.4
+   ]
+  },
+  {
+   "area_sf": 1869,
+   "base_ft": 73.5,
+   "height_ft": 19.1,
+   "h_lidar": 19.1,
+   "h_overture": 10.3,
+   "centroid": [
+    426266.0,
+    1579236.9
+   ]
+  },
+  {
+   "area_sf": 444,
+   "base_ft": 72.5,
+   "height_ft": 27.8,
+   "h_lidar": 27.8,
+   "h_overture": null,
+   "centroid": [
+    425704.7,
+    1579706.2
+   ]
+  },
+  {
+   "area_sf": 4730,
+   "base_ft": 72.1,
+   "height_ft": 59.6,
+   "h_lidar": 59.6,
+   "h_overture": 11.0,
+   "centroid": [
+    425593.9,
+    1579751.7
+   ]
+  }
+ ],
+ "overture_release": "2026-09-23.1",
+ "target_ftUS": [
+  426828.1401845789,
+  1577904.4239360366
+ ],
+ "target_lonlat": [
+  -81.715188,
+  28.672523
+ ]
+}
