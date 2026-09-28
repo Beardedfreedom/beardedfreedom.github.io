@@ -75,3 +75,10 @@ Each zone folder has:
 - `<zone>_preview.jpg` and `<zone>_metadata.json` (per-building base, eave and ridge, water areas and levels, tree counts).
 
 Measured from the lidar (2018): main house 7,423 sq ft footprint, base about 73.6 ft, eave about 14 ft, ridge about 31 ft above ground; the structure just west of it is 2,198 sq ft with a 43 ft ridge; the pond southwest of the house sits at about 68.8 ft; the elongated lake is about 1.6 acres at about 69.3 ft; the round lake is about 1.1 acres at about 70.0 ft. Ground across both zones runs 68 to 88 ft NAVD88. Contours at 0.5 ft are indicative only, since the lidar's own vertical error is about 0.33 ft.
+
+## 3D renders (`viewer/` and `focus/*/…_render3d.jpg`)
+
+- `viewer/index.html` is a self-contained three.js viewer of the lidar surfaces. It loads the heightmaps and land-cover textures in `viewer/data/` (surface and bare earth for the whole site at 6 ft, the house compound at 1 ft, the lakes at 2 ft), lets you orbit, tilt and zoom, switch between surface and bare earth, set vertical exaggeration and sun angle, toggle a 100 ft grid, click any point to read easting, northing and elevation, take a snapshot, and drape your own aerial image over the zone. It runs from GitHub Pages once this branch is merged (`/reports/sausage-castle-base/viewer/`) and is also published as a Claude artifact.
+- Heightmaps are RGB PNGs: elevation in feet = (R × 256 + G) × 0.01 + zmin, with zmin per zone in `viewer/data/meta.json`. Row 0 is north. Textures are synthetic land cover from canopy height (grass, shrub, trees by height), building footprints, road buffers and lidar water, shaded by the surface hillshade. They are not aerial photos; NAIP or a drone orthomosaic cropped to a zone's bounds can be draped instead.
+- `focus/house/house_render3d.jpg` and `focus/lakes/lakes_render3d.jpg` are static perspective renders produced by `scripts/render_static.py` from the same data.
+- `scripts/export_3d.py` regenerates `viewer/data/` from the lidar clip and the Overture files.

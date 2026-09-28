@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sausage Castle Terrain</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one full-height frame. The 3D canvas fills it; a title strip floats at the top, a control deck floats at the left (bottom sheet on phones), a readout pill floats bottom-right. */
+:root{
+  --bg:#edf0e8; --panel:rgba(249,250,246,.93); --fg:#1e2a20; --muted:#5f6f60; --line:#c6cfc0;
+  --accent:#2d6b3b; --accent-ink:#ffffff; --water:#3b7dbd; --sky-top:#d9e6ee; --sky-bot:#f1ede1; --grid:#8a9a86;
+  --display:"Barlow Semi Condensed","Barlow","Helvetica Neue",Arial,sans-serif;
+  --body:"Barlow","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131814;--panel:rgba(22,28,23,.93);--fg:#e7ece3;--muted:#9db09a;--line:#33413a;--accent:#7cc48a;--accent-ink:#0f1a12;--water:#5a9fdb;--sky-top:#18222a;--sky-bot:#262b23;--grid:#4f6050;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#131814;--panel:rgba(22,28,23,.93);--fg:#e7ece3;--muted:#9db09a;--line:#33413a;--accent:#7cc48a;--accent-ink:#0f1a12;--water:#5a9fdb;--sky-top:#18222a;--sky-bot:#262b23;--grid:#4f6050;color-scheme:dark}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px;overflow:hidden}
+#app{position:relative;width:100%;height:100%}
+#view{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+#view:active{cursor:grabbing}
+.strip{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));pointer-events:none}
+.strip>*{pointer-events:auto}
+h1{font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.01em;margin:0;text-wrap:balance}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px}
+.tabs button{border:0;background:transparent;color:var(--fg);font:inherit;font-weight:500;padding:6px 12px;border-radius:999px;cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tabs button:focus-visible,.deck button:focus-visible,.deck input:focus-visible,.deck select:focus-visible,label.file:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.deck{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(300px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:10px;backdrop-filter:blur(6px)}
+.deck summary{font-family:var(--display);font-weight:600;font-size:14px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.deck summary::after{content:"–";color:var(--muted)}
+.deck details:not([open]) summary::after{content:"+"}
+.deck details[open]>div{display:grid;gap:10px;margin-top:10px}
+.row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;min-width:0}
+.row label{font-weight:500}
+.row output,.row .val{font-family:var(--mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.deck input[type=range]{width:100%;accent-color:var(--accent);grid-column:1/-1}
+.seg{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px}
+.seg button{flex:1;border:0;background:transparent;color:var(--fg);font:inherit;padding:5px 8px;border-radius:4px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.deck select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:5px 8px}
+.btn{border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;font-weight:500;padding:7px 10px;border-radius:6px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+label.file{display:inline-flex}
+label.file input{position:absolute;width:1px;height:1px;opacity:0}
+.readout{position:absolute;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-family:var(--mono);font-size:12px;line-height:1.5;font-variant-numeric:tabular-nums;max-width:calc(100% - 32px);min-width:0}
+.readout b{font-family:var(--body);font-weight:500;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);line-height:1.4}
+#loading{position:absolute;inset:0;display:grid;place-items:center;background:var(--bg);font-family:var(--display);font-size:16px;color:var(--muted);transition:opacity .3s}
+#shot{position:absolute;inset:0;background:rgba(0,0,0,.65);display:grid;place-items:center;padding:24px;gap:12px;grid-template-rows:1fr auto}
+#shot img{max-width:100%;max-height:100%;border:1px solid var(--line);background:var(--bg)}
+#shot p{color:#fff;margin:0;font-size:13px;text-align:center}
+.compass{position:absolute;right:16px;top:calc(56px + env(safe-area-inset-top,0px));width:44px;height:44px;border-radius:50%;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;font-family:var(--display);font-weight:600;pointer-events:none}
+.compass span{display:block;transform-origin:50% 50%}
+@media (max-width:640px){
+  .strip{gap:8px}
+  h1{font-size:17px}
+  .deck{left:16px;right:16px;width:auto;bottom:calc(64px + env(safe-area-inset-bottom,0px));max-height:45%;overflow:auto}
+  .readout{left:16px;right:16px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:none}
+  .compass{top:calc(96px + env(safe-area-inset-top,0px))}
+}
+@media (prefers-reduced-motion:reduce){#loading{transition:none}}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="view" aria-label="3D terrain view of the Sausage Castle site"></canvas>
+  <div class="strip">
+    <h1>Sausage Castle Terrain</h1>
+    <div class="tabs" role="group" aria-label="Zone">
+      <button type="button" data-zone="site" aria-pressed="true">Whole site</button>
+      <button type="button" data-zone="house" aria-pressed="false">House</button>
+      <button type="button" data-zone="lakes" aria-pressed="false">Lakes</button>
+    </div>
+  </div>
+  <div class="compass" aria-hidden="true"><span id="needle">N</span></div>
+  <div class="deck">
+    <details open>
+      <summary>Render controls</summary>
+      <div>
+        <div class="seg" role="group" aria-label="Model">
+          <button type="button" id="mSurface" aria-pressed="true">Surface</button>
+          <button type="button" id="mGround" aria-pressed="false">Bare earth</button>
+        </div>
+        <div class="row"><label for="exag">Vertical exaggeration</label><output id="exagVal" for="exag">1.0×</output>
+          <input type="range" id="exag" min="1" max="3" step="0.1" value="1"></div>
+        <div class="row"><label for="sunAz">Sun direction</label><output id="sunAzVal" for="sunAz">315°</output>
+          <input type="range" id="sunAz" min="0" max="360" step="5" value="315"></div>
+        <div class="row"><label for="sunAlt">Sun height</label><output id="sunAltVal" for="sunAlt">40°</output>
+          <input type="range" id="sunAlt" min="10" max="85" step="5" value="40"></div>
+        <div class="row"><label for="quality">Mesh detail</label>
+          <select id="quality"><option value="1">Full</option><option value="2">Half</option><option value="4">Quarter</option></select></div>
+        <div class="row"><label for="gridToggle">100 ft grid</label><input type="checkbox" id="gridToggle"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" class="btn primary" id="snap">Snapshot</button>
+          <button type="button" class="btn" id="reset">Reset view</button>
+          <label class="file btn" tabindex="0">Drape my aerial<input type="file" id="tex" accept="image/*"></label>
+        </div>
+        <p class="note" id="zoneNote"></p>
+      </div>
+    </details>
+  </div>
+  <div class="readout" id="readout"><b>Drag</b> orbit · <b>Wheel/pinch</b> zoom · <b>Right-drag</b> pan · <b>Click</b> read a point</div>
+  <div id="shot" hidden><img id="shotImg" alt="Rendered snapshot"><p>Snapshot rendered. Right-click or long-press the image to save it, then <button type="button" class="btn" id="shotClose">close</button>.</p></div>
+  <div id="loading">Loading lidar surface…</div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  if(!window.THREE){document.getElementById('loading').textContent='The 3D library did not load. Reload the page or open it in another browser.';return;}
+  var canvas=document.getElementById('view');
+  var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true,preserveDrawingBuffer:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  var scene=new THREE.Scene();
+  var camera=new THREE.PerspectiveCamera(48,1,2,60000);
+  var hemi=new THREE.HemisphereLight(0xd9e6ee,0x6b6a55,0.75); scene.add(hemi);
+  var sun=new THREE.DirectionalLight(0xfff2dc,1.15); scene.add(sun);
+  var mesh=null, grid=null, marker=null, meta=null, zone=null, cache={}, mode='surface', step=1, exag=1;
+  var mat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.96,metalness:0,side:THREE.DoubleSide});
+  var loader=new THREE.TextureLoader();
+  // ---- orbit control (self-contained)
+  var target=new THREE.Vector3(), sph={r:3000,theta:Math.PI*0.75,phi:Math.PI*0.36}, home=null;
+  function applyCam(){ var p=Math.max(0.05,Math.min(Math.PI/2-0.02,sph.phi)); sph.phi=p;
+    camera.position.set(target.x+sph.r*Math.sin(p)*Math.sin(sph.theta),target.y+sph.r*Math.cos(p),target.z+sph.r*Math.sin(p)*Math.cos(sph.theta));
+    camera.lookAt(target); var n=document.getElementById('needle'); if(n) n.style.transform='rotate('+(-sph.theta*180/Math.PI)+'deg)'; }
+  var drag=null, pinch=null;
+  function pt(e){return {x:e.clientX,y:e.clientY};}
+  canvas.addEventListener('pointerdown',function(e){ canvas.setPointerCapture(e.pointerId); drag={id:e.pointerId,b:e.button,x:e.clientX,y:e.clientY,moved:false,t:Date.now()}; if(e.pointerType==='touch'){ touches[e.pointerId]=pt(e); if(Object.keys(touches).length===2) pinch=pinchState(); } });
+  var touches={};
+  function pinchState(){ var k=Object.keys(touches); var a=touches[k[0]],b=touches[k[1]]; return {d:Math.hypot(a.x-b.x,a.y-b.y),cx:(a.x+b.x)/2,cy:(a.y+b.y)/2,r:sph.r}; }
+  canvas.addEventListener('pointermove',function(e){
+    if(e.pointerType==='touch' && touches[e.pointerId]){ touches[e.pointerId]=pt(e); if(pinch && Object.keys(touches).length===2){ var s=pinchState(); sph.r=Math.max(50,Math.min(40000,pinch.r*pinch.d/s.d)); pan(s.cx-pinch.cx,s.cy-pinch.cy); pinch.cx=s.cx;pinch.cy=s.cy; applyCam(); return; } }
+    if(!drag||drag.id!==e.pointerId) return; var dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>3) drag.moved=true;
+    if(drag.b===2||e.shiftKey){ pan(dx,dy); } else { sph.theta-=dx*0.005; sph.phi-=dy*0.005; }
+    drag.x=e.clientX; drag.y=e.clientY; applyCam(); });
+  function pan(dx,dy){ var s=sph.r*0.0016; var f=new THREE.Vector3(); camera.getWorldDirection(f); f.y=0; f.normalize(); var r=new THREE.Vector3().crossVectors(f,new THREE.Vector3(0,1,0)); target.addScaledVector(r,-dx*s); target.addScaledVector(f,dy*s); }
+  canvas.addEventListener('pointerup',function(e){ if(e.pointerType==='touch'){ delete touches[e.pointerId]; if(Object.keys(touches).length<2) pinch=null; } if(drag&&drag.id===e.pointerId){ if(!drag.moved && Date.now()-drag.t<400) probe(e.clientX,e.clientY); drag=null; } });
+  canvas.addEventListener('pointercancel',function(e){ delete touches[e.pointerId]; pinch=null; drag=null; });
+  canvas.addEventListener('contextmenu',function(e){e.preventDefault();});
+  canvas.addEventListener('wheel',function(e){ e.preventDefault(); sph.r*=Math.exp(e.deltaY*0.0012); sph.r=Math.max(50,Math.min(40000,sph.r)); applyCam(); },{passive:false});
+  // ---- data
+  function loadImage(url){ return new Promise(function(res,rej){ var im=new Image(); im.onload=function(){res(im)}; im.onerror=function(){rej(new Error('Could not load '+url))}; im.src=url; }); }
+  function loadHeight(url){ return loadImage(url).then(function(im){ var c=document.createElement('canvas'); c.width=im.width; c.height=im.height; var g=c.getContext('2d',{willReadFrequently:true}); g.drawImage(im,0,0); return {w:im.width,h:im.height,d:g.getImageData(0,0,im.width,im.height).data}; }); }
+  function buildGeometry(hm,info,cell,st,zbase){
+    var w=Math.floor((hm.w-1)/st)+1, h=Math.floor((hm.h-1)/st)+1, W=(hm.w-1)*cell, H=(hm.h-1)*cell;
+    var pos=new Float32Array(w*h*3), uv=new Float32Array(w*h*2), k=0, u=0;
+    for(var j=0;j<h;j++){ var py=Math.min(j*st,hm.h-1); for(var i=0;i<w;i++){ var px=Math.min(i*st,hm.w-1); var q=(py*hm.w+px)*4; var z=(hm.d[q]*256+hm.d[q+1])*info.scale+info.zmin;
+      pos[k++]=px*cell-W/2; pos[k++]=z-zbase; pos[k++]=py*cell-H/2; uv[u++]=px/(hm.w-1); uv[u++]=1-py/(hm.h-1); } }
+    var idx=new Uint32Array((w-1)*(h-1)*6), n=0;
+    for(var j2=0;j2<h-1;j2++) for(var i2=0;i2<w-1;i2++){ var a=j2*w+i2,b=a+1,c=a+w,d=c+1; idx[n++]=a;idx[n++]=c;idx[n++]=b; idx[n++]=b;idx[n++]=c;idx[n++]=d; }
+    var g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.BufferAttribute(uv,2)); g.setIndex(new THREE.BufferAttribute(idx,1)); g.computeVertexNormals(); g.computeBoundingSphere(); return g; }
+  function zoneGeometry(zn,which){ var key=zn+'|'+which+'|'+step; if(cache[key]) return Promise.resolve(cache[key]);
+    var z=meta.zones[zn]; return loadHeight('data/'+z[which].file).then(function(hm){ var g=buildGeometry(hm,z[which],z.cell_ft,step,z.z_range[0]); cache[key]=g; return g; }); }
+  function setZone(zn){ zone=zn; var z=meta.zones[zn]; document.getElementById('loading').hidden=false; document.getElementById('loading').style.opacity=1;
+    document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.zone===zn));});
+    var W=z.width_ft, H=z.height_ft; if(!cache[zn+'|tex']){ var t=loader.load('data/'+z.color); t.encoding=THREE.sRGBEncoding; t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); cache[zn+'|tex']=t; }
+    if(!customTex) mat.map=cache[zn+'|tex']; mat.needsUpdate=true;
+    zoneGeometry(zn,mode).then(function(g){ if(mesh){scene.remove(mesh);} mesh=new THREE.Mesh(g,mat); mesh.scale.y=exag; scene.add(mesh);
+      if(grid){scene.remove(grid);} grid=new THREE.GridHelper(Math.max(W,H),Math.round(Math.max(W,H)/100),0x8a9a86,0x8a9a86); grid.position.y=-1; grid.material.opacity=0.35; grid.material.transparent=true; grid.visible=document.getElementById('gridToggle').checked; scene.add(grid);
+      if(marker){scene.remove(marker);marker=null;} if(z.target){ var mx=z.target[0]-z.x0-W/2, mz=H/2-(z.target[1]-z.y0); marker=new THREE.Mesh(new THREE.ConeGeometry(Math.max(6,W/120),Math.max(20,W/40),12),new THREE.MeshStandardMaterial({color:0xd0308a,roughness:0.6})); marker.rotation.x=Math.PI; marker.position.set(mx,(z.z_range[1]-z.z_range[0])*exag+Math.max(30,W/30),mz); scene.add(marker); }
+      target.set(0,(z.z_range[0]+8-z.z_range[0]),0); sph.r=Math.max(W,H)*1.15; sph.theta=Math.PI*0.78; sph.phi=Math.PI*0.34; home={r:sph.r,theta:sph.theta,phi:sph.phi,t:target.clone()}; applyCam();
+      var wl=(z.water||[]).map(function(w){return w.acres+' ac at '+w.wse+' ft';}).join(', ');
+      document.getElementById('zoneNote').textContent=z.title+' · '+z.cell_ft+' ft cells · '+W+' × '+H+' ft · ground '+z.z_range[0].toFixed(0)+'–'+z.z_range[1].toFixed(0)+' ft NAVD88'+(wl?' · water: '+wl:'');
+      document.getElementById('loading').style.opacity=0; setTimeout(function(){document.getElementById('loading').hidden=true;},320); render(); })
+    .catch(function(err){ document.getElementById('loading').textContent='Could not load the zone data ('+err.message+').'; }); }
+  function sunUpdate(){ var az=+document.getElementById('sunAz').value, al=+document.getElementById('sunAlt').value; var a=az*Math.PI/180, e=al*Math.PI/180; sun.position.set(Math.sin(a)*Math.cos(e)*4000, Math.sin(e)*4000, -Math.cos(a)*Math.cos(e)*4000); sun.intensity=0.6+0.8*Math.sin(e);
+    document.getElementById('sunAzVal').textContent=az+'°'; document.getElementById('sunAltVal').textContent=al+'°'; render(); }
+  function render(){ var w=canvas.clientWidth, h=canvas.clientHeight; if(canvas.width!==Math.round(w*renderer.getPixelRatio())||canvas.height!==Math.round(h*renderer.getPixelRatio())){ renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix(); } renderer.render(scene,camera); }
+  function probe(cx,cy){ if(!mesh||!zone) return; var z=meta.zones[zone]; var r=canvas.getBoundingClientRect(); var v=new THREE.Vector2(((cx-r.left)/r.width)*2-1,-((cy-r.top)/r.height)*2+1); var rc=new THREE.Raycaster(); rc.setFromCamera(v,camera); var hit=rc.intersectObject(mesh)[0]; var ro=document.getElementById('readout');
+    if(!hit){ ro.innerHTML='<b>No surface</b> under that point'; return; } var p=hit.point; var E=z.x0+p.x+z.width_ft/2, N=z.y0+z.height_ft/2-p.z, Z=p.y/exag+z.z_range[0];
+    ro.innerHTML='<b>E</b> '+E.toFixed(1)+' <b>N</b> '+N.toFixed(1)+' ftUS · <b>Z</b> '+Z.toFixed(1)+' ft NAVD88 · <b>'+(mode==='surface'?'surface':'bare earth')+'</b>'; }
+  function themeColors(){ var cs=getComputedStyle(document.documentElement); var top=cs.getPropertyValue('--sky-top').trim(); renderer.setClearColor(new THREE.Color(top||'#d9e6ee'),1); render(); }
+  // ---- wiring
+  var customTex=null;
+  document.querySelectorAll('.tabs button').forEach(function(b){ b.addEventListener('click',function(){ setZone(b.dataset.zone); }); });
+  document.getElementById('mSurface').addEventListener('click',function(){ mode='surface'; this.setAttribute('aria-pressed','true'); document.getElementById('mGround').setAttribute('aria-pressed','false'); setZone(zone); });
+  document.getElementById('mGround').addEventListener('click',function(){ mode='ground'; this.setAttribute('aria-pressed','true'); document.getElementById('mSurface').setAttribute('aria-pressed','false'); setZone(zone); });
+  document.getElementById('exag').addEventListener('input',function(){ exag=+this.value; document.getElementById('exagVal').textContent=exag.toFixed(1)+'×'; if(mesh) mesh.scale.y=exag; if(marker&&zone){ var z=meta.zones[zone]; marker.position.y=(z.z_range[1]-z.z_range[0])*exag+Math.max(30,z.width_ft/30);} render(); });
+  document.getElementById('sunAz').addEventListener('input',sunUpdate); document.getElementById('sunAlt').addEventListener('input',sunUpdate);
+  document.getElementById('quality').addEventListener('change',function(){ step=+this.value; setZone(zone); });
+  document.getElementById('gridToggle').addEventListener('change',function(){ if(grid) grid.visible=this.checked; render(); });
+  document.getElementById('reset').addEventListener('click',function(){ if(home){ sph.r=home.r; sph.theta=home.theta; sph.phi=home.phi; target.copy(home.t); applyCam(); render(); } });
+  document.getElementById('snap').addEventListener('click',function(){ render(); document.getElementById('shotImg').src=canvas.toDataURL('image/png'); document.getElementById('shot').hidden=false; });
+  document.getElementById('shotClose').addEventListener('click',function(){ document.getElementById('shot').hidden=true; });
+  document.getElementById('tex').addEventListener('change',function(){ var f=this.files&&this.files[0]; if(!f) return; var url=URL.createObjectURL(f); loader.load(url,function(t){ t.encoding=THREE.sRGBEncoding; customTex=t; mat.map=t; mat.needsUpdate=true; document.getElementById('zoneNote').textContent='Draped '+f.name+'. Crop your aerial exactly to the zone bounds shown in the notes for it to line up.'; render(); }); });
+  window.addEventListener('resize',render);
+  if(window.matchMedia){ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',themeColors); }
+  new MutationObserver(themeColors).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  function loop(){ render(); requestAnimationFrame(loop); }
+  fetch('data/meta.json').then(function(r){return r.json();}).then(function(m){ meta=m; var isPhone=Math.min(window.innerWidth,window.innerHeight)<700; step=isPhone?2:1; document.getElementById('quality').value=String(step); themeColors(); sunUpdate(); setZone('site'); loop(); })
+  .catch(function(err){ document.getElementById('loading').textContent='Could not load the model data ('+err.message+').'; });
+})();
+</script>
+
+</body>
+</html>
