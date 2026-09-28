@@ -56,3 +56,13 @@ Files: `swamp_sheet.png` (plan, elevations, axon), `swamp_unit_local_ft.dxf` (3D
 | mushroom | 10 |
 | haunted | 6 |
 | swamp | 6 |
+
+## Concept art (AI, generated from the design specs)
+
+Three images were generated on the user's Higgsfield account (GPT Image 2.5, 16:9, about 1.5 to 6 credits total) from prompts written to match the massing models. The sandbox could not download them, so they are linked here and shown in the session's generation widget:
+
+- Mushroom: https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20260928_225118_0054bdb1-84f7-4862-af92-53fb41ba444f.png
+- Haunted house: https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20260928_225118_bfef9a54-d725-46a6-bee7-179994f6d0a2.png
+- Florida swamp: https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20260928_225118_0b090e9c-ffe5-45cf-9882-f79dad4bc3b1.png
+
+They are inspiration images, not the design: dimensions, plans and placement come from the DXF and JSON files in this folder.
