@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sausage Castle Demo</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Barlow:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a survey sheet. One reading column (68ch) with full-bleed figures; section eyebrows numbered like drawing sheets because the sections are the real order of the work. */
+:root{
+  --bg:#f3f1ea; --paper:#faf9f4; --fg:#1d261f; --muted:#5e6c60; --line:#d3d7c9; --accent:#2d6b3b; --accent-ink:#fff; --lake:#2f6f9f; --sand:#e2c98f; --roof:#a63a30;
+  --display:"Barlow Semi Condensed","Barlow","Helvetica Neue",Arial,sans-serif; --body:"Barlow","Helvetica Neue",Arial,sans-serif; --mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a15;--paper:#1b221c;--fg:#e8ede4;--muted:#9fb19c;--line:#2f3b31;--accent:#7cc48a;--accent-ink:#0f1a12;--lake:#6aaee0;--sand:#b89a55;--roof:#d4675b;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141a15;--paper:#1b221c;--fg:#e8ede4;--muted:#9fb19c;--line:#2f3b31;--accent:#7cc48a;--accent-ink:#0f1a12;--lake:#6aaee0;--sand:#b89a55;--roof:#d4675b;color-scheme:dark}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:1100px;margin:0 auto;padding-block:0 64px;padding-inline:16px}
+header.hero{position:relative;margin:0 0 40px;border-bottom:1px solid var(--line)}
+.hero-img{width:100%;max-width:100%;aspect-ratio:2040/2270;max-height:70vh;object-fit:cover;object-position:center 45%;display:block;border-radius:0 0 12px 12px}
+.hero-text{display:grid;gap:12px;padding:28px 0 32px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,6vw,60px);line-height:1;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.lede{font-size:19px;max-width:68ch;margin:0;color:var(--fg)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:8px}
+.stat{border-top:2px solid var(--accent);padding-top:8px}
+.stat b{display:block;font-family:var(--display);font-size:30px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+section{margin:56px 0}
+section h2{font-family:var(--display);font-weight:600;font-size:clamp(26px,4vw,38px);line-height:1.1;margin:0 0 8px;text-wrap:balance}
+.num{font-family:var(--mono);color:var(--accent);font-size:13px;letter-spacing:.06em}
+p{max-width:68ch}
+figure{margin:20px 0}
+figure img{width:100%;max-width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);background:var(--paper)}
+figcaption{font-size:13px;color:var(--muted);margin-top:8px;max-width:80ch}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.two>*{min-width:0}
+@media (max-width:720px){.two{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+.btn{display:inline-block;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:500;padding:12px 18px;border-radius:8px;font-family:var(--display);font-size:18px}
+.btn:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.btn.secondary{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.btns{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto;margin:16px 0}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--display);font-weight:600;font-size:14px;color:var(--muted)}
+td.n{text-align:right;font-family:var(--mono);font-size:13px}
+.zone{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.theme{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden;display:grid;grid-template-rows:auto 1fr}
+.theme img{width:100%;max-width:100%;display:block;aspect-ratio:3/2;object-fit:cover;object-position:center top}
+.theme .body{padding:16px 18px;display:grid;gap:8px}
+.theme h3{font-family:var(--display);font-size:22px;margin:0;font-weight:600}
+.theme .tag{font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.theme dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:4px 0 0;font-size:14px}
+.theme dt{color:var(--muted)}
+.theme dd{margin:0;font-family:var(--mono);font-size:13px}
+.theme a{color:var(--accent)}
+ol.steps{padding-left:0;list-style:none;counter-reset:s;display:grid;gap:12px;max-width:72ch}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+ol.steps li::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);color:var(--accent);font-size:13px;padding-top:4px;border-top:2px solid var(--accent)}
+.note{border-left:3px solid var(--sand);padding:8px 14px;background:var(--paper);border-radius:0 8px 8px 0;max-width:72ch}
+footer{border-top:1px solid var(--line);margin-top:56px;padding-top:20px;font-size:13px;color:var(--muted)}
+footer a,section a{color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.theme{transition:transform .2s}.theme:hover{transform:translateY(-2px)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <img class="hero-img" src="sausage_castle_preview.jpg" alt="Lidar hillshade of the Sausage Castle estate in Astatula, Florida, with buildings, roads and lakes marked">
+  <div class="hero-text">
+    <span class="eyebrow">22500 Robbins Road, Astatula, Florida · Lake County · concept study, September 2026</span>
+    <h1>Sausage Castle: from an address to a buildable idea</h1>
+    <p class="lede">A 120-acre estate modelled from free government lidar, split into four equal lake zones, and filled with three kinds of themed tiny home. Everything on this page came from public data and a few Python scripts. No Google Earth model was touched.</p>
+    <div class="stats">
+      <div class="stat"><b>328 ac</b><span>modelled at 3 ft, with 1 ft detail on the house and lakes</span></div>
+      <div class="stat"><b>39.5 M</b><span>lidar points, USGS 3DEP 2018 flight</span></div>
+      <div class="stat"><b>4 × 2.04 ac</b><span>equal zones around the round lake</span></div>
+      <div class="stat"><b>22</b><span>tiny-home pads on the existing loop track</span></div>
+      <div class="stat"><b>3</b><span>themes: mushroom, haunted house, Florida swamp</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="site">
+  <span class="num">01</span>
+  <h2>The site as the laser saw it</h2>
+  <p>The estate sits west of Robbins Road. The main house, 7,423 sq ft with a 31 ft ridge, is at the south end of the road, with a cleared compound of pads, a ring and a pond behind it. Two lakes with a loop track lie 1,300 ft north. The images below are shaded from the lidar surface, so every roof, tree and bank is real; the colours are land cover, not photographs.</p>
+  <div class="two">
+    <figure><img src="focus/house/house_preview.jpg" alt="1 ft lidar hillshade of the house compound with contours, footprints and trees"><figcaption>House compound at 1 ft: the main house (red outline), the 43 ft structure beside it, the pond at 68.8 ft, and the pads and ring to the southwest.</figcaption></figure>
+    <figure><img src="focus/lakes/lakes_preview.jpg" alt="1 ft lidar hillshade of the two lakes, the loop track and the orchard rows"><figcaption>The lakes at 1 ft: the round lake (1.1 ac, water at 70.0 ft) with its loop track, the long lake (1.6 ac, 69.3 ft), and the orchard rows.</figcaption></figure>
+  </div>
+</section>
+
+<section id="threed">
+  <span class="num">02</span>
+  <h2>Walk it in 3D</h2>
+  <p>The interactive model lets you orbit the whole site, the house or the lakes, switch to bare earth, move the sun, click any point for its elevation in State Plane feet, and turn on the lake-zone plan and the tiny homes.</p>
+  <div class="btns"><a class="btn" href="viewer/index.html" target="_blank" rel="noopener">Open the 3D viewer</a><a class="btn secondary" href="#zones">Skip to the plan</a></div>
+  <figure><img src="viewer/lakes_homes_view.jpg" alt="3D view of the lakes zone with mushroom tiny homes placed on their pads"><figcaption>Lakes zone in the viewer with the zone overlay and the tiny homes switched on. In surface mode the 2018 tree canopy still stands around the pads.</figcaption></figure>
+  <div class="two">
+    <figure><img src="focus/house/house_render3d.jpg" alt="Static 3D render of the house compound from the southeast"><figcaption>House compound, rendered from the lidar surface.</figcaption></figure>
+    <figure><img src="focus/lakes/lakes_render3d.jpg" alt="Static 3D render of the lakes and loop track"><figcaption>The lakes and loop track.</figcaption></figure>
+  </div>
+</section>
+
+<section id="zones">
+  <span class="num">03</span>
+  <h2>Four equal zones around the lake</h2>
+  <p>The zone lines radiate from the lake centre so each zone has exactly 2.04 acres between a 50 ft no-build water buffer and a limit 250 ft from the shore. The existing 1,640 ft loop track becomes the lane. Pads are 35 × 50 ft, 20 ft off the lane edge and 15 ft apart. Widening the ring to 300 or 350 ft adds no pads: the lane is the limit, and a second row would need a rear lane.</p>
+  <figure><img src="focus/lakes/lake_zones_plan.jpg" alt="Plan of four coloured zones around the round lake with numbered pads along the loop track"><figcaption>Zone plan over the lidar hillshade. Dashed blue: 50 ft buffer. Dash-dot purple: 250 ft zone limit. Yellow: pads with IDs.</figcaption></figure>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Zone</th><th>Sector</th><th>Area</th><th>Lake frontage</th><th>Shore to lane</th><th>Pads</th><th>Trees (2018)</th><th>Homes placed</th></tr></thead>
+    <tbody>
+      <tr><td><span class="zone" style="background:#d94f3d"></span>A · northeast</td><td>0° to 89°</td><td class="n">2.04 ac</td><td class="n">249 ft</td><td class="n">81 to 109 ft</td><td class="n">4</td><td class="n">69</td><td>haunted houses</td></tr>
+      <tr><td><span class="zone" style="background:#e8a33c"></span>B · southeast</td><td>89° to 176°</td><td class="n">2.04 ac</td><td class="n">310 ft</td><td class="n">92 to 249 ft</td><td class="n">5</td><td class="n">53</td><td>swamp houses</td></tr>
+      <tr><td><span class="zone" style="background:#3f8f5a"></span>C · southwest</td><td>176° to 270°</td><td class="n">2.04 ac</td><td class="n">246 ft</td><td class="n">106 to 135 ft</td><td class="n">8</td><td class="n">53</td><td>mushrooms</td></tr>
+      <tr><td><span class="zone" style="background:#4a7fc2"></span>D · northwest</td><td>270° to 360°</td><td class="n">2.04 ac</td><td class="n">247 ft</td><td class="n">80 to 107 ft</td><td class="n">5</td><td class="n">66</td><td>one of each</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="homes">
+  <span class="num">04</span>
+  <h2>Three kinds of home</h2>
+  <p>Each unit was built as a parametric massing model sized to a 35 × 50 ft pad, then exported as CAD blocks and placed on all 22 pads facing the lane. Sheets show the plan, elevations and an axon; the specs carry materials and Florida wind and flood notes.</p>
+  <div class="themes">
+    <article class="theme">
+      <img src="units/mushroom_sheet.jpg" alt="Design sheet for the Amanita cottage mushroom tiny home">
+      <div class="body"><span class="tag">Mushroom</span><h3>Amanita cottage</h3>
+        <p style="margin:0;font-size:15px">An 18 ft cream stem under a red spotted cap that overhangs 6 ft all round. The sleeping loft is inside the cap under a round skylight; a baby mushroom is the bathroom.</p>
+        <dl><dt>Gross</dt><dd>412 sq ft</dd><dt>Height</dt><dd>24 ft</dd><dt>Placed</dt><dd>10 units</dd></dl>
+        <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20260928_225118_0054bdb1-84f7-4862-af92-53fb41ba444f.png" target="_blank" rel="noopener">Concept art</a></div>
+    </article>
+    <article class="theme">
+      <img src="units/haunted_sheet.jpg" alt="Design sheet for the Widow's Peak haunted house tiny home">
+      <div class="body"><span class="tag">Haunted house</span><h3>Widow's Peak</h3>
+        <p style="margin:0;font-size:15px">A narrow Gothic cottage: 24:12 black roof, corner turret with a witch-hat spire and reading nook, amber lancet windows, hooded porch on a lattice base, brick chimney.</p>
+        <dl><dt>Gross</dt><dd>564 sq ft</dd><dt>Height</dt><dd>34 ft</dd><dt>Placed</dt><dd>6 units</dd></dl>
+        <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20260928_225118_bfef9a54-d725-46a6-bee7-179994f6d0a2.png" target="_blank" rel="noopener">Concept art</a></div>
+    </article>
+    <article class="theme">
+      <img src="units/swamp_sheet.jpg" alt="Design sheet for the Cypress stilt cracker Florida swamp tiny home">
+      <div class="body"><span class="tag">Florida swamp</span><h3>Cypress stilt cracker</h3>
+        <p style="margin:0;font-size:15px">A cracker house lifted 7 ft on piers, wrapped on three sides by a screened porch, under a tin hip roof with a vented cupola. Shutters close for storms.</p>
+        <dl><dt>Gross</dt><dd>702 sq ft</dd><dt>Height</dt><dd>28 ft</dd><dt>Placed</dt><dd>6 units</dd></dl>
+        <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20260928_225118_0b090e9c-ffe5-45cf-9882-f79dad4bc3b1.png" target="_blank" rel="noopener">Concept art</a></div>
+    </article>
+  </div>
+</section>
+
+<section id="how">
+  <span class="num">05</span>
+  <h2>How it was made, and why not from Google Earth</h2>
+  <p>Google Earth's 3D mesh can be downloaded in an afternoon, but Google's Maps Platform terms forbid exporting, storing or deriving 3D models from it, and the mesh carries no accuracy specification. The public route is legal and more accurate.</p>
+  <ol class="steps">
+    <li><div><b>Locate.</b> The address was matched to county address points and road geometry after a search-engine coordinate proved 1.7 km off.</div></li>
+    <li><div><b>Lidar.</b> 39.5 million points were clipped from the USGS 3DEP Entwine index for Lake County (2018, public domain) and reprojected to NAD83 Florida East, US survey feet, NAVD88.</div></li>
+    <li><div><b>Base.</b> Bare-earth and surface grids, 1 ft and 0.5 ft contours, building footprints with lidar heights, tree crowns, lake outlines at their water level, all as layered DXF and Civil 3D point files.</div></li>
+    <li><div><b>Zones.</b> Equal-area sectors solved numerically around the lake, pads placed under stated spacing rules, capacity tested at three ring depths.</div></li>
+    <li><div><b>Homes.</b> Parametric massing models per theme, exported as DXF blocks and dropped on the pads at ground elevation, with concept images generated from the same specs.</div></li>
+  </ol>
+  <div class="note" style="margin-top:20px"><b>Concept grade.</b> No parcel lines yet (Lake County GIS was unreachable), zoning for district A unverified, the 50 ft water buffer is an assumption, and a boundary-plus-topo survey must replace all of this before any permit.</div>
+</section>
+
+<section id="next">
+  <span class="num">06</span>
+  <h2>What happens next</h2>
+  <div class="two">
+    <div class="card"><b>Data</b><p style="margin:8px 0 0">Pull the parcel polygons for 09-21-26-000300004800, -4600 and -4900 from the Lake County Property Appraiser, and check the district A zoning text for tiny homes, park models and waterbody setbacks.</p></div>
+    <div class="card"><b>Design</b><p style="margin:8px 0 0">Pick the first unit to take to a real floor plan with wall thicknesses and a window schedule, decide on a second row with a rear lane, and add a shared bathhouse, parking and stormwater set-asides.</p></div>
+  </div>
+</section>
+
+<footer>
+  Terrain: USGS 3DEP lidar, project FL_Peninsular_Lake_2018, public domain. Buildings, roads, water and addresses: Overture Maps 2026-09-23.1, © OpenStreetMap contributors, Overture Maps Foundation (ODbL). Property facts from public listings. Concept images generated with GPT Image 2.5 via Higgsfield. Coordinates EPSG:2236 ftUS, elevations NAVD88 ft. Files and scripts: <a href="https://github.com/Beardedfreedom/beardedfreedom.github.io/pull/2" target="_blank" rel="noopener">pull request on GitHub</a>.
+</footer>
+</div>
+</body>
+</html>
