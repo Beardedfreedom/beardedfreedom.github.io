@@ -76,6 +76,30 @@ ol.steps li::before{content:counter(s,decimal-leading-zero);font-family:var(--mo
 .note{border-left:3px solid var(--gold);padding:10px 14px;background:var(--paper);border-radius:0 10px 10px 0;max-width:72ch}
 footer{border-top:1px solid var(--line);margin-top:56px;padding-top:20px;font-size:13px;color:var(--muted)}
 @media (prefers-reduced-motion:no-preference){.theme,.el{transition:transform .2s}.theme:hover,.el:hover{transform:translateY(-2px)}}
+/* Print / Save as PDF: the poster as a cover, then one section per landscape page, dark theme kept, images fitted to the page. */
+.print-only{display:none}
+@media print{
+  @page{size:11in 8.5in;margin:0}
+  html,body{background:var(--bg)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .wrap{max-width:none;padding:0.4in 0.55in}
+  .hero{min-height:7.4in;grid-template-columns:340px 1fr;gap:36px;padding:0;border-bottom:0;break-after:page}
+  .poster{width:auto;max-width:100%;max-height:6.8in;margin:0 auto}
+  h1{font-size:84px;filter:none}
+  .print-only{display:block;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--pink);margin-top:18px}
+  section{break-before:page;margin:0 0 24px}
+  footer{margin-top:24px}
+  figure,.card,.theme,.el,.tablewrap,.note,ol.steps li,.stat{break-inside:avoid}
+  figure{margin:14px 0}
+  figure img{width:auto;max-width:100%;max-height:6in;margin:0 auto}
+  .two figure img{max-height:5.2in}
+  .map{grid-template-columns:repeat(4,1fr);gap:10px}
+  .el{padding:12px 14px}
+  .themes{grid-template-columns:1fr 1fr}
+  .theme img{aspect-ratio:auto;width:auto;max-width:100%;max-height:3in;margin:0 auto}
+  .btns{display:none}
+  a{text-decoration:none}
+  .theme,.el{transform:none!important;transition:none}
+}
 </style>
 </head>
 <body>
@@ -93,6 +117,7 @@ footer{border-top:1px solid var(--line);margin-top:56px;padding-top:20px;font-si
       <div class="stat"><b>35</b><span>RV sites plus a tent loop</span></div>
       <div class="stat"><b>1.6 ac</b><span>float lagoon at 69.3 ft</span></div>
     </div>
+    <p class="print-only">Private review copy · concept only · please don't forward</p>
   </div>
 </header>
 

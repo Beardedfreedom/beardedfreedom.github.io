@@ -134,3 +134,13 @@ For a real subdomain (for example `review.beardedfreedom.com`): point a DNS CNAM
 `beardedfreedom.github.io`, put the `review/` files in their own public repository with a `CNAME`
 file naming the subdomain, and enable GitHub Pages on it. Only ciphertext is published, so the
 repository holding the review site does not need to be private.
+
+### Review PDF
+
+`review/florida-freedom-world-review.pdf` is the same demo as a 20-page landscape PDF (poster cover,
+then one section per page), encrypted with AES-256 under the same review password. The demo page
+carries a print stylesheet, so "Print / Save as PDF" in a browser gives the same layout. To rebuild:
+
+    npm install playwright-core @fontsource/anton @fontsource/barlow @fontsource/jetbrains-mono
+    node reports/sausage-castle-base/scripts/export_pdf.js /tmp/ffw.pdf
+    REVIEW_PASSWORD='the passphrase' python3 reports/sausage-castle-base/scripts/encrypt_pdf.py /tmp/ffw.pdf review/florida-freedom-world-review.pdf

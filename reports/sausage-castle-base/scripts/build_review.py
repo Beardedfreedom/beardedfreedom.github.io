@@ -165,6 +165,9 @@ can sit on a public GitHub Pages site or any static host.
 * `sw.js`: service worker that serves the decrypted pages from this browser's cache under
   `app/`. A locked browser is redirected back to the gate.
 * `bundle.enc`: {n} files, {mb:.1f} MB before encryption (demo page, 3D viewer, images, data).
+* `florida-freedom-world-review.pdf`: the whole demo as a 20-page landscape PDF (poster cover, one
+  section per page), AES-256 encrypted with the same review password. Made by
+  `scripts/export_pdf.js` (Chromium print of the demo page) and `scripts/encrypt_pdf.py`.
 
 Locking: the "Private review · Lock" link on every page (or opening the gate again) wipes the
 decrypted copy from the browser. Nothing is sent anywhere.
