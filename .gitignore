@@ -2,3 +2,4 @@
 
 *.blend1
 reports/sausage-castle-base/mockup/blender/render.log
+__pycache__/
