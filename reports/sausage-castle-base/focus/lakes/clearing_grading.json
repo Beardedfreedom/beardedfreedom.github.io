@@ -1,0 +1,1168 @@
+{
+ "generated": "2026-09-29",
+ "rules": {
+  "clearing_limit_ft": 8.0,
+  "blend_ft": 10.0,
+  "pad_grade": "median existing"
+ },
+ "totals": {
+  "pads": 22,
+  "trees_removed": 82,
+  "cut_cy": 155.6,
+  "fill_cy": 135.4,
+  "clearing_ac": 2.24
+ },
+ "pads": [
+  {
+   "pad": "B05",
+   "zone": "B",
+   "unit": "swamp",
+   "center": [
+    426800.6,
+    1578900.9
+   ],
+   "existing_min": 74.7,
+   "existing_max": 77.2,
+   "existing_median": 75.2,
+   "design_elev": 75.2,
+   "cut_cy": 19.5,
+   "fill_cy": 8.4,
+   "net_cy": -11.1,
+   "clearing_sf": 3367,
+   "trees_removed": 3,
+   "trees_removed_ids": [
+    319,
+    326,
+    343
+   ],
+   "tallest_removed_ft": 23.0,
+   "trees_kept_nearby": 4
+  },
+  {
+   "pad": "B04",
+   "zone": "B",
+   "unit": "swamp",
+   "center": [
+    426751.2,
+    1578883.4
+   ],
+   "existing_min": 74.3,
+   "existing_max": 77.2,
+   "existing_median": 75.0,
+   "design_elev": 75.0,
+   "cut_cy": 16.2,
+   "fill_cy": 11.2,
+   "net_cy": -4.9,
+   "clearing_sf": 3361,
+   "trees_removed": 2,
+   "trees_removed_ids": [
+    293,
+    317
+   ],
+   "tallest_removed_ft": 30.0,
+   "trees_kept_nearby": 7
+  },
+  {
+   "pad": "B03",
+   "zone": "B",
+   "unit": "swamp",
+   "center": [
+    426703.5,
+    1578868.2
+   ],
+   "existing_min": 74.6,
+   "existing_max": 77.7,
+   "existing_median": 74.9,
+   "design_elev": 74.9,
+   "cut_cy": 16.3,
+   "fill_cy": 6.0,
+   "net_cy": -10.2,
+   "clearing_sf": 3364,
+   "trees_removed": 2,
+   "trees_removed_ids": [
+    284,
+    297
+   ],
+   "tallest_removed_ft": 34.0,
+   "trees_kept_nearby": 6
+  },
+  {
+   "pad": "B02",
+   "zone": "B",
+   "unit": "swamp",
+   "center": [
+    426635.5,
+    1578859.6
+   ],
+   "existing_min": 74.5,
+   "existing_max": 75.1,
+   "existing_median": 74.7,
+   "design_elev": 74.7,
+   "cut_cy": 5.0,
+   "fill_cy": 2.9,
+   "net_cy": -2.1,
+   "clearing_sf": 3369,
+   "trees_removed": 1,
+   "trees_removed_ids": [
+    285
+   ],
+   "tallest_removed_ft": 20.0,
+   "trees_kept_nearby": 6
+  },
+  {
+   "pad": "C08",
+   "zone": "C",
+   "unit": "mushroom",
+   "center": [
+    426572.3,
+    1578868.4
+   ],
+   "existing_min": 73.9,
+   "existing_max": 74.8,
+   "existing_median": 74.3,
+   "design_elev": 74.3,
+   "cut_cy": 4.4,
+   "fill_cy": 3.0,
+   "net_cy": -1.4,
+   "clearing_sf": 3366,
+   "trees_removed": 4,
+   "trees_removed_ids": [
+    282,
+    288,
+    299,
+    341
+   ],
+   "tallest_removed_ft": 30.0,
+   "trees_kept_nearby": 4
+  },
+  {
+   "pad": "C07",
+   "zone": "C",
+   "unit": "mushroom",
+   "center": [
+    426520.1,
+    1578884.9
+   ],
+   "existing_min": 73.6,
+   "existing_max": 74.1,
+   "existing_median": 73.8,
+   "design_elev": 73.8,
+   "cut_cy": 4.0,
+   "fill_cy": 1.8,
+   "net_cy": -2.1,
+   "clearing_sf": 3370,
+   "trees_removed": 4,
+   "trees_removed_ids": [
+    303,
+    311,
+    318,
+    323
+   ],
+   "tallest_removed_ft": 26.0,
+   "trees_kept_nearby": 5
+  },
+  {
+   "pad": "C06",
+   "zone": "C",
+   "unit": "mushroom",
+   "center": [
+    426473.7,
+    1578903.6
+   ],
+   "existing_min": 73.5,
+   "existing_max": 73.8,
+   "existing_median": 73.7,
+   "design_elev": 73.7,
+   "cut_cy": 1.6,
+   "fill_cy": 3.1,
+   "net_cy": 1.5,
+   "clearing_sf": 3368,
+   "trees_removed": 6,
+   "trees_removed_ids": [
+    318,
+    323,
+    327,
+    332,
+    335,
+    342
+   ],
+   "tallest_removed_ft": 26.0,
+   "trees_kept_nearby": 5
+  },
+  {
+   "pad": "C05",
+   "zone": "C",
+   "unit": "mushroom",
+   "center": [
+    426422.1,
+    1578929.9
+   ],
+   "existing_min": 73.5,
+   "existing_max": 74.0,
+   "existing_median": 73.7,
+   "design_elev": 73.7,
+   "cut_cy": 4.2,
+   "fill_cy": 2.4,
+   "net_cy": -1.8,
+   "clearing_sf": 3369,
+   "trees_removed": 4,
+   "trees_removed_ids": [
+    338,
+    354,
+    355,
+    366
+   ],
+   "tallest_removed_ft": 28.0,
+   "trees_kept_nearby": 7
+  },
+  {
+   "pad": "C04",
+   "zone": "C",
+   "unit": "mushroom",
+   "center": [
+    426371.6,
+    1578971.3
+   ],
+   "existing_min": 72.9,
+   "existing_max": 74.1,
+   "existing_median": 73.6,
+   "design_elev": 73.6,
+   "cut_cy": 4.7,
+   "fill_cy": 4.2,
+   "net_cy": -0.5,
+   "clearing_sf": 3367,
+   "trees_removed": 4,
+   "trees_removed_ids": [
+    365,
+    366,
+    376,
+    381
+   ],
+   "tallest_removed_ft": 28.0,
+   "trees_kept_nearby": 6
+  },
+  {
+   "pad": "C03",
+   "zone": "C",
+   "unit": "mushroom",
+   "center": [
+    426335.0,
+    1579034.2
+   ],
+   "existing_min": 73.2,
+   "existing_max": 73.7,
+   "existing_median": 73.4,
+   "design_elev": 73.4,
+   "cut_cy": 4.2,
+   "fill_cy": 2.0,
+   "net_cy": -2.2,
+   "clearing_sf": 3365,
+   "trees_removed": 5,
+   "trees_removed_ids": [
+    396,
+    411,
+    418,
+    422,
+    423
+   ],
+   "tallest_removed_ft": 29.0,
+   "trees_kept_nearby": 6
+  },
+  {
+   "pad": "C02",
+   "zone": "C",
+   "unit": "mushroom",
+   "center": [
+    426318.2,
+    1579085.4
+   ],
+   "existing_min": 73.3,
+   "existing_max": 74.0,
+   "existing_median": 73.5,
+   "design_elev": 73.5,
+   "cut_cy": 3.2,
+   "fill_cy": 3.3,
+   "net_cy": 0.1,
+   "clearing_sf": 3368,
+   "trees_removed": 3,
+   "trees_removed_ids": [
+    418,
+    423,
+    439
+   ],
+   "tallest_removed_ft": 27.0,
+   "trees_kept_nearby": 7
+  },
+  {
+   "pad": "C01",
+   "zone": "C",
+   "unit": "mushroom",
+   "center": [
+    426306.6,
+    1579144.4
+   ],
+   "existing_min": 73.5,
+   "existing_max": 74.2,
+   "existing_median": 73.6,
+   "design_elev": 73.6,
+   "cut_cy": 3.8,
+   "fill_cy": 1.2,
+   "net_cy": -2.6,
+   "clearing_sf": 3364,
+   "trees_removed": 2,
+   "trees_removed_ids": [
+    456,
+    466
+   ],
+   "tallest_removed_ft": 32.0,
+   "trees_kept_nearby": 5
+  },
+  {
+   "pad": "D01",
+   "zone": "D",
+   "unit": "mushroom",
+   "center": [
+    426333.8,
+    1579310.8
+   ],
+   "existing_min": 73.5,
+   "existing_max": 74.3,
+   "existing_median": 73.9,
+   "design_elev": 73.9,
+   "cut_cy": 4.9,
+   "fill_cy": 5.9,
+   "net_cy": 1.1,
+   "clearing_sf": 3368,
+   "trees_removed": 6,
+   "trees_removed_ids": [
+    513,
+    517,
+    529,
+    530,
+    535,
+    542
+   ],
+   "tallest_removed_ft": 37.0,
+   "trees_kept_nearby": 7
+  },
+  {
+   "pad": "D02",
+   "zone": "D",
+   "unit": "haunted",
+   "center": [
+    426379.4,
+    1579378.6
+   ],
+   "existing_min": 73.2,
+   "existing_max": 73.9,
+   "existing_median": 73.6,
+   "design_elev": 73.6,
+   "cut_cy": 5.8,
+   "fill_cy": 5.3,
+   "net_cy": -0.5,
+   "clearing_sf": 3365,
+   "trees_removed": 6,
+   "trees_removed_ids": [
+    545,
+    555,
+    557,
+    574,
+    581,
+    591
+   ],
+   "tallest_removed_ft": 37.0,
+   "trees_kept_nearby": 9
+  },
+  {
+   "pad": "D03",
+   "zone": "D",
+   "unit": "swamp",
+   "center": [
+    426438.4,
+    1579410.1
+   ],
+   "existing_min": 73.4,
+   "existing_max": 73.7,
+   "existing_median": 73.5,
+   "design_elev": 73.5,
+   "cut_cy": 3.6,
+   "fill_cy": 0.9,
+   "net_cy": -2.6,
+   "clearing_sf": 3366,
+   "trees_removed": 6,
+   "trees_removed_ids": [
+    563,
+    565,
+    582,
+    594,
+    603,
+    629
+   ],
+   "tallest_removed_ft": 36.0,
+   "trees_kept_nearby": 3
+  },
+  {
+   "pad": "D04",
+   "zone": "D",
+   "unit": "mushroom",
+   "center": [
+    426490.0,
+    1579426.1
+   ],
+   "existing_min": 73.4,
+   "existing_max": 74.1,
+   "existing_median": 73.5,
+   "design_elev": 73.5,
+   "cut_cy": 6.0,
+   "fill_cy": 1.3,
+   "net_cy": -4.7,
+   "clearing_sf": 3367,
+   "trees_removed": 6,
+   "trees_removed_ids": [
+    580,
+    613,
+    618,
+    636,
+    638,
+    648
+   ],
+   "tallest_removed_ft": 36.0,
+   "trees_kept_nearby": 6
+  },
+  {
+   "pad": "D05",
+   "zone": "D",
+   "unit": "haunted",
+   "center": [
+    426548.5,
+    1579434.4
+   ],
+   "existing_min": 73.3,
+   "existing_max": 74.0,
+   "existing_median": 73.5,
+   "design_elev": 73.5,
+   "cut_cy": 6.0,
+   "fill_cy": 2.3,
+   "net_cy": -3.7,
+   "clearing_sf": 3367,
+   "trees_removed": 6,
+   "trees_removed_ids": [
+    585,
+    606,
+    612,
+    618,
+    621,
+    623
+   ],
+   "tallest_removed_ft": 34.0,
+   "trees_kept_nearby": 7
+  },
+  {
+   "pad": "A01",
+   "zone": "A",
+   "unit": "haunted",
+   "center": [
+    426655.9,
+    1579441.5
+   ],
+   "existing_min": 73.7,
+   "existing_max": 74.5,
+   "existing_median": 73.9,
+   "design_elev": 73.9,
+   "cut_cy": 5.1,
+   "fill_cy": 2.2,
+   "net_cy": -2.9,
+   "clearing_sf": 3367,
+   "trees_removed": 7,
+   "trees_removed_ids": [
+    588,
+    611,
+    615,
+    624,
+    628,
+    633,
+    634
+   ],
+   "tallest_removed_ft": 38.0,
+   "trees_kept_nearby": 4
+  },
+  {
+   "pad": "A02",
+   "zone": "A",
+   "unit": "haunted",
+   "center": [
+    426708.7,
+    1579439.3
+   ],
+   "existing_min": 73.5,
+   "existing_max": 74.3,
+   "existing_median": 73.7,
+   "design_elev": 73.7,
+   "cut_cy": 5.7,
+   "fill_cy": 3.1,
+   "net_cy": -2.6,
+   "clearing_sf": 3363,
+   "trees_removed": 9,
+   "trees_removed_ids": [
+    588,
+    599,
+    615,
+    616,
+    622,
+    630,
+    633,
+    634,
+    640
+   ],
+   "tallest_removed_ft": 34.0,
+   "trees_kept_nearby": 4
+  },
+  {
+   "pad": "A03",
+   "zone": "A",
+   "unit": "haunted",
+   "center": [
+    426779.0,
+    1579420.9
+   ],
+   "existing_min": 73.5,
+   "existing_max": 74.3,
+   "existing_median": 74.0,
+   "design_elev": 74.0,
+   "cut_cy": 2.3,
+   "fill_cy": 5.8,
+   "net_cy": 3.5,
+   "clearing_sf": 3366,
+   "trees_removed": 3,
+   "trees_removed_ids": [
+    576,
+    592,
+    631
+   ],
+   "tallest_removed_ft": 39.0,
+   "trees_kept_nearby": 6
+  },
+  {
+   "pad": "A04",
+   "zone": "A",
+   "unit": "haunted",
+   "center": [
+    426858.0,
+    1579303.5
+   ],
+   "existing_min": 74.0,
+   "existing_max": 74.6,
+   "existing_median": 74.2,
+   "design_elev": 74.2,
+   "cut_cy": 3.5,
+   "fill_cy": 1.2,
+   "net_cy": -2.2,
+   "clearing_sf": 3365,
+   "trees_removed": 3,
+   "trees_removed_ids": [
+    509,
+    518,
+    526
+   ],
+   "tallest_removed_ft": 27.0,
+   "trees_kept_nearby": 8
+  },
+  {
+   "pad": "B01",
+   "zone": "B",
+   "unit": "swamp",
+   "center": [
+    426762.5,
+    1579004.1
+   ],
+   "existing_min": 70.0,
+   "existing_max": 74.7,
+   "existing_median": 73.3,
+   "design_elev": 73.3,
+   "cut_cy": 25.6,
+   "fill_cy": 57.9,
+   "net_cy": 32.3,
+   "clearing_sf": 3363,
+   "trees_removed": 0,
+   "trees_removed_ids": [],
+   "tallest_removed_ft": 0,
+   "trees_kept_nearby": 1
+  }
+ ],
+ "trees_removed": [
+  {
+   "id": 282,
+   "x": 426571.5,
+   "y": 1578826.5,
+   "crown_r": 16.3,
+   "height_ft": 25.0
+  },
+  {
+   "id": 284,
+   "x": 426710.5,
+   "y": 1578828.5,
+   "crown_r": 17.6,
+   "height_ft": 34.0
+  },
+  {
+   "id": 285,
+   "x": 426636.5,
+   "y": 1578829.5,
+   "crown_r": 4.0,
+   "height_ft": 20.0
+  },
+  {
+   "id": 288,
+   "x": 426590.5,
+   "y": 1578837.5,
+   "crown_r": 15.5,
+   "height_ft": 30.0
+  },
+  {
+   "id": 293,
+   "x": 426753.5,
+   "y": 1578844.5,
+   "crown_r": 15.5,
+   "height_ft": 30.0
+  },
+  {
+   "id": 297,
+   "x": 426690.5,
+   "y": 1578852.5,
+   "crown_r": 7.9,
+   "height_ft": 20.0
+  },
+  {
+   "id": 299,
+   "x": 426557.5,
+   "y": 1578854.5,
+   "crown_r": 11.2,
+   "height_ft": 26.0
+  },
+  {
+   "id": 303,
+   "x": 426512.5,
+   "y": 1578857.5,
+   "crown_r": 15.1,
+   "height_ft": 23.0
+  },
+  {
+   "id": 311,
+   "x": 426530.5,
+   "y": 1578864.5,
+   "crown_r": 15.5,
+   "height_ft": 24.0
+  },
+  {
+   "id": 317,
+   "x": 426757.5,
+   "y": 1578874.5,
+   "crown_r": 4.0,
+   "height_ft": 12.0
+  },
+  {
+   "id": 318,
+   "x": 426482.5,
+   "y": 1578875.5,
+   "crown_r": 14.5,
+   "height_ft": 26.0
+  },
+  {
+   "id": 319,
+   "x": 426827.5,
+   "y": 1578875.5,
+   "crown_r": 16.0,
+   "height_ft": 23.0
+  },
+  {
+   "id": 323,
+   "x": 426500.5,
+   "y": 1578881.5,
+   "crown_r": 18.1,
+   "height_ft": 23.0
+  },
+  {
+   "id": 326,
+   "x": 426788.5,
+   "y": 1578885.5,
+   "crown_r": 4.0,
+   "height_ft": 14.0
+  },
+  {
+   "id": 327,
+   "x": 426451.5,
+   "y": 1578887.5,
+   "crown_r": 16.2,
+   "height_ft": 19.0
+  },
+  {
+   "id": 332,
+   "x": 426474.5,
+   "y": 1578894.5,
+   "crown_r": 11.0,
+   "height_ft": 23.0
+  },
+  {
+   "id": 335,
+   "x": 426495.5,
+   "y": 1578899.5,
+   "crown_r": 7.8,
+   "height_ft": 14.0
+  },
+  {
+   "id": 338,
+   "x": 426427.5,
+   "y": 1578902.5,
+   "crown_r": 15.8,
+   "height_ft": 28.0
+  },
+  {
+   "id": 341,
+   "x": 426577.5,
+   "y": 1578904.5,
+   "crown_r": 11.2,
+   "height_ft": 19.0
+  },
+  {
+   "id": 342,
+   "x": 426446.5,
+   "y": 1578906.5,
+   "crown_r": 14.6,
+   "height_ft": 23.0
+  },
+  {
+   "id": 343,
+   "x": 426788.5,
+   "y": 1578906.5,
+   "crown_r": 4.0,
+   "height_ft": 16.0
+  },
+  {
+   "id": 354,
+   "x": 426411.5,
+   "y": 1578921.5,
+   "crown_r": 16.4,
+   "height_ft": 26.0
+  },
+  {
+   "id": 355,
+   "x": 426390.5,
+   "y": 1578926.5,
+   "crown_r": 18.4,
+   "height_ft": 27.0
+  },
+  {
+   "id": 365,
+   "x": 426374.5,
+   "y": 1578946.5,
+   "crown_r": 21.8,
+   "height_ft": 28.0
+  },
+  {
+   "id": 366,
+   "x": 426393.5,
+   "y": 1578947.5,
+   "crown_r": 20.9,
+   "height_ft": 26.0
+  },
+  {
+   "id": 376,
+   "x": 426372.5,
+   "y": 1578967.5,
+   "crown_r": 21.8,
+   "height_ft": 27.0
+  },
+  {
+   "id": 381,
+   "x": 426346.5,
+   "y": 1578977.5,
+   "crown_r": 19.2,
+   "height_ft": 26.0
+  },
+  {
+   "id": 396,
+   "x": 426324.5,
+   "y": 1579005.5,
+   "crown_r": 5.7,
+   "height_ft": 22.0
+  },
+  {
+   "id": 411,
+   "x": 426302.5,
+   "y": 1579028.5,
+   "crown_r": 18.6,
+   "height_ft": 29.0
+  },
+  {
+   "id": 418,
+   "x": 426314.5,
+   "y": 1579046.5,
+   "crown_r": 19.7,
+   "height_ft": 24.0
+  },
+  {
+   "id": 422,
+   "x": 426342.5,
+   "y": 1579052.5,
+   "crown_r": 10.3,
+   "height_ft": 26.0
+  },
+  {
+   "id": 423,
+   "x": 426299.5,
+   "y": 1579056.5,
+   "crown_r": 15.8,
+   "height_ft": 24.0
+  },
+  {
+   "id": 439,
+   "x": 426305.5,
+   "y": 1579093.5,
+   "crown_r": 16.9,
+   "height_ft": 27.0
+  },
+  {
+   "id": 456,
+   "x": 426306.5,
+   "y": 1579124.5,
+   "crown_r": 20.0,
+   "height_ft": 32.0
+  },
+  {
+   "id": 466,
+   "x": 426306.5,
+   "y": 1579160.5,
+   "crown_r": 12.4,
+   "height_ft": 32.0
+  },
+  {
+   "id": 509,
+   "x": 426870.5,
+   "y": 1579279.5,
+   "crown_r": 10.3,
+   "height_ft": 24.0
+  },
+  {
+   "id": 513,
+   "x": 426354.5,
+   "y": 1579285.5,
+   "crown_r": 14.4,
+   "height_ft": 18.0
+  },
+  {
+   "id": 517,
+   "x": 426315.5,
+   "y": 1579292.5,
+   "crown_r": 15.0,
+   "height_ft": 26.0
+  },
+  {
+   "id": 518,
+   "x": 426848.5,
+   "y": 1579292.5,
+   "crown_r": 11.8,
+   "height_ft": 27.0
+  },
+  {
+   "id": 526,
+   "x": 426871.5,
+   "y": 1579312.5,
+   "crown_r": 13.9,
+   "height_ft": 25.0
+  },
+  {
+   "id": 529,
+   "x": 426374.5,
+   "y": 1579315.5,
+   "crown_r": 15.3,
+   "height_ft": 23.0
+  },
+  {
+   "id": 530,
+   "x": 426323.5,
+   "y": 1579317.5,
+   "crown_r": 21.5,
+   "height_ft": 37.0
+  },
+  {
+   "id": 535,
+   "x": 426341.5,
+   "y": 1579333.5,
+   "crown_r": 26.4,
+   "height_ft": 35.0
+  },
+  {
+   "id": 542,
+   "x": 426329.5,
+   "y": 1579343.5,
+   "crown_r": 30.0,
+   "height_ft": 35.0
+  },
+  {
+   "id": 545,
+   "x": 426388.5,
+   "y": 1579346.5,
+   "crown_r": 13.9,
+   "height_ft": 25.0
+  },
+  {
+   "id": 555,
+   "x": 426363.5,
+   "y": 1579361.5,
+   "crown_r": 26.7,
+   "height_ft": 32.0
+  },
+  {
+   "id": 557,
+   "x": 426337.5,
+   "y": 1579362.5,
+   "crown_r": 26.0,
+   "height_ft": 37.0
+  },
+  {
+   "id": 563,
+   "x": 426429.5,
+   "y": 1579373.5,
+   "crown_r": 14.6,
+   "height_ft": 26.0
+  },
+  {
+   "id": 565,
+   "x": 426465.5,
+   "y": 1579376.5,
+   "crown_r": 19.4,
+   "height_ft": 27.0
+  },
+  {
+   "id": 574,
+   "x": 426345.5,
+   "y": 1579393.5,
+   "crown_r": 25.0,
+   "height_ft": 33.0
+  },
+  {
+   "id": 576,
+   "x": 426763.5,
+   "y": 1579397.5,
+   "crown_r": 18.1,
+   "height_ft": 27.0
+  },
+  {
+   "id": 580,
+   "x": 426503.5,
+   "y": 1579402.5,
+   "crown_r": 14.9,
+   "height_ft": 32.0
+  },
+  {
+   "id": 581,
+   "x": 426363.5,
+   "y": 1579403.5,
+   "crown_r": 21.4,
+   "height_ft": 25.0
+  },
+  {
+   "id": 582,
+   "x": 426453.5,
+   "y": 1579403.5,
+   "crown_r": 13.9,
+   "height_ft": 27.0
+  },
+  {
+   "id": 585,
+   "x": 426547.5,
+   "y": 1579407.5,
+   "crown_r": 17.1,
+   "height_ft": 30.0
+  },
+  {
+   "id": 588,
+   "x": 426676.5,
+   "y": 1579410.5,
+   "crown_r": 20.8,
+   "height_ft": 27.0
+  },
+  {
+   "id": 591,
+   "x": 426362.5,
+   "y": 1579416.5,
+   "crown_r": 19.1,
+   "height_ft": 23.0
+  },
+  {
+   "id": 592,
+   "x": 426800.5,
+   "y": 1579416.5,
+   "crown_r": 23.0,
+   "height_ft": 35.0
+  },
+  {
+   "id": 594,
+   "x": 426426.5,
+   "y": 1579423.5,
+   "crown_r": 15.7,
+   "height_ft": 32.0
+  },
+  {
+   "id": 599,
+   "x": 426731.5,
+   "y": 1579429.5,
+   "crown_r": 17.8,
+   "height_ft": 30.0
+  },
+  {
+   "id": 603,
+   "x": 426453.5,
+   "y": 1579431.5,
+   "crown_r": 14.9,
+   "height_ft": 36.0
+  },
+  {
+   "id": 606,
+   "x": 426567.5,
+   "y": 1579433.5,
+   "crown_r": 15.8,
+   "height_ft": 33.0
+  },
+  {
+   "id": 611,
+   "x": 426642.5,
+   "y": 1579437.5,
+   "crown_r": 22.8,
+   "height_ft": 33.0
+  },
+  {
+   "id": 612,
+   "x": 426539.5,
+   "y": 1579438.5,
+   "crown_r": 18.5,
+   "height_ft": 31.0
+  },
+  {
+   "id": 613,
+   "x": 426479.5,
+   "y": 1579439.5,
+   "crown_r": 25.0,
+   "height_ft": 27.0
+  },
+  {
+   "id": 615,
+   "x": 426696.5,
+   "y": 1579440.5,
+   "crown_r": 23.9,
+   "height_ft": 31.0
+  },
+  {
+   "id": 616,
+   "x": 426740.5,
+   "y": 1579440.5,
+   "crown_r": 17.3,
+   "height_ft": 30.0
+  },
+  {
+   "id": 618,
+   "x": 426507.5,
+   "y": 1579442.5,
+   "crown_r": 22.8,
+   "height_ft": 34.0
+  },
+  {
+   "id": 621,
+   "x": 426563.5,
+   "y": 1579446.5,
+   "crown_r": 21.5,
+   "height_ft": 30.0
+  },
+  {
+   "id": 622,
+   "x": 426728.5,
+   "y": 1579447.5,
+   "crown_r": 13.7,
+   "height_ft": 30.0
+  },
+  {
+   "id": 623,
+   "x": 426578.5,
+   "y": 1579451.5,
+   "crown_r": 15.0,
+   "height_ft": 30.0
+  },
+  {
+   "id": 624,
+   "x": 426658.5,
+   "y": 1579451.5,
+   "crown_r": 22.1,
+   "height_ft": 35.0
+  },
+  {
+   "id": 628,
+   "x": 426632.5,
+   "y": 1579454.5,
+   "crown_r": 22.3,
+   "height_ft": 38.0
+  },
+  {
+   "id": 629,
+   "x": 426441.5,
+   "y": 1579455.5,
+   "crown_r": 26.3,
+   "height_ft": 28.0
+  },
+  {
+   "id": 630,
+   "x": 426704.5,
+   "y": 1579455.5,
+   "crown_r": 19.1,
+   "height_ft": 34.0
+  },
+  {
+   "id": 631,
+   "x": 426807.5,
+   "y": 1579455.5,
+   "crown_r": 19.9,
+   "height_ft": 39.0
+  },
+  {
+   "id": 633,
+   "x": 426690.5,
+   "y": 1579457.5,
+   "crown_r": 20.7,
+   "height_ft": 34.0
+  },
+  {
+   "id": 634,
+   "x": 426677.5,
+   "y": 1579458.5,
+   "crown_r": 25.3,
+   "height_ft": 34.0
+  },
+  {
+   "id": 636,
+   "x": 426499.5,
+   "y": 1579460.5,
+   "crown_r": 21.9,
+   "height_ft": 36.0
+  },
+  {
+   "id": 638,
+   "x": 426468.5,
+   "y": 1579461.5,
+   "crown_r": 22.1,
+   "height_ft": 32.0
+  },
+  {
+   "id": 640,
+   "x": 426740.5,
+   "y": 1579470.5,
+   "crown_r": 18.2,
+   "height_ft": 34.0
+  },
+  {
+   "id": 648,
+   "x": 426504.5,
+   "y": 1579472.5,
+   "crown_r": 22.0,
+   "height_ft": 36.0
+  }
+ ]
+}

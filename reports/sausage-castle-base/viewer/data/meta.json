@@ -130,7 +130,21 @@
    "target": null,
    "overlay": "lakes_zones.jpg",
    "overlay_label": "Lake zones concept",
-   "units": "units.json"
+   "units": "units.json",
+   "cleared": {
+    "surface": {
+     "file": "lakes_cleared_surface.png",
+     "zmin": 69.0,
+     "scale": 0.01
+    },
+    "ground": {
+     "file": "lakes_cleared_ground.png",
+     "zmin": 69.0,
+     "scale": 0.01
+    },
+    "color": "lakes_cleared_color.jpg",
+    "label": "Cleared and graded"
+   }
   }
  }
 }

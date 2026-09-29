@@ -97,6 +97,7 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
         <div class="row"><label for="gridToggle">100 ft grid</label><input type="checkbox" id="gridToggle"></div>
         <div class="row" id="overlayRow" hidden><label for="overlayToggle" id="overlayLabel">Concept overlay</label><input type="checkbox" id="overlayToggle"></div>
         <div class="row" id="unitsRow" hidden><label for="unitsToggle">Tiny homes (concept)</label><input type="checkbox" id="unitsToggle"></div>
+        <div class="row" id="clearedRow" hidden><label for="clearedToggle" id="clearedLabel">Cleared and graded</label><input type="checkbox" id="clearedToggle"></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
           <button type="button" class="btn primary" id="snap">Snapshot</button>
           <button type="button" class="btn" id="reset">Reset view</button>
@@ -156,15 +157,18 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
     var idx=new Uint32Array((w-1)*(h-1)*6), n=0;
     for(var j2=0;j2<h-1;j2++) for(var i2=0;i2<w-1;i2++){ var a=j2*w+i2,b=a+1,c=a+w,d=c+1; idx[n++]=a;idx[n++]=c;idx[n++]=b; idx[n++]=b;idx[n++]=c;idx[n++]=d; }
     var g=new THREE.BufferGeometry(); g.setAttribute('position',new THREE.BufferAttribute(pos,3)); g.setAttribute('uv',new THREE.BufferAttribute(uv,2)); g.setIndex(new THREE.BufferAttribute(idx,1)); g.computeVertexNormals(); g.computeBoundingSphere(); return g; }
-  function zoneGeometry(zn,which){ var key=zn+'|'+which+'|'+step; if(cache[key]) return Promise.resolve(cache[key]);
-    var z=meta.zones[zn]; return loadHeight('data/'+z[which].file).then(function(hm){ var g=buildGeometry(hm,z[which],z.cell_ft,step,z.z_range[0]); cache[key]=g; return g; }); }
+  function clearedOn(zn){ var z=meta.zones[zn]; return !!(z.cleared && document.getElementById('clearedToggle').checked); }
+  function zoneGeometry(zn,which){ var cl=clearedOn(zn); var key=zn+'|'+which+'|'+step+(cl?'|cleared':''); if(cache[key]) return Promise.resolve(cache[key]);
+    var z=meta.zones[zn]; var src=cl?z.cleared[which]:z[which]; return loadHeight('data/'+src.file).then(function(hm){ var g=buildGeometry(hm,src,z.cell_ft,step,z.z_range[0]); cache[key]=g; return g; }); }
   function setZone(zn){ zone=zn; var z=meta.zones[zn]; document.getElementById('loading').hidden=false; document.getElementById('loading').style.opacity=1;
     document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.zone===zn));});
     var W=z.width_ft, H=z.height_ft; if(!cache[zn+'|tex']){ var t=loader.load('data/'+z.color); t.encoding=THREE.sRGBEncoding; t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); cache[zn+'|tex']=t; }
     if(z.overlay && !cache[zn+'|ovl']){ var t2=loader.load('data/'+z.overlay); t2.encoding=THREE.sRGBEncoding; t2.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); cache[zn+'|ovl']=t2; }
     document.getElementById('unitsRow').hidden=!z.units;
     var row=document.getElementById('overlayRow'); row.hidden=!z.overlay; if(z.overlay) document.getElementById('overlayLabel').textContent=z.overlay_label||'Concept overlay';
-    if(!customTex) mat.map=(z.overlay && document.getElementById('overlayToggle').checked)?cache[zn+'|ovl']:cache[zn+'|tex']; mat.needsUpdate=true;
+    document.getElementById('clearedRow').hidden=!z.cleared; if(z.cleared) document.getElementById('clearedLabel').textContent=z.cleared.label||'Cleared and graded';
+    if(z.cleared && !cache[zn+'|clr']){ var t3=loader.load('data/'+z.cleared.color); t3.encoding=THREE.sRGBEncoding; t3.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy()); cache[zn+'|clr']=t3; }
+    if(!customTex) mat.map=clearedOn(zn)?cache[zn+'|clr']:((z.overlay && document.getElementById('overlayToggle').checked)?cache[zn+'|ovl']:cache[zn+'|tex']); mat.needsUpdate=true;
     zoneGeometry(zn,mode).then(function(g){ if(mesh){scene.remove(mesh);} mesh=new THREE.Mesh(g,mat); mesh.scale.y=exag; scene.add(mesh);
       if(grid){scene.remove(grid);} grid=new THREE.GridHelper(Math.max(W,H),Math.round(Math.max(W,H)/100),0x8a9a86,0x8a9a86); grid.position.y=-1; grid.material.opacity=0.35; grid.material.transparent=true; grid.visible=document.getElementById('gridToggle').checked; scene.add(grid);
       if(marker){scene.remove(marker);marker=null;} if(z.target){ var mx=z.target[0]-z.x0-W/2, mz=H/2-(z.target[1]-z.y0); marker=new THREE.Mesh(new THREE.ConeGeometry(Math.max(6,W/120),Math.max(20,W/40),12),new THREE.MeshStandardMaterial({color:0xd0308a,roughness:0.6})); marker.rotation.x=Math.PI; marker.position.set(mx,(z.z_range[1]-z.z_range[0])*exag+Math.max(30,W/30),mz); scene.add(marker); }
@@ -189,7 +193,7 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
       var m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(part.color),roughness:0.85,metalness:0,side:THREE.DoubleSide})); g.add(m); });
     unitGeoms[key]=g; return g; }
   function placeUnits(){ if(unitsGroup){ scene.remove(unitsGroup); unitsGroup=null; } if(!zone) return; var z=meta.zones[zone]; if(!z.units || !document.getElementById('unitsToggle').checked) { render(); return; }
-    var go=function(){ unitsGroup=new THREE.Group(); unitsData.placements.forEach(function(pl){ var proto=buildUnit(pl.unit); var inst=proto.clone(); inst.userData.z=pl.z; inst.position.set(pl.x-z.x0-z.width_ft/2,(pl.z-z.z_range[0])*exag,z.height_ft/2-(pl.y-z.y0)); inst.rotation.y=pl.rot_deg*Math.PI/180; unitsGroup.add(inst); }); scene.add(unitsGroup); render(); };
+    var go=function(){ unitsGroup=new THREE.Group(); unitsData.placements.forEach(function(pl){ var proto=buildUnit(pl.unit); var inst=proto.clone(); inst.userData.z=(clearedOn(zone)&&pl.z_graded!=null)?pl.z_graded:pl.z; inst.position.set(pl.x-z.x0-z.width_ft/2,(inst.userData.z-z.z_range[0])*exag,z.height_ft/2-(pl.y-z.y0)); inst.rotation.y=pl.rot_deg*Math.PI/180; unitsGroup.add(inst); }); scene.add(unitsGroup); render(); };
     if(unitsData) go(); else fetch('data/'+z.units).then(function(r){return r.json();}).then(function(d){ unitsData=d; go(); }).catch(function(){ document.getElementById('zoneNote').textContent='Could not load the tiny home models.'; }); }
   document.querySelectorAll('.tabs button').forEach(function(b){ b.addEventListener('click',function(){ setZone(b.dataset.zone); }); });
   document.getElementById('mSurface').addEventListener('click',function(){ mode='surface'; this.setAttribute('aria-pressed','true'); document.getElementById('mGround').setAttribute('aria-pressed','false'); setZone(zone); });
@@ -199,7 +203,8 @@ label.file input{position:absolute;width:1px;height:1px;opacity:0}
   document.getElementById('quality').addEventListener('change',function(){ step=+this.value; setZone(zone); });
   document.getElementById('gridToggle').addEventListener('change',function(){ if(grid) grid.visible=this.checked; render(); });
   document.getElementById('unitsToggle').addEventListener('change',placeUnits);
-  document.getElementById('overlayToggle').addEventListener('change',function(){ if(!zone) return; var z=meta.zones[zone]; if(customTex) return; mat.map=(z.overlay && this.checked)?cache[zone+'|ovl']:cache[zone+'|tex']; mat.needsUpdate=true; render(); });
+  document.getElementById('clearedToggle').addEventListener('change',function(){ setZone(zone); });
+  document.getElementById('overlayToggle').addEventListener('change',function(){ if(!zone) return; var z=meta.zones[zone]; if(customTex) return; if(clearedOn(zone)) return; mat.map=(z.overlay && this.checked)?cache[zone+'|ovl']:cache[zone+'|tex']; mat.needsUpdate=true; render(); });
   document.getElementById('reset').addEventListener('click',function(){ if(home){ sph.r=home.r; sph.theta=home.theta; sph.phi=home.phi; target.copy(home.t); applyCam(); render(); } });
   document.getElementById('snap').addEventListener('click',function(){ render(); document.getElementById('shotImg').src=canvas.toDataURL('image/png'); document.getElementById('shot').hidden=false; });
   document.getElementById('shotClose').addEventListener('click',function(){ document.getElementById('shot').hidden=true; });
