@@ -1,0 +1,2 @@
+/home/user/beardedfreedom.github.io/reports/sausage-castle-base/scripts/blender_build.py:57: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  tcol = collection('Terrain'); tmat = bpy.data.materials.new('Terrain'); tmat.use_nodes = True; nt = tmat.node_tree; tex = nt.nodes.new('ShaderNodeTexImage'); tex.image = bpy.data.images.load(f"{VD}/{z['cleared']['color']}", check_existing=True)

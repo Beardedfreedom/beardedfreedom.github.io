@@ -98,3 +98,13 @@ The project owner's poster (`brand/florida-freedom-world-poster.webp`) is the vi
 ## Clearing, grading and the 3D mock-up (`focus/lakes/CLEARING-GRADING.md`, `mockup/`)
 
 `scripts/clear_and_grade.py` grades each of the 22 pads flat at its median existing grade (balanced cut and fill), blends to existing ground over 10 ft, sets an 8 ft clearing limit and lists every 2018 tree that has to come out: 82 trees, 2.24 acres cleared, 155.6 cu yd cut and 135.4 cu yd fill. Outputs: `focus/lakes/clearing_grading_EPSG2236_ftUS.dxf` (pads at finished grade, clearing limits, trees to remove with IDs, graded contours), the plan image, JSON and summary table. It also writes a cleared, graded surface for the 3D viewer ("Cleared and graded" toggle in the Lakes zone, cabins at finished grade) and `mockup/lakes_cleared_3d_mockup_EPSG2236_ftUS.dxf`, a graded terrain mesh with the cabin blocks inserted. `scripts/render_mockup.py` renders the perspective mock-ups in `mockup/`.
+
+## Blender scene (`scripts/blender_build.py`, `mockup/blender/`)
+
+`scripts/blender_build.py` builds the cleared, graded lake zones in Blender from the same data the web viewer uses: the terrain with the land-cover texture, the lakes as water, the kept trees as simple crowns, and all 22 cabins (four lands: haunted A, swamp B, mushroom C, UFO D) placed at finished grade with materials and glowing windows. It saves `mockup/blender/florida_freedom_world_lakes.blend` and `.glb`, sets up five cameras (overall plus one per zone) and renders them with Cycles. Run it inside Blender 3.6 or newer:
+
+```
+blender --background --python scripts/blender_build.py -- --base reports/sausage-castle-base --out reports/sausage-castle-base/mockup/blender --renders --samples 64
+```
+
+or with the pip `bpy` module on Python 3.11. Options: `--step 2` halves the terrain resolution, `--no-trees` skips the tree instances, `--views overall,C` limits the renders, `--res 1920x1080`.

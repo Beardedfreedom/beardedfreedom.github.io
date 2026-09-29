@@ -320,7 +320,7 @@
   {
    "pad": "D01",
    "zone": "D",
-   "unit": "mushroom",
+   "unit": "ufo",
    "center": [
     426333.8,
     1579310.8
@@ -348,7 +348,7 @@
   {
    "pad": "D02",
    "zone": "D",
-   "unit": "haunted",
+   "unit": "ufo",
    "center": [
     426379.4,
     1579378.6
@@ -376,7 +376,7 @@
   {
    "pad": "D03",
    "zone": "D",
-   "unit": "swamp",
+   "unit": "ufo",
    "center": [
     426438.4,
     1579410.1
@@ -404,7 +404,7 @@
   {
    "pad": "D04",
    "zone": "D",
-   "unit": "mushroom",
+   "unit": "ufo",
    "center": [
     426490.0,
     1579426.1
@@ -432,7 +432,7 @@
   {
    "pad": "D05",
    "zone": "D",
-   "unit": "haunted",
+   "unit": "ufo",
    "center": [
     426548.5,
     1579434.4
