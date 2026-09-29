@@ -1,0 +1,18 @@
+# GitHub Pages (Jekyll) settings for beardedfreedom.github.io.
+# The working folders below are source material and are not published on the public site.
+# The password-protected copy for reviewers lives in review/ (ciphertext only).
+exclude:
+  - reports
+  - research_notes
+  - skills-src
+  - STYLE-CONTRACT.md
+  - .sass-cache
+  - .jekyll-cache
+  - gemfiles
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/

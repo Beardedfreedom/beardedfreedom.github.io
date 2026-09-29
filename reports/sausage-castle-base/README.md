@@ -108,3 +108,29 @@ blender --background --python scripts/blender_build.py -- --base reports/sausage
 ```
 
 or with the pip `bpy` module on Python 3.11. Options: `--step 2` halves the terrain resolution, `--no-trees` skips the tree instances, `--views overall,C` limits the renders, `--res 1920x1080`.
+
+## Private review site (`/review/`)
+
+A password-protected copy of the demo for reviewers lives at the repo root in `review/`, built by
+`scripts/build_review.py`. It packs the demo page, the 3D viewer and every image and data file they
+use (42 files, 13.3 MB) into `review/bundle.enc`, encrypted with AES-256-GCM under a key derived
+from the review password (PBKDF2-SHA256, 600,000 rounds, random salt). The gate page
+(`review/index.html`) decrypts in the browser with WebCrypto and hands the files to a service
+worker (`review/sw.js`) that serves them under `review/app/`. Wrong passwords fail the
+authentication tag, so nothing is readable without the password, and the folder is safe on a public
+static host. Every unlocked page carries a "Private review · Lock" link that wipes the copy from
+the browser; opening the gate again also locks.
+
+Once this branch is on `main`, the gate is served at `https://beardedfreedom.github.io/review/`.
+`_config.yml` at the repo root keeps `reports/` and `research_notes/` out of the public Pages build,
+so the only published copy of the demo is the encrypted one. To rotate the password or rebuild after
+changing the demo:
+
+    REVIEW_PASSWORD='new passphrase' python3 reports/sausage-castle-base/scripts/build_review.py
+
+The password is never stored in the repository. Share it with reviewers out of band.
+
+For a real subdomain (for example `review.beardedfreedom.com`): point a DNS CNAME for `review` at
+`beardedfreedom.github.io`, put the `review/` files in their own public repository with a `CNAME`
+file naming the subdomain, and enable GitHub Pages on it. Only ciphertext is published, so the
+repository holding the review site does not need to be private.
