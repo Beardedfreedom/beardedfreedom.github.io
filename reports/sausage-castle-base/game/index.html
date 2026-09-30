@@ -227,21 +227,38 @@ function drawMap(){ if($('map').hidden) return; var Wm=mapc.width,Hm=mapc.height
   mg.save(); mg.translate(mx(P.x),mz(P.z)); mg.rotate(-P.yaw); mg.beginPath(); mg.moveTo(0,-11); mg.lineTo(7,8); mg.lineTo(0,4); mg.lineTo(-7,8); mg.closePath(); mg.fillStyle='#fff3dc'; mg.fill(); mg.strokeStyle='#0b0a14'; mg.lineWidth=2; mg.stroke(); mg.restore(); }
 
 // ---------------------------------------------------------------- loop
-var last=performance.now(), tmpV=new THREE.Vector3(), whereLast='';
-function step(now){ requestAnimationFrame(step); var dt=Math.min(0.05,(now-last)/1000); last=now; if(!W) return;
+var last=performance.now(), tmpV=new THREE.Vector3(), whereLast='', director=false, vnow=0;
+function step(now){ requestAnimationFrame(step); if(director) return; var dt=Math.min(0.05,(now-last)/1000); last=now; simulate(dt,now); }
+function simulate(dt,now){ if(!W) return;
   if(P.started){ var fwd=0,strafe=0; if(keys.KeyW||keys.ArrowUp) fwd+=1; if(keys.KeyS||keys.ArrowDown) fwd-=1; if(keys.KeyD||keys.ArrowRight) strafe+=1; if(keys.KeyA||keys.ArrowLeft) strafe-=1; if(stick.id!==null){ fwd-=stick.dz; strafe+=stick.dx; }
     var speed=P.cart?30:((keys.ShiftLeft||keys.ShiftRight)?14:7); var L=Math.hypot(fwd,strafe); if(L>1){fwd/=L;strafe/=L;}
     var s=Math.sin(P.yaw), c=Math.cos(P.yaw); var tx=(-s*fwd+c*strafe)*speed, tz=(-c*fwd-s*strafe)*speed; var k=P.cart?2.5:9; P.vx+=(tx-P.vx)*Math.min(1,k*dt); P.vz+=(tz-P.vz)*Math.min(1,k*dt);
     var nxp=P.x+P.vx*dt, nzp=P.z+P.vz*dt; if(!blocked(nxp,P.z)) P.x=nxp; else P.vx=0; if(!blocked(P.x,nzp)) P.z=nzp; else P.vz=0;
-    var eye=P.cart?5:5.6; var gy=groundAt(P.x,P.z); camera.position.set(P.x,gy+eye,P.z); camera.rotation.set(0,0,0); camera.rotation.order='YXZ'; camera.rotation.y=P.yaw; camera.rotation.x=P.pitch;
+    var eye=(P.cart?5:5.6)+(P.bob||0); var gy=groundAt(P.x,P.z); camera.position.set(P.x,gy+eye,P.z); camera.rotation.set(0,0,0); camera.rotation.order='YXZ'; camera.rotation.y=P.yaw; camera.rotation.x=P.pitch;
     var here=null; for(var i=0;i<attractions.length;i++){ var A=attractions[i]; var d=Math.hypot(P.x-A.x,P.z-A.z); if(inPoly(P.x,P.z,A.poly)||d<70){ here=A; if(!A.visited){ A.visited=true; P.visited++; A.beacon.visible=false; var li=$('li_'+A.key); if(li) li.className='done'; toast(A.name,A.poster+'. '+A.note); if(P.visited===attractions.length){ $('doneP').textContent='All twelve attractions found in '+fmt(now-P.t0)+'. The property is yours to roam.'; $('done').hidden=false; if(locked) document.exitPointerLock(); } } } }
     var wh=here?here.name:(cabinsInfo.some(function(cb){return Math.hypot(P.x-cb.x,P.z-cb.z)<40})?'Lakeside cabins':'Sausage Castle estate'); if(wh!==whereLast){ $('where').textContent=wh; whereLast=wh; }
     var deg=((-P.yaw*180/Math.PI)%360+360)%360; var dirs=['N','NE','E','SE','S','SW','W','NW']; $('hdg').textContent=dirs[Math.round(deg/45)%8]+' '+Math.round(deg)+'°'+(P.cart?' · cart':'');
     $('objSub').textContent=P.visited+' of '+attractions.length+' visited · '+fmt(now-P.t0)+(P.night?' · night':'');
     attractions.forEach(function(A){ A.label.visible=Math.hypot(P.x-A.x,P.z-A.z)<900; }); spinners.forEach(function(sp){sp.rotation.z+=dt*0.25;});
-    if((now|0)%3===0) drawMap(); }
+    if(director||(now|0)%3===0) drawMap(); }
   renderer.render(scene,camera); }
 requestAnimationFrame(step);
+// director mode: fixed-step frames driven from outside (used to record tours); a small A* over a 30 ft grid plans routes around water and buildings
+function route(ax,az,bx,bz){ var cs=30, W2=site.w/2, H2=site.h/2, gw=Math.ceil(site.w/cs)+1, gh=Math.ceil(site.h/cs)+1; var cache={};
+  function isB(i,j){ var k=j*gw+i; if(k in cache) return cache[k]; var x=i*cs-W2, z=j*cs-H2; var b=i<=0||j<=0||i>=gw-1||j>=gh-1||blocked(x,z)||blocked(x+12,z)||blocked(x-12,z)||blocked(x,z+12)||blocked(x,z-12); cache[k]=b; return b; }
+  var si=Math.round((ax+W2)/cs), sj=Math.round((az+H2)/cs), gi=Math.round((bx+W2)/cs), gj=Math.round((bz+H2)/cs);
+  var heap=[], gS={}, came={}, closed={}; function push(n){ heap.push(n); var k=heap.length-1; while(k>0){ var p=(k-1)>>1; if(heap[p].f<=heap[k].f) break; var t=heap[p]; heap[p]=heap[k]; heap[k]=t; k=p; } }
+  function pop(){ var top=heap[0], lastN=heap.pop(); if(heap.length){ heap[0]=lastN; var k=0; for(;;){ var l=2*k+1,r=l+1,m=k; if(l<heap.length&&heap[l].f<heap[m].f) m=l; if(r<heap.length&&heap[r].f<heap[m].f) m=r; if(m===k) break; var t=heap[m]; heap[m]=heap[k]; heap[k]=t; k=m; } } return top; }
+  var sk=sj*gw+si; gS[sk]=0; push({i:si,j:sj,f:Math.hypot(gi-si,gj-sj)}); var found=null, it=0;
+  while(heap.length&&it++<200000){ var n=pop(); var nk=n.j*gw+n.i; if(closed[nk]) continue; closed[nk]=1; if(n.i===gi&&n.j===gj){found=nk;break;}
+    for(var dj=-1;dj<=1;dj++) for(var di=-1;di<=1;di++){ if(!di&&!dj) continue; var ni=n.i+di,nj=n.j+dj; if(ni<0||nj<0||ni>=gw||nj>=gh) continue; var k2=nj*gw+ni; if(closed[k2]||isB(ni,nj)) continue; var ng=gS[nk]+Math.hypot(di,dj); if(ng<(gS[k2]===undefined?1e9:gS[k2])){ gS[k2]=ng; came[k2]=nk; push({i:ni,j:nj,f:ng+Math.hypot(gi-ni,gj-nj)}); } } }
+  if(found===null) return [[ax,az],[bx,bz]];
+  var cells=[]; for(var c=found;c!==undefined;c=came[c]){ cells.push(c); if(c===sk) break; } cells.reverse();
+  var pts=cells.map(function(c){ var j=Math.floor(c/gw), i=c-j*gw; return [i*cs-W2,j*cs-H2]; }); pts[0]=[ax,az]; pts[pts.length-1]=[bx,bz];
+  var out=[pts[0]]; for(var q=1;q<pts.length-1;q++){ var a=pts[q-1],b=pts[q],c2=pts[q+1]; var d1=Math.atan2(b[1]-a[1],b[0]-a[0]), d2=Math.atan2(c2[1]-b[1],c2[0]-b[0]); if(Math.abs(Math.atan2(Math.sin(d2-d1),Math.cos(d2-d1)))>0.01) out.push(b); } out.push(pts[pts.length-1]); return out; }
+window.__director={ on:function(fps){ director=true; vnow=P.t0=performance.now(); return {attractions:attractions.map(function(A){return {key:A.key,name:A.name,x:A.x,z:A.z}}), spawn:{x:P.x,z:P.z,yaw:P.yaw}}; },
+  pose:function(o){ P.x=o.x; P.z=o.z; P.yaw=o.yaw; P.pitch=o.pitch||0; P.bob=o.bob||0; P.vx=P.vz=0; if(o.cart!==undefined&&o.cart!==P.cart) toggleCart(); if(o.night!==undefined&&o.night!==P.night) toggleNight(); },
+  frame:function(dt){ vnow+=dt*1000; simulate(dt,vnow); }, route:route, free:freeSpot, blocked:blocked };
 
 // ---------------------------------------------------------------- start
 Promise.all([fetch('data/world.json').then(function(r){if(!r.ok) throw new Error('world.json '+r.status); return r.json();}), loadImage('data/site_ground.png')]).then(function(res){
