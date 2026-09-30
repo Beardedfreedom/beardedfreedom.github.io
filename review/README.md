@@ -9,7 +9,7 @@ can sit on a public GitHub Pages site or any static host.
   the service worker and opens `app/index.html`.
 * `sw.js`: service worker that serves the decrypted pages from this browser's cache under
   `app/`. A locked browser is redirected back to the gate.
-* `bundle.enc`: 42 files, 13.3 MB before encryption (demo page, 3D viewer, images, data).
+* `bundle.enc`: 49 files, 24.3 MB before encryption (demo page, 3D viewer, images, data).
 * `florida-freedom-world-review.pdf`: the whole demo as a 20-page landscape PDF (poster cover, one
   section per page), AES-256 encrypted with the same review password. Made by
   `scripts/export_pdf.js` (Chromium print of the demo page) and `scripts/encrypt_pdf.py`.
