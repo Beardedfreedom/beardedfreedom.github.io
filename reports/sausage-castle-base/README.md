@@ -144,3 +144,23 @@ carries a print stylesheet, so "Print / Save as PDF" in a browser gives the same
     npm install playwright-core @fontsource/anton @fontsource/barlow @fontsource/jetbrains-mono
     node reports/sausage-castle-base/scripts/export_pdf.js /tmp/ffw.pdf
     REVIEW_PASSWORD='the passphrase' python3 reports/sausage-castle-base/scripts/encrypt_pdf.py /tmp/ffw.pdf review/florida-freedom-world-review.pdf
+
+## Presentation model (`mockup/present/`, `viewer3d/`)
+
+The earlier mock-ups drew the trees straight from the lidar canopy, which reads as jagged blobs. The
+presentation model (`scripts/blender_present.py`) rebuilds the lake zones cleanly: the smoothed
+graded bare earth with painted land cover (grass, a sand ring at the shore, packed-sand loop lane
+and pads), a rounded lake at 69.3 ft with a gentle bed, the 22 cabins on their pad slabs with short
+paths to the lane, and the 610 kept trees as stylised oaks, pines and cypresses at the heights and
+crown sizes the lidar measured. Trees standing between a low camera and its subject are hidden per
+view so the cabins read clearly.
+
+Outputs: `mockup/present/render_{overall,A,B,C,D,lake,hero,hero_dusk}.jpg` (1920 × 1080, Cycles,
+128 samples), `mockup/present/turntable.mp4` (60-frame orbit), the `.blend`, and
+`viewer3d/florida_freedom_world_lakes_present.glb` with `viewer3d/index.html`, an interactive page
+(orbit, zone view presets, tree toggle, shadows, snapshot) built on three.js. To rebuild:
+
+    python3 reports/sausage-castle-base/scripts/blender_present.py --base reports/sausage-castle-base --out reports/sausage-castle-base/mockup/present --renders --samples 128 --turntable 60
+    python3 reports/sausage-castle-base/scripts/make_turntable.py reports/sausage-castle-base/mockup/present
+
+Options: `--views`, `--res`, `--step` (ground grid, 2 = 4 ft), `--tree-density`, `--no-trees`, `--seed`.

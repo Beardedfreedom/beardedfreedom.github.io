@@ -3,8 +3,9 @@
 
 What it does
 ------------
-* Collects the demo page (``index.html``), every local image/data file it references, and the
-  whole ``viewer/`` folder (3D viewer page + heightmaps + textures + unit models).
+* Collects the demo page (``index.html``), every local image/data/video file it references, the
+  whole ``viewer/`` folder (terrain viewer page + heightmaps + textures + unit models) and the
+  ``viewer3d/`` folder (interactive presentation model page + .glb).
 * Adds a small "Private review · Lock" link to each HTML page.
 * Packs everything into one container and encrypts it with AES-256-GCM. The key comes from the
   review password through PBKDF2-SHA256 (600,000 iterations by default) with a random salt.
@@ -48,7 +49,7 @@ from cryptography.hazmat.primitives import hashes
 
 HERE = Path(__file__).resolve().parent
 MAGIC = b"FFWREV1\x00"
-REF_RE = re.compile(r'(?:src|href)="([^"#?]+)')
+REF_RE = re.compile(r'(?:src|href|poster)="([^"#?]+)')
 WORDS = ("gator", "cypress", "lantern", "saucer", "castle", "moss", "swamp", "mushroom", "firefly",
          "heron", "orbit", "haunt", "ember", "willow", "comet", "marsh", "spore", "beacon", "raven",
          "tide", "pine", "meteor", "fable", "thunder", "compass", "harbor", "acorn", "nova", "cabin",
@@ -90,11 +91,14 @@ def collect(base: Path) -> list[str]:
             wanted.append(rel)
         elif not (base / rel).is_file():
             print(f"  warning: demo references {rel} but it is missing; skipped", file=sys.stderr)
-    for p in sorted((base / "viewer").rglob("*")):
-        if p.is_file() and not p.name.startswith("."):
-            rel = p.relative_to(base).as_posix()
-            if rel not in wanted:
-                wanted.append(rel)
+    for folder in ("viewer", "viewer3d"):
+        if not (base / folder).is_dir():
+            continue
+        for p in sorted((base / folder).rglob("*")):
+            if p.is_file() and not p.name.startswith("."):
+                rel = p.relative_to(base).as_posix()
+                if rel not in wanted:
+                    wanted.append(rel)
     return wanted
 
 
@@ -113,7 +117,7 @@ def lock_pill(depth: int, viewer: bool) -> str:
 def prepare_html(rel: str, data: bytes) -> bytes:
     text = data.decode("utf-8")
     depth = rel.count("/")
-    pill = lock_pill(depth, viewer=rel.startswith("viewer/"))
+    pill = lock_pill(depth, viewer=rel.startswith(("viewer/", "viewer3d/")))
     if "</body>" in text:
         text = text.replace("</body>", pill + "</body>", 1)
     else:

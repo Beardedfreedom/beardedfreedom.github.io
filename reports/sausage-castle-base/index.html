@@ -38,7 +38,7 @@ section h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,5
 section h2 em{font-style:normal;color:var(--gold)}
 p{max-width:68ch}
 figure{margin:20px 0}
-figure img{width:100%;max-width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:var(--paper)}
+figure img,figure video{width:100%;max-width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:var(--paper)}
 figcaption{font-size:13px;color:var(--muted);margin-top:8px;max-width:80ch}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .two>*{min-width:0}
@@ -96,7 +96,7 @@ footer{border-top:1px solid var(--line);margin-top:56px;padding-top:20px;font-si
   .el{padding:12px 14px}
   .themes{grid-template-columns:1fr 1fr}
   .theme img{aspect-ratio:auto;width:auto;max-width:100%;max-height:3in;margin:0 auto}
-  .btns{display:none}
+  .btns,.web-only{display:none}
   a{text-decoration:none}
   .theme,.el{transform:none!important;transition:none}
 }
@@ -237,15 +237,20 @@ footer{border-top:1px solid var(--line);margin-top:56px;padding-top:20px;font-si
 </section>
 
 <section id="blender">
-  <span class="num">06 · BLENDER</span>
-  <h2>Rendered in <em>Blender</em></h2>
-  <p>The same cleared site, all 22 cabins and the kept trees rebuilt as a Blender scene by script and rendered with Cycles. The .blend and .glb files are in the repository, so the scene can be opened, re-lit and re-shot, or handed to any 3D tool.</p>
-  <figure><img src="mockup/blender/render_overall.jpg" alt="Blender render of the lake zones with all four lands of cabins"><figcaption>Overall view from the south-west: mushrooms in C, stilt cabins in B, haunted houses in A, saucers in D.</figcaption></figure>
+  <span class="num">06 · THE PRESENTATION MODEL</span>
+  <h2>The lake, <em>clean</em></h2>
+  <p>The same site rebuilt as a presentation model. The ground is the graded bare earth from the lidar, smoothed; the lake sits at its measured level; the loop lane, the pad slabs and the 22 cabins are where the plan puts them; and the 610 kept trees are drawn as oaks, pines and cypresses at the heights and crown sizes the laser measured, instead of the raw canopy. Rendered with Cycles in Blender. The same scene is an interactive model you can orbit, and a .blend and .glb sit in the repository for any 3D tool.</p>
+  <div class="btns"><a class="btn" href="viewer3d/index.html" target="_blank" rel="noopener">Open the 3D model</a><a class="btn secondary" href="mockup/present/turntable.mp4" target="_blank" rel="noopener">Turntable clip</a></div>
+  <figure><img src="mockup/present/render_hero.jpg" alt="Presentation render of the mushroom cabins seen from low over the lake, with the loop lane and trees behind"><figcaption>Mushroom Hollow from over the water: eight cabins on their pads, the loop lane behind, kept trees at lidar height.</figcaption></figure>
+  <figure class="web-only"><video src="mockup/present/turntable.mp4" poster="mockup/present/turntable_poster.jpg" controls muted loop playsinline preload="none"></video><figcaption>Sixty-frame orbit of the lake zones.</figcaption></figure>
+  <figure><img src="mockup/present/render_overall.jpg" alt="Presentation render of the whole lake with all four lands of cabins around it"><figcaption>Overall from the south-west: haunted houses in A, stilt cabins in B, mushrooms in C, saucers in D.</figcaption></figure>
   <div class="two">
-    <figure><img src="mockup/blender/render_A.jpg" alt="Blender render of zone A haunted houses"><figcaption>Zone A, Haunted Hammock.</figcaption></figure>
-    <figure><img src="mockup/blender/render_B.jpg" alt="Blender render of zone B swamp cabins"><figcaption>Zone B, Swamp Camp.</figcaption></figure>
-    <figure><img src="mockup/blender/render_C.jpg" alt="Blender render of zone C mushroom cabins"><figcaption>Zone C, Mushroom Hollow.</figcaption></figure>
-    <figure><img src="mockup/blender/render_D.jpg" alt="Blender render of zone D UFO saucer pods"><figcaption>Zone D, Landing Site.</figcaption></figure>
+    <figure><img src="mockup/present/render_A.jpg" alt="Presentation render of zone A haunted houses"><figcaption>Zone A, Haunted Hammock.</figcaption></figure>
+    <figure><img src="mockup/present/render_B.jpg" alt="Presentation render of zone B swamp cabins"><figcaption>Zone B, Swamp Camp.</figcaption></figure>
+    <figure><img src="mockup/present/render_D.jpg" alt="Presentation render of zone D UFO saucer pods"><figcaption>Zone D, Landing Site.</figcaption></figure>
+    <figure><img src="mockup/present/render_C.jpg" alt="Presentation render of zone C mushroom cabins"><figcaption>Zone C, Mushroom Hollow.</figcaption></figure>
+    <figure><img src="mockup/present/render_lake.jpg" alt="Eye-level render across the lake to the mushroom cabins reflected in the water"><figcaption>From the far shore at eye level, the mushroom row in the water.</figcaption></figure>
+    <figure><img src="mockup/present/render_hero_dusk.jpg" alt="Dusk render of the mushroom cabins with lit windows"><figcaption>The same shot at dusk, windows lit.</figcaption></figure>
   </div>
 </section>
 
