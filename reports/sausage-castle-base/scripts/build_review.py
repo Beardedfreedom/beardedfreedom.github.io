@@ -91,7 +91,7 @@ def collect(base: Path) -> list[str]:
             wanted.append(rel)
         elif not (base / rel).is_file():
             print(f"  warning: demo references {rel} but it is missing; skipped", file=sys.stderr)
-    for folder in ("viewer", "viewer3d"):
+    for folder in ("viewer", "viewer3d", "game"):
         if not (base / folder).is_dir():
             continue
         for p in sorted((base / folder).rglob("*")):
@@ -117,7 +117,7 @@ def lock_pill(depth: int, viewer: bool) -> str:
 def prepare_html(rel: str, data: bytes) -> bytes:
     text = data.decode("utf-8")
     depth = rel.count("/")
-    pill = lock_pill(depth, viewer=rel.startswith(("viewer/", "viewer3d/")))
+    pill = lock_pill(depth, viewer=rel.startswith(("viewer/", "viewer3d/", "game/")))
     if "</body>" in text:
         text = text.replace("</body>", pill + "</body>", 1)
     else:

@@ -164,3 +164,19 @@ Outputs: `mockup/present/render_{overall,A,B,C,D,lake,hero,hero_dusk}.jpg` (1920
     python3 reports/sausage-castle-base/scripts/make_turntable.py reports/sausage-castle-base/mockup/present
 
 Options: `--views`, `--res`, `--step` (ground grid, 2 = 4 ft), `--tree-density`, `--no-trees`, `--seed`.
+
+## The walkabout game (`game/`)
+
+`game/index.html` is a browser game on the real property: first-person walking or a golf cart over the
+lidar ground, with all 68 lidar-measured buildings, 3,080 trees from the canopy height model, the roads,
+the trail loop, both lakes, the 22 cabins on their pads and the twelve master-plan attractions marked by
+beacons, signs and simple props (Ferris wheel and carousel at the gate, the stage, the golf greens, the
+lagoon, RV rows and tents, the observation tower, the mushroom garden). Objective: find all twelve.
+Keyboard and mouse on desktop (pointer lock, or drag to look where pointer lock is not allowed), a
+virtual stick and drag on phones; day and night; a minimap; R returns to the gate.
+
+`scripts/game_world.py` packs the world from the site heightmaps, the base and master-plan DXFs and the
+unit models into `game/data/world.json` (plus the ground and colour grids). Rebuild after changing the
+plan with:
+
+    python3 reports/sausage-castle-base/scripts/game_world.py
