@@ -22,6 +22,29 @@ Concept grade, on the lidar base (EPSG:2236 ftUS). Made by `scripts/golf_course.
 - The ground is gentle: tees sit between 67 and 75 ft NAVD88, and no hole rises or falls more than 8 ft.
 - It replaces the 3.3 ac Gator Greens pitch-and-putt in the master plan.
 
+## Hazards and the 3D model
+
+`scripts/golf_3d.py` adds the hazards and grades the course into the 3 ft lidar ground; the result is
+`golf_course_3d_EPSG2236_ftUS.dxf`, a 3D CAD model with one mesh per surface per hole on its own layer
+(fairway, green, tee, bunker, pond bed, water surface), a flag on every green and 2D outlines at their
+elevations. XREF the site base DXF underneath it.
+
+- **Water carries** on holes 1, 3, 6, 13 and 17: a pond across the hole between tee and green, so the
+  tee shot must fly the water (carries of 111, 110, 111, 71 and 69 yd). Ponds total 0.94 ac, dug 5 ft
+  below a water level 1 ft under the lowest bank, with 4:1 side slopes; they double as stormwater storage.
+- **Sand carries** on holes 2, 5, 8, 11 and 15: a cross bunker across the hole (carries of 59 to 115 yd).
+- **Greenside bunkers**: 45 in all, two or three per green, dug 2.5 ft.
+- **Greens** about 3,200 sq ft, raised 1.5 ft with a 1.5% fall from back to front; **tees** raised 1.5 ft
+  and flat. Every hole ties back into the existing ground over its outer 12 ft.
+- **Earthwork**: about 9,100 cu yd of cut (ponds and bunkers) against 7,400 cu yd of fill (greens and
+  tees), so the course balances on site with about 1,700 cu yd to spare for mounding.
+- Hole 9 was dropped as a water hole because its pond would have sat on the drive.
+
+Pictures: `golf_hazards_plan.jpg` (whole course), `golf_yardage_book.jpg` (all 18 holes, tee at the
+bottom) and `golf_3d_*.jpg` (Cycles renders of the 3D model made by `scripts/golf_render.py`). The
+walkabout game (`game/`) now shows the course too: the ponds are water, the holes are painted on the
+ground with their trees cleared, and every tee has a sign and every green a flag.
+
 ## Rules used
 
 Estate edge setback 75 ft; 40 ft from other plan areas; 100 ft from buildings; 30 ft from water.

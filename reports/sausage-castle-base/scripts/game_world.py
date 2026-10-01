@@ -119,6 +119,21 @@ for j, i in zip(jj, ii):
     if water_union.distance(Point(x, y)) < 60 and h > 30 and rng.random() < 0.5: kind = 2                          # cypress near water
     trees.append([round(x, 1), round(y, 1), round(h, 1), round(r, 1), kind])
 
+# ---- golf course (masterplan/golf, from scripts/golf_course.py + golf_3d.py): ponds become water, the holes are cleared
+golf = None; gfile = BASE / 'masterplan/golf/golf_course.json'
+if gfile.exists():
+    gc = json.load(open(gfile))
+    if 'hazards' in gc:
+        corr = [unary_union([LineString([tuple(h['tee']), tuple(h['green'])]).buffer(48, cap_style=2), Point(*h['green']).buffer(55), Point(*h['tee']).buffer(28)]) for h in gc['holes']]
+        course_u = unary_union(corr); n0 = len(trees)
+        trees = [t for t in trees if not course_u.contains(Point(t[0], t[1]))]
+        for h in gc['holes']:
+            if h.get('pond_poly'): water.append({'wse': h['water_level_ft'], 'pts': [c for q in h['pond_poly'] for c in q]})
+        golf = {'clubhouse': gc['clubhouse'], 'par': gc['par'], 'yards': gc['yards'],
+                'holes': [{'n': h['hole'], 'par': h['par'], 'yards': h['yards'], 'tee': h['tee'], 'green': h['green'], 'carry': h.get('carry_yd'),
+                           'hazard': 'water' if h.get('water_carry') else ('sand' if h.get('sand_carry') else '')} for h in gc['holes']]}
+        print(f'golf: {len(gc["holes"])} holes, {n0 - len(trees)} trees cleared, {sum(1 for h in gc["holes"] if h.get("pond_poly"))} ponds')
+
 # ---- spawn: on the house drive at the gate area, looking toward the Castle
 cb = buildings[castle]; cxb = np.mean(cb['v'][0::3]); cyb = np.mean(cb['v'][1::3])
 gate = prog['gate']['centroid']; spawn = {'x': gate[0], 'y': gate[1] - 80, 'look': [round(float(cxb), 1), round(float(cyb), 1)]}
@@ -130,8 +145,27 @@ world = {
     'water': water, 'roads': [[c for p in r for c in p] for r in roads], 'trail': [[c for p in r for c in p] for r in trail],
     'road_names': [{'x': round(x, 1), 'y': round(y, 1), 'name': t} for x, y, t in road_names],
     'buildings': buildings, 'castle': castle, 'trees': trees, 'units': units['units'], 'cabins': cabins, 'attractions': attractions, 'spawn': spawn,
+    **({'golf': golf} if golf else {}),
 }
 (OUT / 'world.json').write_text(json.dumps(world, separators=(',', ':')))
 for fn in ('site_ground.png', 'site_color.jpg'):
     shutil.copyfile(BASE / 'viewer/data' / fn, OUT / fn)
+if golf:   # paint the course onto the game's ground colours and dig the ponds and bunkers into its heightmap
+    from PIL import ImageDraw
+    SC = 4; col = Image.open(OUT / 'site_color.jpg').convert('RGB'); ov = Image.new('RGBA', (col.width * SC, col.height * SC), (0, 0, 0, 0)); dr = ImageDraw.Draw(ov)
+    def PX(x, y): return ((x - x0) / cell * SC, (ny - (y - y0) / cell) * SC)
+    def fillp(pts, rgba): dr.polygon([PX(*q) for q in pts], fill=rgba)
+    for g_ in corr: fillp(list(g_.exterior.coords), (104, 168, 72, 235))
+    for h in gc['holes']:
+        if h.get('pond_poly'): fillp(h['pond_poly'], (36, 92, 118, 255))
+        for b in h.get('bunker_polys', []): fillp(b, (232, 214, 160, 255))
+        fillp(h['green_poly'], (70, 196, 82, 255)); fillp(h['tee_poly'], (150, 214, 110, 255))
+    col = Image.alpha_composite(col.convert('RGBA'), ov.resize(col.size, Image.LANCZOS)).convert('RGB'); col.save(OUT / 'site_color.jpg', quality=92)
+    spec = meta['ground']; hm = np.asarray(Image.open(OUT / 'site_ground.png').convert('RGB')).astype(np.int64).copy(); Z = (hm[..., 0] * 256 + hm[..., 1]) * spec['scale'] + spec['zmin']
+    for h in gc['holes']:
+        for pts, kind in ([(h['pond_poly'], 'pond')] if h.get('pond_poly') else []) + [(b, 'bunker') for b in h.get('bunker_polys', [])]:
+            mk = Image.new('L', (nx, ny), 0); ImageDraw.Draw(mk).polygon([((x - x0) / cell, ny - (y - y0) / cell) for x, y in pts], fill=255); m_ = np.asarray(mk) > 0
+            Z[m_] = np.minimum(Z[m_], h['water_level_ft'] - 3.0) if kind == 'pond' else Z[m_] - 1.5
+    v = np.clip(np.round((Z - spec['zmin']) / spec['scale']), 0, 65535).astype(np.int64); hm[..., 0] = v // 256; hm[..., 1] = v % 256
+    Image.fromarray(hm.astype(np.uint8), 'RGB').save(OUT / 'site_ground.png')
 print(f"world.json: {(OUT / 'world.json').stat().st_size // 1024} KB | buildings {len(buildings)} (castle #{castle}, {cb['sf']} sf, h {cb['h']} ft) | roads {len(roads)} | trail {len(trail)} | water {len(water)} | trees {len(trees)} | cabins {len(cabins)} | attractions {len(attractions)}")
