@@ -328,7 +328,7 @@ print('cabins placed', len(units['placements']))
 
 # ------------------------------------------------------------------ sky, sun, cameras
 sun = bpy.data.lights.new('Sun', 'SUN'); sun.energy = 3.5; sun.angle = math.radians(1.2); so = bpy.data.objects.new('Sun', sun); scene.collection.objects.link(so)
-PHYS_SKY = False
+PHYS_SKY = False; HAZE = None; _haze = {}
 world = bpy.data.worlds.new('Sky'); scene.world = world; world.use_nodes = True; wn = world.node_tree; sky = None
 try:
     sky = wn.nodes.new('ShaderNodeTexSky')
@@ -338,9 +338,33 @@ try:
     for k, v in (('air_density', 1.0), ('dust_density', 2.2), ('aerosol_density', 2.2), ('ozone_density', 1.6)):
         if hasattr(sky, k): setattr(sky, k, v)
     print('sky', sky.sky_type); PHYS_SKY = True
+    # below the horizon the physical sky is black and shows past the edge of the ground model. Blend those
+    # directions to a haze background whose colour is measured from the sky just above the horizon (lighting()).
+    bg1 = wn.nodes['Background']; HAZE = wn.nodes.new('ShaderNodeBackground'); mixs = wn.nodes.new('ShaderNodeMixShader')
+    tc = wn.nodes.new('ShaderNodeTexCoord'); sep = wn.nodes.new('ShaderNodeSeparateXYZ'); mr = wn.nodes.new('ShaderNodeMapRange'); mr.clamp = True
+    mr.inputs['From Min'].default_value = 0.0; mr.inputs['From Max'].default_value = -0.03; mr.inputs['To Min'].default_value = 0.0; mr.inputs['To Max'].default_value = 1.0
+    wn.links.new(tc.outputs['Generated'], sep.inputs[0]); wn.links.new(sep.outputs['Z'], mr.inputs['Value']); lp = wn.nodes.new('ShaderNodeLightPath'); camonly = wn.nodes.new('ShaderNodeMath'); camonly.operation = 'MULTIPLY'   # haze only where the camera looks, so the lighting is unchanged
+    wn.links.new(mr.outputs['Result'], camonly.inputs[0]); wn.links.new(lp.outputs['Is Camera Ray'], camonly.inputs[1]); wn.links.new(camonly.outputs[0], mixs.inputs[0])
+    wn.links.new(bg1.outputs[0], mixs.inputs[1]); wn.links.new(HAZE.outputs[0], mixs.inputs[2]); wn.links.new(mixs.outputs[0], wn.nodes['World Output'].inputs['Surface'])
     wn.links.new(sky.outputs['Color'], wn.nodes['Background'].inputs['Color']); wn.nodes['Background'].inputs['Strength'].default_value = 0.55
 except Exception:
     wn.nodes['Background'].inputs['Color'].default_value = (0.55, 0.7, 0.9, 1)
+
+
+def horizon_haze(preset):
+    """linear colour of the sky 1-3 degrees above the horizon, from a tiny probe render (cached per preset)"""
+    if preset in _haze: return _haze[preset]
+    r = scene.render; keep = (r.resolution_x, r.resolution_y, r.resolution_percentage, r.filepath, r.image_settings.file_format, scene.camera, scene.cycles.samples)
+    pc = bpy.data.cameras.new('probe'); pc.lens = 200; pc.clip_start = 0.01; pc.clip_end = 0.1; po = bpy.data.objects.new('probe', pc); scene.collection.objects.link(po)
+    pc.lens = 50; r.resolution_x, r.resolution_y, r.resolution_percentage = 16, 2, 100; scene.cycles.samples = 16; scene.camera = po
+    r.image_settings.file_format = 'OPEN_EXR'; acc = []
+    for k in range(4):   # four compass directions, rays 1.5 to 6.5 degrees above the horizon
+        po.location = (0, 0, 500); po.rotation_euler = (math.radians(94), 0, math.radians(90 * k))
+        r.filepath = os.path.join(OUT, f'_probe_{preset}_{k}.exr'); bpy.ops.render.render(write_still=True)
+        img = bpy.data.images.load(r.filepath); acc.append(np.array(img.pixels[:], dtype=np.float32).reshape(-1, 4)[:, :3].mean(axis=0)); bpy.data.images.remove(img); os.remove(r.filepath)
+    rgb = tuple(float(v) for v in np.mean(acc, axis=0)); bpy.data.objects.remove(po); bpy.data.cameras.remove(pc)
+    r.resolution_x, r.resolution_y, r.resolution_percentage, r.filepath, r.image_settings.file_format, scene.camera, scene.cycles.samples = keep
+    print('haze', preset, [round(v, 4) for v in rgb]); _haze[preset] = rgb; return rgb
 
 
 def lighting(preset):
@@ -351,6 +375,9 @@ def lighting(preset):
     sun.energy = energy
     if sky is not None:
         sky.sun_elevation = math.radians(elev); sky.sun_rotation = math.radians(rot); wn.nodes['Background'].inputs['Strength'].default_value = strength
+    if PHYS_SKY and HAZE is not None:
+        rgb = horizon_haze(preset); m = max(max(rgb), 1e-6)
+        HAZE.inputs['Color'].default_value = (rgb[0] / m, rgb[1] / m, rgb[2] / m, 1); HAZE.inputs['Strength'].default_value = m
     scene.view_settings.exposure = 0.15 if preset == 'day' else 0.6
 
 
