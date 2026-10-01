@@ -70,6 +70,10 @@ and point `MODELS` at the local copies.
 
 Pick one, keep the pull request small, and say in it what you changed and how you checked it.
 
+0. **Hyper-realistic presentation renders (Codex).** The full brief is in `CODEX-HYPERREAL.md`:
+   realistic Florida trees, PBR ground and grass, tea-coloured water, real cabin materials, HDRI light,
+   camera depth of field, on branch `codex/hyperreal`.
+
 1. **Bring the AI models into the repository** (task above) so the game works offline and loads faster.
 2. **Phone performance for the game**: frame rate on a mid-range phone, fewer draw calls for the 3,080
    trees, a lower-detail terrain on touch devices, texture sizes.
