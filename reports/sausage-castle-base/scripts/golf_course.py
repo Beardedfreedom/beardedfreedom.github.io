@@ -33,8 +33,10 @@ ap.add_argument('--time', type=float, default=240, help='search time budget per 
 ap.add_argument('--seed', type=int, default=3)
 ap.add_argument('--setback', type=float, default=75, help='setback from the estate edge (ft)')
 ap.add_argument('--nodes', type=int, default=60, help='search nodes per routing attempt before a fresh restart')
+ap.add_argument('--max4', default='8,6,4,2,0', help='par-4 caps to try in order')
+ap.add_argument('--out', default=None, help='output folder (default masterplan/golf)')
 args = ap.parse_args()
-B = os.path.abspath(args.base); OUT = os.path.join(B, 'masterplan', 'golf'); os.makedirs(OUT, exist_ok=True)
+B = os.path.abspath(args.base); OUT = os.path.abspath(args.out) if args.out else os.path.join(B, 'masterplan', 'golf'); os.makedirs(OUT, exist_ok=True)
 rng = random.Random(args.seed); NODE_CAP = args.nodes
 
 # ------------------------------------------------------------------ estate and constraints
@@ -148,7 +150,7 @@ def search(max4, budget, n_holes=18):
     return best['holes']
 
 result = None
-for max4 in (8, 6, 4, 2, 0):
+for max4 in [int(v) for v in args.max4.split(',')]:
     holes = search(max4, args.time)
     n4 = sum(1 for h in holes if h['par'] == 4)
     print(f'max par 4s {max4}: fitted {len(holes)} of 18 holes, {n4} par 4s, par {sum(h["par"] for h in holes)}')
@@ -173,6 +175,8 @@ summary = {'generated': time.strftime('%Y-%m-%d'), 'crs': 'EPSG:2236 ftUS', 'par
            'free_acres': round(free.area / AC, 1), 'course_type': kind, 'holes_fitted': len(holes), 'par': sum(r['par'] for r in rows), 'yards': sum(r['yards'] for r in rows),
            'course_acres': round(course_u.area / AC, 1), 'trees_to_clear': len(cleared), 'clubhouse': [round(club_pt.x, 1), round(club_pt.y, 1)],
            'finish_to_clubhouse_ft': round(holes[-1]['green'].distance(club_pt)) if holes else None,
+           'front_finish_to_clubhouse_ft': round(holes[8]['green'].distance(club_pt)) if len(holes) > 8 else None,
+           'total_walk_ft': round(sum(holes[i]['green'].distance(holes[i + 1]['tee']) for i in range(len(holes) - 1))),
            'rules': {'edge_setback_ft': args.setback, 'building_buffer_ft': 100, 'water_buffer_ft': 30, 'drives': 'holes may cross internal drives (cart crossings counted)', 'programme_buffer_ft': 40,
                      'par3_corridor_ft': 2 * SPEC[3]['hw'], 'par4_corridor_ft': 2 * SPEC[4]['hw'], 'gap_between_holes_ft': 25},
            'holes': rows}
