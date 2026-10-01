@@ -32,9 +32,10 @@ ap.add_argument('--parcels', default='SW,NW,SE', help='quarter-quarters assumed 
 ap.add_argument('--time', type=float, default=240, help='search time budget per course type (s)')
 ap.add_argument('--seed', type=int, default=3)
 ap.add_argument('--setback', type=float, default=75, help='setback from the estate edge (ft)')
+ap.add_argument('--nodes', type=int, default=60, help='search nodes per routing attempt before a fresh restart')
 args = ap.parse_args()
 B = os.path.abspath(args.base); OUT = os.path.join(B, 'masterplan', 'golf'); os.makedirs(OUT, exist_ok=True)
-rng = random.Random(args.seed)
+rng = random.Random(args.seed); NODE_CAP = args.nodes
 
 # ------------------------------------------------------------------ estate and constraints
 E_BRK, N_BRK, QQ = 427050.0, 1578500.0, 1320.0
@@ -118,7 +119,7 @@ def search(max4, budget, n_holes=18):
                             poly, green = corridor(tee, ang, L * YD, par)
                             if not pa.contains(poly): continue
                             dhome = green.distance(club_pt)
-                            if k == 8 and dhome > 900: continue           # holes 9 and 18 must come back to the Castle
+                            if k == 8 and dhome > 1100: continue          # holes 9 and 18 must come back towards the Castle
                             packed = abs(poly.distance(used_u) - 25) if used_u is not None else 0.0
                             hug = poly.distance(edge)
                             score = (3.0 if par == 4 else 0.0) + L / 45.0 - min(packed, 200) / 35.0 - min(hug, 200) / 45.0 - walk / 160.0 - home_w * dhome / 120.0 + rng.random() * 0.8
@@ -126,19 +127,24 @@ def search(max4, budget, n_holes=18):
             if out: break
         out.sort(key=lambda c: -c[0])
         return out[:6] + (rng.sample(out[6:50], min(2, len(out[6:50]))) if len(out) > 6 else [])
+    nodes = [0]
     def dfs(i, holes, used_u, prev_green, n4):
         nonlocal best
         if better(holes, best['holes']): best = {'holes': list(holes)}
         if i == n_holes: return True
-        if time.time() - t0 > budget: return False
+        nodes[0] += 1
+        if time.time() - t0 > budget or nodes[0] > NODE_CAP: return False     # give up on this routing and restart fresh
         for score, tee, green, poly, L, par, walk in candidates(i, used_u, prev_green, n4):
             holes.append({'par': par, 'yards': L, 'tee': tee, 'green': green, 'poly': poly, 'walk': walk})
             if dfs(i + 1, holes, poly if used_u is None else used_u.union(poly), green, n4 + (par == 4)): return True
             holes.pop()
             if time.time() - t0 > budget: break
         return False
+    runs = 0
     while time.time() - t0 < budget:
+        nodes[0] = 0; runs += 1
         if dfs(0, [], None, None, 0): break
+    print(f'  {runs} restarts')
     return best['holes']
 
 result = None
