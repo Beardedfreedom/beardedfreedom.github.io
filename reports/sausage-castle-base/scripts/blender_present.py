@@ -8,6 +8,10 @@ web viewer (viewer3d/) and saves the .blend.
 
 Run with the pip "bpy" module (Python 3.11):
     python3 scripts/blender_present.py --base . --out mockup/present --renders --samples 128 --turntable 48
+    # zone close-ups (drone + visitor eye level, day and dusk) and a slow 240-frame orbit (10 s a lap at 24 fps):
+    python3 scripts/blender_present.py --base . --out mockup/present --renders --no-glb \
+        --views close_A,close_B,close_C,close_D,ground_A,ground_B,ground_C,ground_D,ground_C_dusk,ground_D_dusk,ground_A_dusk,ground_B_dusk \
+        --turntable 240 --tt-res 1280x720 --tt-samples 40
 or inside Blender:
     blender --background --python scripts/blender_present.py -- --base reports/sausage-castle-base --out ... --renders
 
@@ -37,6 +41,8 @@ ap.add_argument('--res', default='1920x1080'); ap.add_argument('--step', type=in
 ap.add_argument('--views', default='overall,A,B,C,D,lake,hero,hero_dusk')
 ap.add_argument('--turntable', type=int, default=0, help='number of turntable frames (0 = none)')
 ap.add_argument('--tt-res', default='960x540'); ap.add_argument('--tt-samples', type=int, default=48)
+ap.add_argument('--tt-radius', type=float, default=900.0, help='turntable orbit radius (ft)'); ap.add_argument('--tt-height', type=float, default=380.0, help='turntable camera height above the water (ft)')
+ap.add_argument('--tt-start', type=int, default=0, help='first turntable frame to render (resume)')
 ap.add_argument('--no-trees', action='store_true'); ap.add_argument('--tree-density', type=float, default=1.0)
 ap.add_argument('--no-glb', action='store_true'); ap.add_argument('--seed', type=int, default=7)
 args = ap.parse_args(argv)
@@ -322,12 +328,16 @@ print('cabins placed', len(units['placements']))
 
 # ------------------------------------------------------------------ sky, sun, cameras
 sun = bpy.data.lights.new('Sun', 'SUN'); sun.energy = 3.5; sun.angle = math.radians(1.2); so = bpy.data.objects.new('Sun', sun); scene.collection.objects.link(so)
+PHYS_SKY = False
 world = bpy.data.worlds.new('Sky'); scene.world = world; world.use_nodes = True; wn = world.node_tree; sky = None
 try:
-    sky = wn.nodes.new('ShaderNodeTexSky'); sky.sky_type = 'NISHITA'; sky.sun_intensity = 0.35; sky.altitude = 30
-    for k, v in (('air_density', 1.0), ('dust_density', 2.2), ('ozone_density', 1.6)):
-        try: setattr(sky, k, v)
-        except Exception: pass
+    sky = wn.nodes.new('ShaderNodeTexSky')
+    sky_types = [i.identifier for i in sky.bl_rna.properties['sky_type'].enum_items]   # Blender 5 renamed NISHITA to MULTIPLE_SCATTERING
+    sky.sky_type = next(t for t in ('NISHITA', 'MULTIPLE_SCATTERING', 'SINGLE_SCATTERING', 'HOSEK_WILKIE') if t in sky_types)
+    sky.sun_intensity = 0.35; sky.altitude = 30
+    for k, v in (('air_density', 1.0), ('dust_density', 2.2), ('aerosol_density', 2.2), ('ozone_density', 1.6)):
+        if hasattr(sky, k): setattr(sky, k, v)
+    print('sky', sky.sky_type); PHYS_SKY = True
     wn.links.new(sky.outputs['Color'], wn.nodes['Background'].inputs['Color']); wn.nodes['Background'].inputs['Strength'].default_value = 0.55
 except Exception:
     wn.nodes['Background'].inputs['Color'].default_value = (0.55, 0.7, 0.9, 1)
@@ -336,6 +346,7 @@ except Exception:
 def lighting(preset):
     """day: high warm sun from the south-west; dusk: low sun, glowing windows"""
     elev, rot, energy, strength = (38, 215, 3.5, 0.55) if preset == 'day' else (7, 250, 1.6, 0.35)
+    if PHYS_SKY: strength = 0.03 if preset == 'day' else 0.05      # the physical sky is radiometric: far brighter than the flat fallback colour
     so.rotation_euler = (math.radians(90 - elev), 0, math.radians(rot + 90))
     sun.energy = energy
     if sky is not None:
@@ -369,6 +380,19 @@ add_cam('lake', (L[0] - 118 * math.cos(ax), L[1] - 118 * math.sin(ax), wse + 5.5
 hero_pos = (L[0] - 0.12 * (cxC - L[0]), L[1] - 0.12 * (cyC - L[1]), wse + 46)   # low over the water, looking at the mushroom row
 add_cam('hero', hero_pos, (cxC, cyC, czC + 6), 30)
 add_cam('hero_dusk', hero_pos, (cxC, cyC, czC + 6), 30)
+# zone close-ups: the two cabins nearest each zone centre, seen from the lake side (fronts face the lane)
+ZONE_NAME = {'A': 'haunted', 'B': 'swamp', 'C': 'mushroom', 'D': 'saucer'}
+for zn in 'ABCD':
+    zp = sorted([v for v in cabin_pos.values() if v[3] == zn], key=lambda v: (v[0] - zone_c[zn][0]) ** 2 + (v[1] - zone_c[zn][1]) ** 2)
+    k0 = zp[0]; k1 = zp[1] if len(zp) > 1 else zp[0]
+    tx, ty, tz = (k0[0] + k1[0]) / 2, (k0[1] + k1[1]) / 2, max(k0[2], k1[2])
+    dl = math.hypot(L[0] - tx, L[1] - ty) or 1.0; ux, uy = (L[0] - tx) / dl, (L[1] - ty) / dl   # unit vector toward the lake
+    a = math.atan2(uy, ux) + math.radians(24)                                                  # low drone, three-quarter angle
+    px, py = tx + 120 * math.cos(a), ty + 120 * math.sin(a)
+    add_cam(f'close_{zn}', (px, py, max(ground_z(px, py), wse + 2) + 36), (tx, ty, tz + 9), 42)
+    gx, gy = k0[0] + 60 * ux - 20 * uy, k0[1] + 60 * uy + 20 * ux                             # visitor on the lane, a step to the side
+    for nm in (f'ground_{zn}', f'ground_{zn}_dusk'):
+        add_cam(nm, (gx, gy, max(ground_z(gx, gy), wse + 1) + 5.5), (k0[0], k0[1], k0[2] + 10), 26)
 scene.camera = cams['overall'][0]; lighting('day')
 
 
@@ -399,8 +423,9 @@ if args.renders:
         scene.render.filepath = f'{OUT}/render_{name}.png'; bpy.ops.render.render(write_still=True); foreground_cull(name, False); print('rendered', name, flush=True)
 if args.turntable:
     lighting('day'); scene.render.resolution_x, scene.render.resolution_y = map(int, args.tt_res.split('x')); scene.cycles.samples = args.tt_samples
-    cam = add_cam('turntable', (L[0] + 900, L[1], wse + 380), (L[0], L[1], wse + 10), 32); scene.camera = cam; os.makedirs(f'{OUT}/turntable', exist_ok=True)
-    for f in range(args.turntable):
-        a = 2 * math.pi * f / args.turntable; cam.location = M(L[0] + 900 * math.cos(a), L[1] + 900 * math.sin(a), wse + 380); look_at(cam, M(L[0], L[1], wse + 10))
+    R, Hc = args.tt_radius, args.tt_height
+    cam = add_cam('turntable', (L[0] + R, L[1], wse + Hc), (L[0], L[1], wse + 10), 32); scene.camera = cam; os.makedirs(f'{OUT}/turntable', exist_ok=True)
+    for f in range(args.tt_start, args.turntable):
+        a = 2 * math.pi * f / args.turntable; cam.location = M(L[0] + R * math.cos(a), L[1] + R * math.sin(a), wse + Hc); look_at(cam, M(L[0], L[1], wse + 10))
         scene.render.filepath = f'{OUT}/turntable/frame_{f:03d}.png'; bpy.ops.render.render(write_still=True); print('turntable frame', f, flush=True)
 print('done')

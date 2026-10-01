@@ -156,14 +156,23 @@ crown sizes the lidar measured. Trees standing between a low camera and its subj
 view so the cabins read clearly.
 
 Outputs: `mockup/present/render_{overall,A,B,C,D,lake,hero,hero_dusk}.jpg` (1920 × 1080, Cycles,
-128 samples), `mockup/present/turntable.mp4` (60-frame orbit), the `.blend`, and
+128 samples); zone close-ups `render_close_{A,B,C,D}.jpg` (low drone over the two cabins nearest each
+zone centre, from the lake side), `render_ground_{A,B,C,D}.jpg` (a guest's eye level on the loop lane)
+and `render_ground_{A,B,C,D}_dusk.jpg`; `mockup/present/turntable.mp4` (a slow 240-frame orbit at
+1280 × 720, ten seconds a lap at 24 fps), the `.blend`, and
 `viewer3d/florida_freedom_world_lakes_present.glb` with `viewer3d/index.html`, an interactive page
 (orbit, zone view presets, tree toggle, shadows, snapshot) built on three.js. To rebuild:
 
-    python3 reports/sausage-castle-base/scripts/blender_present.py --base reports/sausage-castle-base --out reports/sausage-castle-base/mockup/present --renders --samples 128 --turntable 60
-    python3 reports/sausage-castle-base/scripts/make_turntable.py reports/sausage-castle-base/mockup/present
+    python3 reports/sausage-castle-base/scripts/blender_present.py --base reports/sausage-castle-base --out reports/sausage-castle-base/mockup/present --renders --samples 128
+    python3 reports/sausage-castle-base/scripts/blender_present.py --base reports/sausage-castle-base --out reports/sausage-castle-base/mockup/present --renders --no-glb \
+        --views close_A,close_B,close_C,close_D,ground_A,ground_B,ground_C,ground_D,ground_A_dusk,ground_B_dusk,ground_C_dusk,ground_D_dusk \
+        --turntable 240 --tt-res 1280x720 --tt-samples 40
+    python3 reports/sausage-castle-base/scripts/make_turntable.py reports/sausage-castle-base/mockup/present --fps 24
 
-Options: `--views`, `--res`, `--step` (ground grid, 2 = 4 ft), `--tree-density`, `--no-trees`, `--seed`.
+Options: `--views`, `--res`, `--step` (ground grid, 2 = 4 ft), `--tree-density`, `--no-trees`, `--seed`,
+`--turntable N` (frames per lap), `--tt-res`, `--tt-samples`, `--tt-radius`, `--tt-height`, `--tt-start`
+(resume a stopped orbit). On a 4-core CPU a close-up takes about 2 minutes and an orbit frame about
+20 seconds.
 
 ## The walkabout game (`game/`)
 
@@ -180,3 +189,21 @@ unit models into `game/data/world.json` (plus the ground and colour grids). Rebu
 plan with:
 
     python3 reports/sausage-castle-base/scripts/game_world.py
+
+## AI-built detail models (Meshy through Higgsfield)
+
+The game swaps its massing cabins for AI-generated meshes at runtime. Pipeline: a clean product-style
+reference image per cabin (GPT Image 2.5), Meshy 7 image-to-3D with PBR textures (about 38 credits
+each), then in the Higgsfield cloud sandbox `gltf-transform resize 1024 → webp → meshopt` (12 MB →
+about 1 MB per model), uploaded back to Higgsfield storage, which serves them with open CORS. The
+gator mascot is rigged and plays a wave clip (Meshy rigging, animation id 28); a second, static
+Meshy model of the mascot in its thumbs-up pose stands 24 ft tall on a stone plinth at the Gator Gate,
+facing the arrival point. Both mascot references were drawn to match the brand gator: crocodile-skin
+cowboy hat with a rattlesnake band, flag bandana, gold chain with a Florida pendant, fringed leopard
+vest and gold teeth. `game/index.html`
+lists the models in `MODELS` with a compressed URL and the full-size original as fallback, scales
+each to its design height (mushroom 26 ft, haunted 34 ft, swamp 28 ft, saucer 20 ft, gator 8.5 ft, statue 24 ft)
+and centres it on the pad; if a model cannot be fetched the massing model stays. The compressed
+files are not in the repository because the sandbox network policy blocks the model host; to bring
+them in, allow `d2ol7oe51mr4n9.cloudfront.net` and `d8j0ntlcm91z4.cloudfront.net` in the
+environment and download them into `game/models/`.

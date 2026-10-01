@@ -3875,7 +3875,8 @@ var MODELS={
   haunted:{url:HF+'0b74e106-07c6-4e88-912c-3eeef5f440a0.glb',alt:HFO+'hf_20260930_164627_96d87b2b-8b6e-4361-b326-fdd188f69ddf.glb',h:34},
   ufo:{url:HF+'4497071f-1157-45d1-8785-2dd552f1b854.glb',alt:HFO+'hf_20260930_164630_ddfc03ba-5587-40c4-984a-049f3b1cd68c.glb',h:20},
   swamp:{url:HF+'97151728-e3c5-470d-936e-af4cdd610e45.glb',alt:HFO+'hf_20260930_191547_4b131670-d3e1-4e09-8bc8-504824157376.glb',h:28},
-  gator:{url:HF+'985a6094-1cd3-439d-88f1-3f5de354359d.glb',alt:HFO+'hf_20260930_164720_eeeaf34d-f2ab-41b3-b5f3-17cdf393c0a5.glb',h:8.5}
+  gator:{url:HFO+'hf_20260930_213122_e3efe3e7-79ae-4b51-b74d-369e3d3c24c6.glb',alt:HF+'7d6ec256-1710-4902-96ef-8009137cda83.glb',h:8.5},   // brand mascot, rigged, waves
+  statue:{url:HFO+'hf_20260930_213124_59ae8455-9f21-4212-a84a-4e3c6a95259a.glb',h:24}   // thumbs-up mascot statue at the gate
 };
 function loadModels(){
   if(!THREE.GLTFLoader||window.__noModels) return; var loader=new THREE.GLTFLoader(); if(typeof MeshoptDecoder!=='undefined') loader.setMeshoptDecoder(MeshoptDecoder);
@@ -3887,6 +3888,13 @@ function placeModel(key,g,M){
   var wrap=new THREE.Group(); root.position.set(-ctr.x*s,-bb.min.y*s,-ctr.z*s); root.scale.setScalar(s); wrap.add(root);
   if(key==='gator'){ var A=attractions.filter(function(a){return a.key==='gate'})[0]; if(!A) return; var f=freeSpot(A.x-26,A.z+22); var gy=groundAt(f[0],f[1]); wrap.position.set(f[0],gy,f[1]); wrap.rotation.y=Math.atan2(-(A.x+40-f[0]),-(A.z+60-f[1]))+Math.PI; scene.add(wrap);
     if(g.animations&&g.animations.length){ var mx=new THREE.AnimationMixer(root); mx.clipAction(g.animations[0]).play(); mixers.push(mx); } blockers.push(circlePoly(f[0],f[1],5)); return; }
+  if(key==='statue'){ // the mascot as a 24 ft landmark on a stone plinth at the gate, facing the arrival point
+    var G=attractions.filter(function(a){return a.key==='gate'})[0]; if(!G) return; var sp=W.spawn; var f2=freeSpot(G.x+38,G.z-5); var gy2=groundAt(f2[0],f2[1]);
+    var stone=new THREE.MeshLambertMaterial({color:0xd6ccb8}), gold=new THREE.MeshLambertMaterial({color:0xc9a227,emissive:0x2a1d00});
+    var base=new THREE.Mesh(new THREE.CylinderGeometry(8,9.5,3,32),stone); base.position.set(f2[0],gy2+1.5,f2[1]); scene.add(base);
+    var top=new THREE.Mesh(new THREE.CylinderGeometry(7,7.6,1.4,32),stone); top.position.set(f2[0],gy2+3.7,f2[1]); scene.add(top);
+    var trim=new THREE.Mesh(new THREE.CylinderGeometry(7.7,7.7,0.6,32),gold); trim.position.set(f2[0],gy2+3.1,f2[1]); scene.add(trim);
+    wrap.position.set(f2[0],gy2+4.4,f2[1]); wrap.rotation.y=Math.atan2(toX(sp.x)-f2[0],toZ(sp.y)-f2[1]); scene.add(wrap); blockers.push(circlePoly(f2[0],f2[1],10)); return; }
   cabinGroups.filter(function(c){return c.unit===key}).forEach(function(c){ var inst=wrap.clone(); inst.position.copy(c.group.position); inst.rotation.y=c.group.rotation.y+Math.PI; scene.add(inst); c.group.visible=false; });
 }
 function palmCrown(){ // eight drooping fronds around a small core, unit size (radius 1)
