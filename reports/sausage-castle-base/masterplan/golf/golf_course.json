@@ -390,5 +390,8 @@
    "acres": 0.8,
    "drive_crossings": 0
   }
- ]
+ ],
+ "total_walk_ft": 4270,
+ "front_finish_to_clubhouse_ft": 744,
+ "drive_crossings": 2
 }

@@ -95,6 +95,18 @@ Three themed units designed for the 35 × 50 ft pads, as parametric massing mode
 
 The project owner's poster (`brand/florida-freedom-world-poster.webp`) is the vision: a Florida theme park, festival ground and campground on the estate. `scripts/masterplan.py` maps each element of the poster to a programme area on the lidar base: Gator Gate and midway, the Castle, Freedom Arena, Gator Greens, the lakeside cabins, the Freedom Float lagoon, Butterfly Grove, the Goat Barn farm, Swamp Camp lodge, the RV and tent camp, the Landing Site tower, and the event barns; 12 areas on about 36 acres. Outputs: `masterplan/florida_freedom_world_masterplan.jpg` (plan over the hillshade), `..._EPSG2236_ftUS.dxf` (one layer per programme area plus the trail loop) and `masterplan.json`. `index.html` is the demo page in the poster's voice, also published as a Claude artifact.
 
+## Gator Greens: 18 holes in the free land (`masterplan/golf/`)
+
+`scripts/golf_course.py` tests whether an 18-hole course fits in what the master plan leaves free. With
+the estate assumed to be the south-west, north-west and south-east quarter-quarters (about 120 acres;
+parcel lines not confirmed), 59 acres are free after edge setbacks, the other plan areas, buildings and
+water. A regulation course needs 120 to 180 acres and an executive course 50 to 80, so neither fits; a
+par-3 course does: 18 holes, par 54, 2,860 yd on 21.5 acres of corridors, the Castle as clubhouse, two
+loops of nine. Outputs: `golf_course_plan.jpg`, `golf_course_EPSG2236_ftUS.dxf` (fairway corridors,
+greens, tees, centre lines, labels, free land), `golf_course.json` (scorecard with tee and green
+elevations, trees to clear, walks) and `GOLF-COURSE.md` (findings and assumptions). Options:
+`--parcels`, `--max4` (par-4 caps to try), `--time`, `--nodes`, `--seed`, `--setback`, `--out`.
+
 ## Clearing, grading and the 3D mock-up (`focus/lakes/CLEARING-GRADING.md`, `mockup/`)
 
 `scripts/clear_and_grade.py` grades each of the 22 pads flat at its median existing grade (balanced cut and fill), blends to existing ground over 10 ft, sets an 8 ft clearing limit and lists every 2018 tree that has to come out: 82 trees, 2.24 acres cleared, 155.6 cu yd cut and 135.4 cu yd fill. Outputs: `focus/lakes/clearing_grading_EPSG2236_ftUS.dxf` (pads at finished grade, clearing limits, trees to remove with IDs, graded contours), the plan image, JSON and summary table. It also writes a cleared, graded surface for the 3D viewer ("Cleared and graded" toggle in the Lakes zone, cabins at finished grade) and `mockup/lakes_cleared_3d_mockup_EPSG2236_ftUS.dxf`, a graded terrain mesh with the cabin blocks inserted. `scripts/render_mockup.py` renders the perspective mock-ups in `mockup/`.
