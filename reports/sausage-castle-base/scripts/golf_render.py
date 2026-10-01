@@ -65,27 +65,32 @@ with gzip.open(f'{B}/sausage_castle_dtm_3ft_EPSG2236.asc.gz', 'rt') as fh:
     dtm = np.loadtxt(fh, dtype=np.float32)
 dtm = np.where(dtm < -9000, np.nanmedian(np.where(dtm < -9000, np.nan, dtm)), dtm)
 col = np.asarray(Image.open(f'{B}/game/data/site_color.jpg').convert('RGB'), dtype=np.float32) / 255.0
-pad = 900; x0, x1, y0, y1 = min(allx) - pad, max(allx) + pad, min(ally) - pad, max(ally) + pad; st = 6
-xs = np.arange(x0, x1, st); ys = np.arange(y0, y1, st); Vg = []; Cg = []
-for y in ys:
-    for x in xs:
-        j = int(hdr['nrows'] - 1 - (y - hdr['yllcorner']) / hdr['cellsize']); i = int((x - hdr['xllcorner']) / hdr['cellsize'])
-        j = min(max(j, 0), dtm.shape[0] - 1); i = min(max(i, 0), dtm.shape[1] - 1); Vg.append(M(x, y, float(dtm[j, i]) - 0.15))
-        cj = int((s['y0'] + s['h'] - y) / s['h'] * col.shape[0]); ci = int((x - s['x0']) / s['w'] * col.shape[1])
-        Cg.append(col[min(max(cj, 0), col.shape[0] - 1), min(max(ci, 0), col.shape[1] - 1)])
+pad = 900; x0, x1, y0, y1 = min(allx) - pad, max(allx) + pad, min(ally) - pad, max(ally) + pad
+def zb(X, Y):   # bilinear on the 3 ft DTM, cell-centred: the same surface golf_3d.py ties the holes into
+    fi = (X - hdr['xllcorner']) / hdr['cellsize'] - 0.5; fj = (hdr['nrows'] - 1) - ((Y - hdr['yllcorner']) / hdr['cellsize'] - 0.5)
+    i0 = np.clip(np.floor(fi), 0, dtm.shape[1] - 2).astype(int); j0 = np.clip(np.floor(fj), 0, dtm.shape[0] - 2).astype(int); ti = np.clip(fi - i0, 0, 1); tj = np.clip(fj - j0, 0, 1)
+    return dtm[j0, i0] * (1 - ti) * (1 - tj) + dtm[j0, i0 + 1] * ti * (1 - tj) + dtm[j0 + 1, i0] * (1 - ti) * tj + dtm[j0 + 1, i0 + 1] * ti * tj
 from shapely.geometry import Point as _P, LineString as _LS
 from shapely.ops import unary_union as _uu
 from shapely.prepared import prep as _prep
-cut_out = _prep(_uu([_uu([_LS([tuple(h['tee']), tuple(h['green'])]).buffer(48, cap_style=2), _P(*h['green']).buffer(55), _P(*h['tee']).buffer(28)]).buffer(-8) for h in holes]))   # the hole corridors, eroded so the ground tucks under their edges
-W_ = len(xs); Fg = [(a * W_ + b, a * W_ + b + 1, (a + 1) * W_ + b + 1, (a + 1) * W_ + b) for a in range(len(ys) - 1) for b in range(W_ - 1)
-                    if not cut_out.contains(_P(xs[b] + st / 2, ys[a] + st / 2))]   # the course meshes replace the ground under the holes
-me = bpy.data.meshes.new('ground'); me.from_pydata(Vg, [], Fg); me.update()
-ca = me.color_attributes.new('Cover', 'FLOAT_COLOR', 'POINT')
-for k, c in enumerate(Cg): ca.data[k].color = (c[0] ** 2.2, c[1] ** 2.2, c[2] ** 2.2, 1)
+cut_out = _prep(_uu([_uu([_LS([tuple(h['tee']), tuple(h['green'])]).buffer(48, cap_style=2), _P(*h['green']).buffer(55), _P(*h['tee']).buffer(28)]).buffer(-6) for h in holes]))   # the hole corridors, eroded so the ground tucks under their edges
+inner = (min(allx) - 150, max(allx) + 150, min(ally) - 150, max(ally) + 150)
 gm = bpy.data.materials.new('ground'); gm.use_nodes = True; gn = gm.node_tree; attr = gn.nodes.new('ShaderNodeAttribute'); attr.attribute_name = 'Cover'
 gn.links.new(attr.outputs['Color'], gn.nodes['Principled BSDF'].inputs['Base Color']); gn.nodes['Principled BSDF'].inputs['Roughness'].default_value = 0.9
-me.materials.append(gm); ob = bpy.data.objects.new('ground', me); sc.collection.objects.link(ob)
-for p in me.polygons: p.use_smooth = True
+def ground_mesh(name, bx0, bx1, by0, by1, st, dz, keep):
+    xs = np.arange(bx0, bx1 + st, st); ys = np.arange(by0, by1 + st, st); XX, YY = np.meshgrid(xs, ys); ZZ = zb(XX, YY) + dz
+    cj = ((s['y0'] + s['h'] - YY) / s['h'] * col.shape[0]).astype(int).clip(0, col.shape[0] - 1); ci = ((XX - s['x0']) / s['w'] * col.shape[1]).astype(int).clip(0, col.shape[1] - 1); CC = col[cj, ci]
+    V = [M(x, y, z) for x, y, z in zip(XX.ravel(), YY.ravel(), ZZ.ravel())]; W_ = len(xs)
+    F = [(a * W_ + b, a * W_ + b + 1, (a + 1) * W_ + b + 1, (a + 1) * W_ + b) for a in range(len(ys) - 1) for b in range(W_ - 1) if keep(xs[b] + st / 2, ys[a] + st / 2)]
+    me = bpy.data.meshes.new(name); me.from_pydata(V, [], F); me.update()
+    ca = me.color_attributes.new('Cover', 'FLOAT_COLOR', 'POINT')
+    for k, c in enumerate(CC.reshape(-1, 3)): ca.data[k].color = (float(c[0]) ** 2.2, float(c[1]) ** 2.2, float(c[2]) ** 2.2, 1)
+    me.materials.append(gm); ob = bpy.data.objects.new(name, me); sc.collection.objects.link(ob)
+    for p in me.polygons: p.use_smooth = True
+    return len(F)
+na = ground_mesh('ground_near', *inner, 3.0, -0.08, lambda x, y: not cut_out.contains(_P(x, y)))
+nb = ground_mesh('ground_far', x0, x1, y0, y1, 9.0, -0.35, lambda x, y: not (inner[0] + 9 < x < inner[1] - 9 and inner[2] + 9 < y < inner[3] - 9))
+print('ground faces', na, nb)
 
 # distant land so the camera never sees the black sky below the horizon
 bpy.ops.mesh.primitive_plane_add(size=20000, location=M(CX, CY, float(np.percentile(dtm, 5)) - 1.0)); far = bpy.context.active_object
