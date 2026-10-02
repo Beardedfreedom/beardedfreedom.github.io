@@ -81,6 +81,12 @@ renders found no shift in framing (phase correlation 0 to 1 px at 320 px wide) a
 | `golf_mockup_hole13.jpg` | [hole 13 water carry](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_6cafad0b-b9ba-44b2-9305-9e11e92943f5.png) |
 | `golf_mockup_tee17.jpg` | [17th tee](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_4e1c8834-c9a9-4ace-8a0a-e70f8c98ce78.png) |
 | `golf_mockup_finish18.jpg` | [18 toward the Castle, golden hour](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_74121d39-0a4a-4da8-99b1-8ab298f1d033.png) |
+| `golf_mockup_aerial.jpg` | [overhead orthophoto](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_103613_21f18181-d670-4dc8-a58f-e3df0a9bf1fb.png): the west and middle thirds match the plan closely (edge correlation 0.6 to 0.84); the east third, around the house compound, was redrawn (0.2 to 0.4), so use it for mood, not measurement |
+
+Two 10-second photoreal drone clips (Kling 3.0, 1928 x 1076, 24 fps, no cuts) start from those stills:
+[glide over the course at midday](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_103615_1f67d38c-8c94-4da1-bb38-5a9216bb0f9f.mp4)
+and [push-in over the hole 13 water carry](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_103615_48e648e8-b556-4a0b-b463-730ce187f196.mp4).
+They are AI motion from a single frame, so treat what comes into view late in each clip as illustrative.
 
 Rebuild:
 
