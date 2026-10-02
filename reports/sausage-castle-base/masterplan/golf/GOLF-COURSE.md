@@ -45,6 +45,37 @@ bottom) and `golf_3d_*.jpg` (Cycles renders of the 3D model made by `scripts/gol
 walkabout game (`game/`) now shows the course too: the ponds are water, the holes are painted on the
 ground with their trees cleared, and every tee has a sign and every green a flag.
 
+## Polished for mock-up photos and video
+
+`scripts/golf_polish.py` turns the routing and hazards into a finished-course design and
+`scripts/golf_mockup.py` renders it with Cycles.
+
+- **Design**: approach fairways with mown stripes (7.07 ac), maintained rough with an
+  irregular tree line (22.09 ac of turf in all), 5 ft collars, cross-hatched greens
+  (1.31 ac), a back and a forward tee box on every hole, 4,538 ft of 8 ft cart
+  paths (clubhouse to 1, green to next tee with the turn at 9 and 10, 18 home), pond banks with reeds,
+  lily pads and cabbage palms. Open ground around the course is painted as Bahia pasture and the woods as
+  pine straw under the lidar trees.
+- **Grading** on a 2 ft grid: turf smoothed, greens raised and tilted, tee boxes flat, bunkers dug with a
+  raised lip, ponds dug with soft banks (about 13,127 cy cut, 10,003 cy fill including the
+  turf smoothing).
+- **Files**: `golf_course_map.jpg` (the finished course as a 1 ft per pixel map),
+  `golf_course_design_EPSG2236_ftUS.dxf` (rough, fairways, collars, greens, tees, bunkers, ponds, cart
+  paths and pins, each at its graded elevation), `polish/design.json` (the same as data), `mockup/`
+  (renders: an overhead aerial, drone views at midday and golden hour, the hole 13 water carry, the
+  view from the 17th tee, a green close-up, the finishing hole toward the Castle, and a 25-second
+  drone flyover).
+- **Trees** are the lidar trees at their measured positions and heights, drawn as live oaks, slash pines,
+  bald cypress near water and cabbage palms; trees inside the turf are cleared.
+- These renders are meant as the base for mock-ups: they hold the true layout, so an image or video
+  model can restyle them into photographs without moving a hole.
+
+Rebuild:
+
+    python3 scripts/golf_polish.py
+    python3 scripts/golf_mockup.py --views aerial,drone_day,drone_golden,hole13,tee17,green2,finish18
+    python3 scripts/golf_mockup.py --flyover 200 --fps 8 --res 1280x720 --samples 16
+
 ## Rules used
 
 Estate edge setback 75 ft; 40 ft from other plan areas; 100 ft from buildings; 30 ft from water.

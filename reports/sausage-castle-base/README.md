@@ -113,6 +113,13 @@ greenside bunkers), grades greens, tees, bunkers and ponds into the lidar ground
 hazards plan, a yardage book and the hazard data in `golf_course.json`. `scripts/golf_render.py` renders the
 3D model with Cycles (`golf_3d_*.jpg`), and `scripts/game_world.py` puts the course into the game.
 
+For mock-up photos and video, `scripts/golf_polish.py` finishes the design (striped approach fairways,
+rough, collars, back and forward tees, cart paths, pond banks), grades it on a 2 ft grid and paints a
+0.5 ft per pixel surface map (`golf_course_map.jpg` at 1 ft, `golf_course_design_EPSG2236_ftUS.dxf`,
+`polish/design.json`); `scripts/golf_mockup.py` renders it with Cycles (lidar trees as live oaks, slash
+pines, cypress and palms; water with reeds and lily pads; clouds and haze) into `masterplan/golf/mockup/`:
+seven stills and a drone flyover. See `masterplan/golf/GOLF-COURSE.md`.
+
 ## Clearing, grading and the 3D mock-up (`focus/lakes/CLEARING-GRADING.md`, `mockup/`)
 
 `scripts/clear_and_grade.py` grades each of the 22 pads flat at its median existing grade (balanced cut and fill), blends to existing ground over 10 ft, sets an 8 ft clearing limit and lists every 2018 tree that has to come out: 82 trees, 2.24 acres cleared, 155.6 cu yd cut and 135.4 cu yd fill. Outputs: `focus/lakes/clearing_grading_EPSG2236_ftUS.dxf` (pads at finished grade, clearing limits, trees to remove with IDs, graded contours), the plan image, JSON and summary table. It also writes a cleared, graded surface for the 3D viewer ("Cleared and graded" toggle in the Lakes zone, cabins at finished grade) and `mockup/lakes_cleared_3d_mockup_EPSG2236_ftUS.dxf`, a graded terrain mesh with the cabin blocks inserted. `scripts/render_mockup.py` renders the perspective mock-ups in `mockup/`.
