@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<title>Private Review</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0a08;--panel:#15130f;--ink:#f3ead8;--muted:#a89f8c;--accent:#f2a93b;--red:#e5533c;--line:#2a261f}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Barlow,system-ui,sans-serif}
+body{display:flex;align-items:center;justify-content:center;padding:24px 16px;min-height:100vh}
+.card{width:100%;max-width:440px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 24px}
+.kicker{font-size:12px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:36px;line-height:1.02;margin:10px 0 8px;letter-spacing:.01em}
+p{margin:0 0 18px;color:var(--muted);font-size:15px;line-height:1.45}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+.row{display:flex;gap:8px}
+input[type=password],input[type=text]{flex:1;min-width:0;font:500 17px Barlow,system-ui,sans-serif;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#0e0d0a;color:var(--ink)}
+input:focus{outline:2px solid var(--accent);outline-offset:1px}
+button{font:600 15px Barlow,system-ui,sans-serif;letter-spacing:.04em;padding:12px 18px;border-radius:10px;border:0;background:var(--accent);color:#1a1206;cursor:pointer}
+button[disabled]{opacity:.55;cursor:wait}
+.show{display:flex;align-items:center;gap:8px;margin:10px 0 0;font-size:13px;color:var(--muted);cursor:pointer}
+.status{margin-top:16px;min-height:22px;font-size:14px;color:var(--muted)}
+.status.err{color:var(--red)}
+.bar{height:4px;background:var(--line);border-radius:2px;margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+[hidden]{display:none!important}
+.foot{margin-top:22px;font-size:12px;color:#7d7566;line-height:1.5}
+</style>
+</head>
+<body>
+<form class="card" id="gate" autocomplete="off">
+  <div class="kicker">Bearded Freedom · private review</div>
+  <h1>Florida Freedom World</h1>
+  <p>This site is encrypted. Enter the review password to unlock the demo, the 3D viewer and the plans in this browser.</p>
+  <label for="pw">Review password</label>
+  <div class="row"><input id="pw" type="password" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="current-password" required><button id="go" type="submit">Unlock</button></div>
+  <label class="show"><input type="checkbox" id="showpw"> show password</label>
+  <div class="status" id="status" aria-live="polite"></div>
+  <div class="bar" id="bar" hidden><i id="fill"></i></div>
+  <div class="foot">Nothing here is readable without the password. Unlocking keeps a copy in this browser only until you press Lock (bottom right of every page) or clear this site's data. Please don't forward the password.</div>
+</form>
+<script>
+(function(){
+  var BUNDLE='bundle.enc';
+  var $=function(id){return document.getElementById(id)};
+  var status=$('status'), bar=$('bar'), fill=$('fill'), btn=$('go'), pw=$('pw');
+  function say(t,err){ status.textContent=t; status.className='status'+(err?' err':''); }
+  function prog(p){ bar.hidden=false; fill.style.width=Math.round(p*100)+'%'; }
+  $('showpw').addEventListener('change',function(){ pw.type=this.checked?'text':'password'; });
+
+  var supported = !!(window.isSecureContext && window.crypto && window.crypto.subtle && ('serviceWorker' in navigator));
+  if(!supported){
+    say('This browser cannot unlock the site here. Open it over https in a current Chrome, Safari, Edge or Firefox, in a normal (not private) window.', true);
+    btn.disabled=true;
+  }
+
+  function send(worker,msg,transfer){
+    return new Promise(function(res,rej){
+      var ch=new MessageChannel();
+      ch.port1.onmessage=function(e){ if(e.data&&e.data.ok) res(e.data); else rej(new Error((e.data&&e.data.error)||'The page worker reported an error.')); };
+      worker.postMessage(msg,[ch.port2].concat(transfer||[]));
+    });
+  }
+
+  // Arriving at the gate always locks: any unlocked copy in this browser is removed first.
+  (async function lockOnArrival(){
+    if(!supported) return;
+    try{
+      var reg=await navigator.serviceWorker.getRegistration('./');
+      if(reg&&reg.active) await send(reg.active,{type:'clear'});
+    }catch(e){}
+    var q=location.search;
+    if(q.indexOf('lock=1')>-1) say('Locked. The unlocked copy was removed from this browser.');
+    else if(q.indexOf('locked=1')>-1) say('Enter the password to unlock the site.');
+    if(history.replaceState&&q) history.replaceState(null,'',location.pathname);
+  })();
+
+  async function fetchBundle(){
+    var r=await fetch(BUNDLE,{cache:'no-store'});
+    if(!r.ok) throw new Error('Could not download the encrypted bundle (HTTP '+r.status+').');
+    var total=+r.headers.get('Content-Length')||0;
+    if(!r.body||!total) return new Uint8Array(await r.arrayBuffer());
+    var reader=r.body.getReader(), chunks=[], got=0;
+    for(;;){ var s=await reader.read(); if(s.done) break; chunks.push(s.value); got+=s.value.length; prog(0.02+0.58*got/total); }
+    var out=new Uint8Array(got), o=0; chunks.forEach(function(c){ out.set(c,o); o+=c.length; }); return out;
+  }
+  function be32(b,o){ return ((b[o]<<24)>>>0)+(b[o+1]<<16)+(b[o+2]<<8)+b[o+3]; }
+
+  async function unlock(password){
+    say('Downloading…'); prog(0.02);
+    var bytes=await fetchBundle();
+    var magic=''; for(var i=0;i<8;i++) magic+=String.fromCharCode(bytes[i]);
+    if(magic!=='FFWREV1\u0000') throw new Error('The bundle on the server is not in the expected format.');
+    var iter=be32(bytes,8), salt=bytes.subarray(12,28), iv=bytes.subarray(28,40), ct=bytes.subarray(40);
+    say('Checking password…'); prog(0.66);
+    var base=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveKey']);
+    var key=await crypto.subtle.deriveKey({name:'PBKDF2',hash:'SHA-256',salt:salt,iterations:iter},base,{name:'AES-GCM',length:256},false,['decrypt']);
+    var plain;
+    try{ plain=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:iv},key,ct)); }
+    catch(e){ throw new Error('Wrong password.'); }
+    prog(0.8); say('Preparing pages…');
+    var n=be32(plain,0);
+    var index=JSON.parse(new TextDecoder().decode(plain.subarray(4,4+n)));
+    var base0=4+n;
+    var files=index.map(function(f){ return {path:f.p,type:f.t,buf:plain.slice(base0+f.o,base0+f.o+f.n).buffer}; });
+    plain=null; bytes=null;
+
+    var reg=await navigator.serviceWorker.register('sw.js',{scope:'./'});
+    await navigator.serviceWorker.ready;
+    reg=await navigator.serviceWorker.getRegistration('./');
+    if(!reg||!reg.active) throw new Error('The page worker did not start. Reload and try again.');
+    await send(reg.active,{type:'clear'});
+    var batch=[], size=0, sent=0;
+    for(var k=0;k<files.length;k++){
+      var f=files[k]; batch.push(f); size+=f.buf.byteLength;
+      if(size>3e6||k===files.length-1){
+        await send(reg.active,{type:'store',files:batch},batch.map(function(x){return x.buf;}));
+        sent+=batch.length; prog(0.8+0.2*sent/files.length); batch=[]; size=0;
+      }
+    }
+    var check=await send(reg.active,{type:'count'});
+    if(!check.count||check.count<files.length) throw new Error('Only '+(check.count||0)+' of '+files.length+' pages were stored. Reload and try again.');
+    say('Unlocked. Opening…');
+    location.href='app/index.html';
+  }
+
+  $('gate').addEventListener('submit',function(ev){
+    ev.preventDefault();
+    if(!supported) return;
+    var p=pw.value; if(!p) return;
+    btn.disabled=true;
+    unlock(p).catch(function(e){ say(e.message||String(e),true); bar.hidden=true; btn.disabled=false; pw.focus(); pw.select(); });
+  });
+})();
+</script>
+</body>
+</html>

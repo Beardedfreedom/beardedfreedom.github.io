@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Florida Freedom World</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a night-sky poster world. Single dark theme by choice. The poster is the hero; every section after it is one element of the poster landed on the real ground. */
+:root{
+  --bg:#0b0a14; --paper:#16142b; --paper2:#1f1b3a; --fg:#fff3dc; --muted:#b9b3c9; --line:#3a3562;
+  --flame:#ff6a1f; --gold:#ffc93c; --sky:#2fb0ff; --pink:#ff2fa8; --green:#7dd35a; --lagoon:#33c6c6; --ink:#0b0a14;
+  --display:"Anton","Impact","Arial Narrow",sans-serif; --body:"Barlow","Helvetica Neue",Arial,sans-serif; --mono:"JetBrains Mono","SFMono-Regular",Consolas,monospace;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+  background-image:radial-gradient(1200px 600px at 50% -10%,rgba(255,106,31,.28),transparent 60%),radial-gradient(900px 500px at 90% 30%,rgba(47,176,255,.14),transparent 60%);}
+.wrap{max-width:1140px;margin:0 auto;padding-block:0 72px;padding-inline:16px}
+.hero{display:grid;grid-template-columns:minmax(260px,420px) 1fr;gap:28px;align-items:center;padding:28px 0 36px;border-bottom:1px solid var(--line)}
+@media (max-width:820px){.hero{grid-template-columns:1fr}}
+.poster{width:100%;max-width:100%;height:auto;display:block;border-radius:12px;box-shadow:0 0 0 2px var(--flame),0 30px 60px rgba(0,0,0,.6),0 0 80px rgba(255,106,31,.35)}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(56px,9vw,112px);line-height:.92;margin:6px 0 10px;letter-spacing:.01em;text-transform:uppercase;text-wrap:balance;
+  background:repeating-linear-gradient(100deg,#ffe082 0 10%,#ff8a2a 10% 20%,#c2481a 20% 26%,#ffc042 26% 38%,#ff6a1f 38% 48%,#c2481a 48% 54%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 14px rgba(255,106,31,.55)) drop-shadow(0 3px 0 rgba(0,0,0,.7)) drop-shadow(0 0 1px #ffd27a)}
+.lede{font-size:20px;max-width:60ch;margin:0 0 16px;color:var(--fg)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.stat{border-top:2px solid var(--gold);padding-top:8px}
+.stat b{display:block;font-family:var(--display);font-weight:400;font-size:34px;line-height:1;color:var(--gold);font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:var(--muted)}
+section{margin:60px 0}
+.num{font-family:var(--mono);color:var(--flame);font-size:13px;letter-spacing:.1em}
+section h2{font-family:var(--display);font-weight:400;font-size:clamp(34px,5vw,54px);line-height:1;margin:2px 0 12px;text-transform:uppercase;letter-spacing:.01em;text-wrap:balance;color:var(--fg)}
+section h2 em{font-style:normal;color:var(--gold)}
+.subh{font-family:var(--display);font-weight:400;font-size:28px;letter-spacing:.02em;text-transform:uppercase;color:var(--gold);margin:28px 0 8px}
+p{max-width:68ch}
+figure{margin:20px 0}
+figure img,figure video{width:100%;max-width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:var(--paper)}
+figcaption{font-size:13px;color:var(--muted);margin-top:8px;max-width:80ch}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.two>*{min-width:0}
+@media (max-width:720px){.two{grid-template-columns:1fr}}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+.btn{display:inline-block;background:var(--flame);color:var(--ink);text-decoration:none;font-family:var(--display);font-size:22px;letter-spacing:.03em;text-transform:uppercase;padding:12px 22px;border-radius:10px;box-shadow:0 0 24px rgba(255,106,31,.45)}
+.btn.secondary{background:transparent;color:var(--fg);border:1px solid var(--line);box-shadow:none}
+.btn:focus-visible,a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.btns{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+.tablewrap{overflow-x:auto;margin:16px 0;background:var(--paper);border:1px solid var(--line);border-radius:12px}
+th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-family:var(--mono);font-weight:500;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+td.n{text-align:right;font-family:var(--mono);font-size:13px;white-space:nowrap}
+.dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:8px;vertical-align:-2px;border:1px solid rgba(255,255,255,.5)}
+.map{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.el{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:4px}
+.el b{font-family:var(--display);font-weight:400;font-size:20px;letter-spacing:.02em;text-transform:uppercase}
+.el .from{font-family:var(--mono);font-size:12px;color:var(--pink);letter-spacing:.06em;text-transform:uppercase}
+.el span{font-size:14px;color:var(--muted)}
+.themes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.theme{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:grid;grid-template-rows:auto 1fr}
+.theme img{width:100%;max-width:100%;display:block;aspect-ratio:3/2;object-fit:cover}
+.theme .body{padding:16px 18px;display:grid;gap:8px}
+.theme h3{font-family:var(--display);font-weight:400;font-size:26px;margin:0;letter-spacing:.02em;text-transform:uppercase}
+.theme .tag{font-family:var(--mono);font-size:12px;color:var(--gold);letter-spacing:.08em;text-transform:uppercase}
+.theme dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:4px 0 0;font-size:14px}
+.theme dt{color:var(--muted)}
+.theme dd{margin:0;font-family:var(--mono);font-size:13px}
+a{color:var(--sky)}
+ol.steps{padding-left:0;list-style:none;counter-reset:s;display:grid;gap:12px;max-width:72ch}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start}
+ol.steps li::before{content:counter(s,decimal-leading-zero);font-family:var(--mono);color:var(--flame);font-size:13px;padding-top:4px;border-top:2px solid var(--flame)}
+.note{border-left:3px solid var(--gold);padding:10px 14px;background:var(--paper);border-radius:0 10px 10px 0;max-width:72ch}
+footer{border-top:1px solid var(--line);margin-top:56px;padding-top:20px;font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.theme,.el{transition:transform .2s}.theme:hover,.el:hover{transform:translateY(-2px)}}
+/* Print / Save as PDF: the poster as a cover, then one section per landscape page, dark theme kept, images fitted to the page. */
+.print-only{display:none}
+@media print{
+  @page{size:11in 8.5in;margin:0}
+  html,body{background:var(--bg)!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .wrap{max-width:none;padding:0.4in 0.55in}
+  .hero{min-height:7.4in;grid-template-columns:340px 1fr;gap:36px;padding:0;border-bottom:0;break-after:page}
+  .poster{width:auto;max-width:100%;max-height:6.8in;margin:0 auto}
+  h1{font-size:84px;filter:none}
+  .print-only{display:block;font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--pink);margin-top:18px}
+  section{break-before:page;margin:0 0 24px}
+  footer{margin-top:24px}
+  figure,.card,.theme,.el,.tablewrap,.note,ol.steps li,.stat{break-inside:avoid}
+  figure{margin:14px 0}
+  figure img{width:auto;max-width:100%;max-height:6in;margin:0 auto}
+  section>p+figure img,section>.btns+figure img{max-height:4.4in}
+  .two figure img{max-height:5.2in}
+  .map{grid-template-columns:repeat(4,1fr);gap:10px}
+  .el{padding:12px 14px}
+  .themes{grid-template-columns:1fr 1fr}
+  .theme img{aspect-ratio:auto;width:auto;max-width:100%;max-height:3in;margin:0 auto}
+  .btns,.web-only{display:none}
+  a{text-decoration:none}
+  .theme,.el{transform:none!important;transition:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <img class="poster" src="brand/florida-freedom-world-poster.jpg" alt="Florida Freedom World poster: an alligator in a cowboy hat with a flag and shotgun on an airboat, a UFO over palm trees, a laser stage on a lake, an RV, a goat, a golfer, a tent and campfire, mushrooms and butterflies">
+  <div>
+    <span class="eyebrow">Sausage Castle estate · 22500 Robbins Road, Astatula, Florida · concept master plan</span>
+    <h1>Florida Freedom World</h1>
+    <p class="lede">A theme park, festival ground and campground planned on real ground. Every element of the poster has a place on the 120-acre estate, measured from public lidar, with the lake cabins, the arena, the lagoon and the landing site drawn where they would actually go.</p>
+    <div class="stats">
+      <div class="stat"><b>12</b><span>attractions programmed on 36 acres</span></div>
+      <div class="stat"><b>4,000</b><span>on the arena lawn at 40 sq ft each</span></div>
+      <div class="stat"><b>22</b><span>themed lakeside cabins on the loop</span></div>
+      <div class="stat"><b>35</b><span>RV sites plus a tent loop</span></div>
+      <div class="stat"><b>1.6 ac</b><span>float lagoon at 69.3 ft</span></div>
+    </div>
+    <p class="print-only">Private review copy · concept only · please don't forward</p>
+  </div>
+</header>
+
+<section id="vision">
+  <span class="num">01 · THE POSTER, LANDED</span>
+  <h2>Every thing in the picture <em>gets a place</em></h2>
+  <p>The poster is the brief. Each element in it becomes an attraction, and each attraction sits on a part of the estate that already suits it: the cleared square is already an arena, the loop track already rings the lake, the barn already stands, the orchard rows already grow.</p>
+  <div class="map">
+    <div class="el"><span class="from">the gator, the airboat, the rides</span><b>Gator Gate and midway</b><span>Entry plaza at the house drive. The existing 200 ft ring becomes the carousel and putt-putt. 4.1 ac.</span></div>
+    <div class="el"><span class="from">the laser stage and the crowd</span><b>Freedom Arena</b><span>The estate's cleared 400 by 400 ft square, stage on the north edge. 4.6 ac, about 4,000 people.</span></div>
+    <div class="el"><span class="from">the girl on the float, the turtle</span><b>Freedom Float lagoon</b><span>The long lake, 1.6 ac at 69.3 ft, with a sand beach on the east bank. No motors.</span></div>
+    <div class="el"><span class="from">the UFO and the sky</span><b>Landing Site tower</b><span>A 40 ft tower on the knoll south-west of the lagoon for the night drone and laser show.</span></div>
+    <div class="el"><span class="from">the RV</span><b>RV and tent camp</b><span>5.8 ac of open field east of the loop: about 35 RV sites at 45 by 60 ft and a tent loop.</span></div>
+    <div class="el"><span class="from">the tent and campfire</span><b>Swamp Camp lodge</b><span>The existing 5,378 sq ft building south of the lake as bathhouse, laundry, camp store and fire circle.</span></div>
+    <div class="el"><span class="from">the goat</span><b>Goat Barn petting farm</b><span>The existing 1,869 sq ft barn plus the north-west orchard block as pasture. 3.8 ac.</span></div>
+    <div class="el"><span class="from">the golfer</span><b>Gator Greens pitch and putt</b><span>Nine short holes around the pond at 68.8 ft, with the 4,479 sq ft outbuilding as clubhouse. 3.3 ac.</span></div>
+    <div class="el"><span class="from">butterflies, sunflowers, toadstools</span><b>Butterfly Grove</b><span>The orchard rows kept as a walk-through pollinator garden and the mushroom-cabin showcase. 4.5 ac.</span></div>
+    <div class="el"><span class="from">the mushrooms, the haunted glow, the swamp</span><b>Lakeside cabins, four lands</b><span>22 themed tiny homes around the round lake on the existing loop track.</span></div>
+    <div class="el"><span class="from">the castle</span><b>The Castle</b><span>The existing 7,423 sq ft house and its 43 ft tower: headquarters, VIP, first aid, radio room.</span></div>
+    <div class="el"><span class="from">rain plan</span><b>Event barns</b><span>Four existing barns of 6,300 to 7,600 sq ft north of the lake. Ownership to confirm.</span></div>
+  </div>
+</section>
+
+<section id="plan">
+  <span class="num">02 · MASTER PLAN</span>
+  <h2>Where it all <em>goes</em></h2>
+  <p>Programme areas drawn on the lidar hillshade of the estate. White lines are the existing roads and the 3.5-mile trail loop; orange shapes are existing buildings; blue is water. The numbers match the list below and the CAD file.</p>
+  <figure><img src="masterplan/florida_freedom_world_masterplan.jpg" alt="Master plan of Florida Freedom World drawn over the lidar hillshade, with twelve numbered programme areas"><figcaption>Master plan programme over the site. Concept grade: no parcel lines yet, zoning, access and utilities unverified.</figcaption></figure>
+  <div class="tablewrap"><table>
+    <thead><tr><th>#</th><th>Attraction</th><th>Area</th><th>Sits on</th></tr></thead>
+    <tbody>
+      <tr><td class="n">1</td><td><span class="dot" style="background:#ff6a1f"></span>Gator Gate and midway</td><td class="n">4.1 ac</td><td>house drive and the existing ring feature</td></tr>
+      <tr><td class="n">2</td><td><span class="dot" style="background:#ffc93c"></span>The Castle</td><td class="n">0.6 ac</td><td>existing main house and tower</td></tr>
+      <tr><td class="n">3</td><td><span class="dot" style="background:#ff2fa8"></span>Freedom Arena</td><td class="n">4.6 ac</td><td>the cleared 400 × 400 ft square</td></tr>
+      <tr><td class="n">4</td><td><span class="dot" style="background:#7dd35a"></span>Gator Greens pitch and putt</td><td class="n">3.3 ac</td><td>field around the pond and outbuilding</td></tr>
+      <tr><td class="n">5</td><td><span class="dot" style="background:#2fb0ff"></span>Lakeside cabins, four lands</td><td class="n">1.5 ac of pads in 8.2 ac of zones</td><td>the loop track around the round lake</td></tr>
+      <tr><td class="n">6</td><td><span class="dot" style="background:#33c6c6"></span>Freedom Float lagoon</td><td class="n">4.0 ac</td><td>the long lake and its banks</td></tr>
+      <tr><td class="n">7</td><td><span class="dot" style="background:#ffb6f2"></span>Butterfly Grove and mushroom garden</td><td class="n">4.5 ac</td><td>the orchard rows between the lakes</td></tr>
+      <tr><td class="n">8</td><td><span class="dot" style="background:#c9a06a"></span>Goat Barn petting farm</td><td class="n">3.8 ac</td><td>existing barn and north-west orchard</td></tr>
+      <tr><td class="n">9</td><td><span class="dot" style="background:#8b6b4a"></span>Swamp Camp lodge</td><td class="n">0.9 ac</td><td>existing 5,378 sq ft building</td></tr>
+      <tr><td class="n">10</td><td><span class="dot" style="background:#f5e08a"></span>RV and tent camp</td><td class="n">5.8 ac</td><td>open field east of the loop</td></tr>
+      <tr><td class="n">11</td><td><span class="dot" style="background:#b48cff"></span>Landing Site observation tower</td><td class="n">1.0 ac</td><td>the knoll south-west of the lagoon</td></tr>
+      <tr><td class="n">12</td><td><span class="dot" style="background:#9aa3a8"></span>Event barns</td><td class="n">1.8 ac</td><td>four existing barns, ownership to confirm</td></tr>
+    </tbody></table></div>
+</section>
+
+<section id="golf">
+  <span class="num">02B · GATOR GREENS</span>
+  <h2>Eighteen holes in the land that's <em>left</em></h2>
+  <p>A full-size course needs 120 to 180 acres, which is the whole estate. After the twelve attractions, the setbacks and the buffers around buildings and water, about 59 acres are free. That is not enough for a regulation or an executive course, but it is room for an 18-hole par-3 course: par 54, 2,860 yards on 21.5 acres, with the Castle as the clubhouse and two loops of nine. The front nine runs through the south-east woods; the back nine weaves around the house compound.</p>
+  <p>Five holes make you carry water and five make you carry sand, every green has two or three bunkers, and the whole course is graded into the laser-measured ground as a 3D CAD model: greens raised and tilted, tees flat, bunkers and ponds dug, with the pond and bunker spoil building the greens and tees.</p>
+  <figure><img src="masterplan/golf/golf_hazards_plan.jpg" alt="Plan of the 18-hole par-3 course with greens, tees, bunkers and ponds drawn over the land-cover map, and a scorecard listing each hole's hazard and carry"><figcaption>Gator Greens with its hazards. Water carries on holes 1, 3, 6, 13 and 17; sand carries on holes 2, 5, 8, 11 and 15; 45 greenside bunkers; 0.94 acres of ponds.</figcaption></figure>
+  <figure><img src="masterplan/golf/golf_3d_overview.jpg" alt="Rendered 3D model of the course in the south-east woods with ponds, bunkers and greens"><figcaption>The 3D CAD model rendered over the lidar ground, looking north-west over the front nine.</figcaption></figure>
+  <div class="two">
+    <figure><img src="masterplan/golf/golf_3d_water.jpg" alt="View from behind a tee across a pond to the green"><figcaption>Hole 3 from behind the tee: 110 yards over the pond.</figcaption></figure>
+    <figure><img src="masterplan/golf/golf_3d_sand.jpg" alt="View from behind a tee over a cross bunker to the green"><figcaption>Hole 2: a cross bunker 115 yards out.</figcaption></figure>
+  </div>
+  <figure><img src="masterplan/golf/golf_yardage_book.jpg" alt="Yardage book showing all 18 holes with tee at the bottom and green at the top, hazards and distance marks"><figcaption>The yardage book: all 18 holes, tee at the bottom, with the carries and the 50, 100 and 150 yard marks.</figcaption></figure>
+  <h3 class="subh">Ready for mock-ups</h3>
+  <p>The course finished and rendered as a base for mock-up photos and video: striped approach fairways, collars, back and forward tees, cart paths, reeds and lily pads on the ponds, and every tree the laser found drawn as a live oak, slash pine, cypress or cabbage palm. Because the renders hold the true layout, an image or video model can turn them into photographs without moving a hole.</p>
+  <figure><img src="masterplan/golf/mockup/golf_mockup_aerial.jpg" alt="Overhead aerial render of the finished 18-hole course among the woods and pasture"><figcaption>Overhead, like a satellite photo of the finished course.</figcaption></figure>
+  <div class="two">
+    <figure><img src="masterplan/golf/mockup/golf_mockup_drone_day.jpg" alt="Drone view over the front nine at midday"><figcaption>Drone over the front nine at midday.</figcaption></figure>
+    <figure><img src="masterplan/golf/mockup/golf_mockup_drone_golden.jpg" alt="Drone view over the front nine at golden hour"><figcaption>The same ground at golden hour.</figcaption></figure>
+    <figure><img src="masterplan/golf/mockup/golf_mockup_hole13.jpg" alt="Drone view from behind the 13th tee across a pond to the green"><figcaption>Hole 13: 71 yards over water.</figcaption></figure>
+    <figure><img src="masterplan/golf/mockup/golf_mockup_tee17.jpg" alt="Golfer's view from the 17th tee across a pond"><figcaption>A golfer's view from the 17th tee.</figcaption></figure>
+    <figure><img src="masterplan/golf/mockup/golf_mockup_green2.jpg" alt="Low view across a bunker to the second green and flag"><figcaption>Over the bunker to the 2nd green.</figcaption></figure>
+    <figure><img src="masterplan/golf/mockup/golf_mockup_finish18.jpg" alt="The 18th green with the Castle clubhouse beyond at golden hour"><figcaption>The 18th, finishing toward the Castle.</figcaption></figure>
+  </div>
+  <figure><img src="masterplan/golf/mockup/golf_mockup_estate_labeled.jpg" alt="The whole estate from a high drone: the Castle, both lakes and the 18 numbered greens inside the dashed estate edge"><figcaption>The whole property: the Castle as clubhouse, the long and round lakes, and all 18 greens (yellow numbers) inside the assumed estate edge.</figcaption></figure>
+  <figure><img src="masterplan/golf/mockup/golf_mockup_estate_top_labeled.jpg" alt="The whole estate from straight overhead with the 18 numbered greens, the Castle and the lakes"><figcaption>The same from straight overhead at 1 ft per pixel. The block outside the dashed line to the north-east is neighbours' land.</figcaption></figure>
+  <figure class="web-only"><video src="masterplan/golf/mockup/golf_flyover.mp4" poster="masterplan/golf/mockup/golf_flyover_poster.jpg" controls muted playsinline preload="none"></video><figcaption>A 25-second drone glide over the front nine to the Castle.</figcaption></figure>
+  <p class="web-only">Photoreal test pass made from these renders with image and video models (held on Higgsfield, opens in a new tab): <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_4e8c23d6-93b2-4e35-b717-b4f03a7e681c.png" target="_blank" rel="noopener noreferrer">drone at midday</a>, <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_6cafad0b-b9ba-44b2-9305-9e11e92943f5.png" target="_blank" rel="noopener noreferrer">hole 13</a>, <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_4e1c8834-c9a9-4ace-8a0a-e70f8c98ce78.png" target="_blank" rel="noopener noreferrer">17th tee</a>, <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_74121d39-0a4a-4da8-99b1-8ab298f1d033.png" target="_blank" rel="noopener noreferrer">18th at golden hour</a>, <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_103613_21f18181-d670-4dc8-a58f-e3df0a9bf1fb.png" target="_blank" rel="noopener noreferrer">overhead</a>, and 10-second clips: <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_103615_1f67d38c-8c94-4da1-bb38-5a9216bb0f9f.mp4" target="_blank" rel="noopener noreferrer">glide over the course</a>, <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_103615_48e648e8-b556-4a0b-b463-730ce187f196.mp4" target="_blank" rel="noopener noreferrer">push-in over hole 13</a>, and the <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_122338_9387ae28-287f-4972-a9c7-ac93773cac2a.mp4" target="_blank" rel="noopener noreferrer">flyover restyled as drone footage</a> (10 s from hole 13 to the 18th, on the rendered flight path).</p>
+  <div class="note"><b>Fit test, not a final routing.</b> The CAD file is <code>masterplan/golf/golf_course_3d_EPSG2236_ftUS.dxf</code>, and the course is also in the walkabout game. Parcel lines, irrigation water and tree removal need confirming, and a golf architect would refine the hole lengths, green sites and safety netting. The north-east quarter, where the plan put the RV camp, looks like neighbours' lots and is left out here.</div>
+</section>
+
+<section id="threed">
+  <span class="num">03 · WALK IT</span>
+  <h2>The ground <em>in 3D</em></h2>
+  <p>The interactive model is built from 39.5 million lidar points. Orbit the whole estate, the house or the lakes, switch to bare earth, move the sun, click any point for its elevation, and turn on the lake-zone plan and the cabins.</p>
+  <div class="btns"><a class="btn" href="viewer/index.html" target="_blank" rel="noopener">Open the 3D viewer</a><a class="btn secondary" href="#cabins">Skip to the cabins</a></div>
+  <figure><img src="viewer/lakes_homes_view.jpg" alt="3D view of the lakes zone with mushroom cabins placed on their pads"><figcaption>Lakes in the viewer with the zone overlay and the cabins switched on. In surface mode the 2018 tree canopy still stands around the pads.</figcaption></figure>
+  <div class="two">
+    <figure><img src="focus/house/house_render3d.jpg" alt="Static 3D render of the house compound from the southeast"><figcaption>The Castle and the arena square, rendered from the lidar surface.</figcaption></figure>
+    <figure><img src="focus/lakes/lakes_render3d.jpg" alt="Static 3D render of the lakes and loop track"><figcaption>The lagoon, the round lake and the loop track.</figcaption></figure>
+  </div>
+</section>
+
+<section id="cabins">
+  <span class="num">04 · FOUR LANDS AROUND THE LAKE</span>
+  <h2>Lakeside <em>cabins</em></h2>
+  <p>Four equal zones of 2.04 acres each, between a 50 ft no-build water buffer and a limit 250 ft from the shore, with the existing 1,640 ft loop track as the lane. Pads are 35 by 50 ft, 20 ft off the lane and 15 ft apart. That gives 22 pads in one row; a second row with a rear lane would roughly double it.</p>
+  <figure><img src="focus/lakes/lake_zones_plan.jpg" alt="Plan of four coloured zones around the round lake with numbered pads along the loop track"><figcaption>Four lands: zone A haunted houses, B swamp houses, C mushrooms, D UFO saucer pods.</figcaption></figure>
+  <div class="themes">
+    <article class="theme">
+      <img src="units/mushroom_sheet.jpg" alt="Design sheet for the Amanita cottage mushroom cabin">
+      <div class="body"><span class="tag">Mushroom Hollow · zone C</span><h3>Amanita cottage</h3>
+        <p style="margin:0;font-size:15px">An 18 ft cream stem under a red spotted cap that overhangs 6 ft all round. Sleeping loft inside the cap under a round skylight; a baby mushroom is the bathroom.</p>
+        <dl><dt>Gross</dt><dd>412 sq ft</dd><dt>Height</dt><dd>24 ft</dd><dt>Placed</dt><dd>10 units</dd></dl>
+        <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20260928_225118_0054bdb1-84f7-4862-af92-53fb41ba444f.png" target="_blank" rel="noopener">Concept art</a></div>
+    </article>
+    <article class="theme">
+      <img src="units/haunted_sheet.jpg" alt="Design sheet for the Widow's Peak haunted house cabin">
+      <div class="body"><span class="tag">Haunted Hammock · zone A</span><h3>Widow's Peak</h3>
+        <p style="margin:0;font-size:15px">A narrow Gothic cottage: 24:12 black roof, corner turret with a witch-hat spire and reading nook, amber lancet windows, hooded porch on a lattice base, brick chimney.</p>
+        <dl><dt>Gross</dt><dd>564 sq ft</dd><dt>Height</dt><dd>34 ft</dd><dt>Placed</dt><dd>6 units</dd></dl>
+        <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20260928_225118_bfef9a54-d725-46a6-bee7-179994f6d0a2.png" target="_blank" rel="noopener">Concept art</a></div>
+    </article>
+    <article class="theme">
+      <img src="units/swamp_sheet.jpg" alt="Design sheet for the Cypress stilt cracker swamp cabin">
+      <div class="body"><span class="tag">Swamp Camp · zone B</span><h3>Cypress stilt cracker</h3>
+        <p style="margin:0;font-size:15px">A cracker house lifted 7 ft on piers, wrapped on three sides by a screened porch, under a tin hip roof with a vented cupola. Shutters close for storms.</p>
+        <dl><dt>Gross</dt><dd>702 sq ft</dd><dt>Height</dt><dd>28 ft</dd><dt>Placed</dt><dd>6 units</dd></dl>
+        <a href="https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20260928_225118_0b090e9c-ffe5-45cf-9882-f79dad4bc3b1.png" target="_blank" rel="noopener">Concept art</a></div>
+    </article>
+    <article class="theme">
+      <img src="units/ufo_sheet.jpg" alt="Design sheet for the Saucer pod UFO cabin">
+      <div class="body"><span class="tag">Landing Site · zone D</span><h3>Saucer pod</h3>
+        <p style="margin:0;font-size:15px">A 24 ft saucer hovering 6 ft off the ground on three legs. Bridge under the dome, bunks and seating in the low outer ring, eight glowing portholes, a ramp from a hatch at the front.</p>
+        <dl><dt>Gross</dt><dd>403 sq ft</dd><dt>Height</dt><dd>19 ft</dd><dt>Placed</dt><dd>5 units</dd></dl></div>
+    </article>
+  </div>
+</section>
+
+<section id="built">
+  <span class="num">05 · CLEARED AND BUILT</span>
+  <h2>Clear the ground, <em>set the cabins</em></h2>
+  <p>Each pad is graded flat at its median existing grade, so cut and fill roughly balance, and blended into the ground over 10 ft. The clearing limit runs 8 ft past each pad; any 2018 tree whose crown touches a pad or whose trunk stands inside that limit comes out. The numbers below come from the lidar, pad by pad.</p>
+  <div class="stats" style="margin:12px 0 20px">
+    <div class="stat"><b>82</b><span>trees out across 22 pads</span></div>
+    <div class="stat"><b>2.24 ac</b><span>cleared</span></div>
+    <div class="stat"><b>156 / 135</b><span>cubic yards cut / fill</span></div>
+    <div class="stat"><b>4</b><span>CAD drawing sets, one per cabin</span></div>
+  </div>
+  <figure><img src="mockup/lakes_cleared_mockup_overall.jpg" alt="3D mock-up of the lake zones with pads cleared and graded and all 22 cabins in place"><figcaption>3D mock-up: pads cleared and graded, removed trees gone, 22 cabins at finished grade. The viewer's Lakes zone has the same as a "Cleared and graded" toggle.</figcaption></figure>
+  <div class="two">
+    <figure><img src="mockup/lakes_cleared_mockup_zoneC.jpg" alt="Close-up of mushroom cabins on cleared pads"><figcaption>Zone C, mushroom cabins along the loop lane.</figcaption></figure>
+    <figure><img src="mockup/lakes_cleared_mockup_zoneD.jpg" alt="Close-up of UFO saucer pods on cleared pads"><figcaption>Zone D, saucer pods on their pads.</figcaption></figure>
+  </div>
+  <figure><img src="focus/lakes/clearing_grading_plan.jpg" alt="Clearing and grading plan with trees to remove marked"><figcaption>Clearing and grading plan: red X marks trees out, each pad labelled with finished grade and cut/fill.</figcaption></figure>
+  <div class="themes">
+    <article class="theme"><img src="units/cad/mushroom_cad_set.png" alt="CAD sheet for the Amanita cottage"><div class="body"><span class="tag">CAD set</span><h3>Amanita cottage</h3><p style="margin:0;font-size:14px">Plan, front and side elevations, section through the stem. DXF and sheet PNG.</p></div></article>
+    <article class="theme"><img src="units/cad/haunted_cad_set.png" alt="CAD sheet for Widow's Peak"><div class="body"><span class="tag">CAD set</span><h3>Widow's Peak</h3><p style="margin:0;font-size:14px">Plan with turret, front and right elevations, section through the parlour.</p></div></article>
+    <article class="theme"><img src="units/cad/swamp_cad_set.png" alt="CAD sheet for the Cypress stilt cracker"><div class="body"><span class="tag">CAD set</span><h3>Cypress stilt cracker</h3><p style="margin:0;font-size:14px">Plan with wrapped porch, front and side elevations, section through the bedroom and loft.</p></div></article>
+    <article class="theme"><img src="units/cad/ufo_cad_set.png" alt="CAD sheet for the Saucer pod"><div class="body"><span class="tag">CAD set</span><h3>Saucer pod</h3><p style="margin:0;font-size:14px">Plan with the bridge, bath core and bunk ring, front and side elevations with legs and ramp, section through the centre.</p></div></article>
+  </div>
+</section>
+
+<section id="blender">
+  <span class="num">06 · THE PRESENTATION MODEL</span>
+  <h2>The lake, <em>clean</em></h2>
+  <p>The same site rebuilt as a presentation model. The ground is the graded bare earth from the lidar, smoothed; the lake sits at its measured level; the loop lane, the pad slabs and the 22 cabins are where the plan puts them; and the 610 kept trees are drawn as oaks, pines and cypresses at the heights and crown sizes the laser measured, instead of the raw canopy. Rendered with Cycles in Blender. The same scene is an interactive model you can orbit, and a .blend and .glb sit in the repository for any 3D tool.</p>
+  <div class="btns"><a class="btn" href="viewer3d/index.html" target="_blank" rel="noopener">Open the 3D model</a><a class="btn secondary" href="mockup/present/turntable.mp4" target="_blank" rel="noopener">Turntable clip</a></div>
+  <figure><img src="mockup/present/render_hero.jpg" alt="Presentation render of the mushroom cabins seen from low over the lake, with the loop lane and trees behind"><figcaption>Mushroom Hollow from over the water: eight cabins on their pads, the loop lane behind, kept trees at lidar height.</figcaption></figure>
+  <figure class="web-only"><video src="mockup/present/turntable.mp4" poster="mockup/present/turntable_poster.jpg" controls muted loop playsinline preload="none"></video><figcaption>A slow orbit of the lake zones: 240 frames, ten seconds a lap.</figcaption></figure>
+  <figure><img src="mockup/present/render_overall.jpg" alt="Presentation render of the whole lake with all four lands of cabins around it"><figcaption>Overall from the south-west: haunted houses in A, stilt cabins in B, mushrooms in C, saucers in D.</figcaption></figure>
+  <div class="two">
+    <figure><img src="mockup/present/render_A.jpg" alt="Presentation render of zone A haunted houses"><figcaption>Zone A, Haunted Hammock.</figcaption></figure>
+    <figure><img src="mockup/present/render_B.jpg" alt="Presentation render of zone B swamp cabins"><figcaption>Zone B, Swamp Camp.</figcaption></figure>
+    <figure><img src="mockup/present/render_D.jpg" alt="Presentation render of zone D UFO saucer pods"><figcaption>Zone D, Landing Site.</figcaption></figure>
+    <figure><img src="mockup/present/render_C.jpg" alt="Presentation render of zone C mushroom cabins"><figcaption>Zone C, Mushroom Hollow.</figcaption></figure>
+    <figure><img src="mockup/present/render_lake.jpg" alt="Eye-level render across the lake to the mushroom cabins reflected in the water"><figcaption>From the far shore at eye level, the mushroom row in the water.</figcaption></figure>
+    <figure><img src="mockup/present/render_hero_dusk.jpg" alt="Dusk render of the mushroom cabins with lit windows"><figcaption>The same shot at dusk, windows lit.</figcaption></figure>
+  </div>
+  <h3 class="subh">Close-ups, zone by zone</h3>
+  <p>Each land up close: a low drone view over two of its cabins, then what a guest sees standing on the loop lane. After that, the same lane views at dusk with the windows and lights on.</p>
+  <div class="two">
+    <figure><img src="mockup/present/render_close_A.jpg" alt="Close drone render of two haunted houses in zone A"><figcaption>Haunted Hammock from a low drone.</figcaption></figure>
+    <figure><img src="mockup/present/render_ground_A.jpg" alt="Eye-level render of the haunted houses in zone A from the loop lane"><figcaption>Haunted Hammock from the lane, at eye level.</figcaption></figure>
+    <figure><img src="mockup/present/render_close_B.jpg" alt="Close drone render of two stilt cabins in zone B"><figcaption>Swamp Camp from a low drone.</figcaption></figure>
+    <figure><img src="mockup/present/render_ground_B.jpg" alt="Eye-level render of the stilt cabins in zone B from the loop lane"><figcaption>Swamp Camp from the lane, at eye level.</figcaption></figure>
+    <figure><img src="mockup/present/render_close_C.jpg" alt="Close drone render of two mushroom cabins in zone C"><figcaption>Mushroom Hollow from a low drone.</figcaption></figure>
+    <figure><img src="mockup/present/render_ground_C.jpg" alt="Eye-level render of the mushroom cabins in zone C from the loop lane"><figcaption>Mushroom Hollow from the lane, at eye level.</figcaption></figure>
+    <figure><img src="mockup/present/render_close_D.jpg" alt="Close drone render of two saucer pods in zone D"><figcaption>Landing Site from a low drone.</figcaption></figure>
+    <figure><img src="mockup/present/render_ground_D.jpg" alt="Eye-level render of the saucer pods in zone D from the loop lane"><figcaption>Landing Site from the lane, at eye level.</figcaption></figure>
+  </div>
+  <div class="two">
+    <figure><img src="mockup/present/render_ground_A_dusk.jpg" alt="Dusk render of the haunted houses in zone A from the loop lane"><figcaption>Haunted Hammock at dusk.</figcaption></figure>
+    <figure><img src="mockup/present/render_ground_B_dusk.jpg" alt="Dusk render of the stilt cabins in zone B from the loop lane"><figcaption>Swamp Camp at dusk.</figcaption></figure>
+    <figure><img src="mockup/present/render_ground_C_dusk.jpg" alt="Dusk render of the mushroom cabins in zone C from the loop lane"><figcaption>Mushroom Hollow at dusk.</figcaption></figure>
+    <figure><img src="mockup/present/render_ground_D_dusk.jpg" alt="Dusk render of the saucer pods in zone D from the loop lane"><figcaption>Landing Site at dusk.</figcaption></figure>
+  </div>
+  <h3 class="subh">Play it: the walkabout</h3>
+  <p>The whole 328-acre property as a game. The ground is the laser survey, all 68 buildings and 3,080 trees stand where the survey found them, the 22 cabins sit on their pads, and the twelve attractions of the master plan are marked by beacons. Walk or take the golf cart, day or night, and find all twelve.</p>
+  <div class="btns"><a class="btn" href="game/index.html" target="_blank" rel="noopener">Play the walkabout</a></div>
+  <figure class="web-only"><video src="game/shots/tour.mp4" poster="game/shots/gate.jpg" controls muted playsinline preload="none"></video><figcaption>Two-minute gameplay tour, played by the game's director mode: gate, Castle, arena, greens, cabins, lagoon, grove, and the tower at night.</figcaption></figure>
+  <div class="two">
+    <figure><img src="game/shots/gate.jpg" alt="Screenshot of the game at the Gator Gate with the Ferris wheel and carousel"><figcaption>Arriving at the Gator Gate: carousel on the existing ring, Ferris wheel behind.</figcaption></figure>
+    <figure><img src="game/shots/night.jpg" alt="Screenshot of the game at night across the lake in the golf cart"><figcaption>Night, in the cart, looking across the lake at the cabins.</figcaption></figure>
+  </div>
+</section>
+
+<section id="ground">
+  <span class="num">07 · THE GROUND</span>
+  <h2>What the laser <em>saw</em></h2>
+  <p>The estate sits west of Robbins Road. The main house, 7,423 sq ft with a 31 ft ridge, is at the south end of the road with the cleared square, a ring and a pond behind it. Two lakes with a loop track lie 1,300 ft north. These images are shaded from the lidar surface; every roof, tree and bank is real, and the colours are land cover, not photographs.</p>
+  <div class="two">
+    <figure><img src="focus/house/house_preview.jpg" alt="1 ft lidar hillshade of the house compound"><figcaption>House compound at 1 ft: the Castle, the 43 ft tower beside it, the pond, the pads and the ring.</figcaption></figure>
+    <figure><img src="focus/lakes/lakes_preview.jpg" alt="1 ft lidar hillshade of the two lakes and loop track"><figcaption>The lakes at 1 ft: the round lake (1.1 ac, water at 70.0 ft) with its loop, the lagoon (1.6 ac, 69.3 ft), and the orchard rows.</figcaption></figure>
+  </div>
+</section>
+
+<section id="how">
+  <span class="num">08 · HOW IT WAS MADE</span>
+  <h2>Public data, <em>no Google Earth</em></h2>
+  <p>Google Earth's 3D mesh can be downloaded in an afternoon, but Google's terms forbid exporting or deriving models from it, and it carries no accuracy specification. The public route is legal and more accurate.</p>
+  <ol class="steps">
+    <li><div><b>Locate.</b> The address was matched to county address points and road geometry after a search-engine coordinate proved 1.7 km off.</div></li>
+    <li><div><b>Lidar.</b> 39.5 million points clipped from the USGS 3DEP index for Lake County (2018, public domain), reprojected to NAD83 Florida East, US survey feet, NAVD88.</div></li>
+    <li><div><b>Base.</b> Bare-earth and surface grids, 1 ft and 0.5 ft contours, footprints with lidar heights, tree crowns, lake outlines at water level, all as layered DXF and Civil 3D point files.</div></li>
+    <li><div><b>Zones and homes.</b> Equal-area sectors solved around the lake, pads placed under stated rules, parametric cabins exported as DXF blocks on the pads.</div></li>
+    <li><div><b>Master plan.</b> The poster's elements mapped to the parts of the estate that already fit them, as a plan image, DXF and JSON.</div></li>
+  </ol>
+  <div class="note" style="margin-top:20px"><b>Concept grade.</b> No parcel lines yet, zoning for district A unverified, the 50 ft water buffer is an assumption, and a boundary-plus-topo survey must replace all of this before any permit.</div>
+</section>
+
+<section id="next">
+  <span class="num">09 · NEXT</span>
+  <h2>What it takes to make it <em>real</em></h2>
+  <div class="two">
+    <div class="card"><b>Land and law</b><p style="margin:8px 0 0">Parcel polygons for 09-21-26-000300004800, -4600 and -4900 from the Lake County Property Appraiser. A planned development or special-use approval for an amusement and camping use in district A, with noise, traffic and stormwater studies. Florida amusement-ride permits for anything mechanical, health department approval for the camp, and FAA review for a 40 ft tower and drone shows.</p></div>
+    <div class="card"><b>Design</b><p style="margin:8px 0 0">A boundary and topographic survey. The first cabin taken to a real floor plan with a window schedule. A second cabin row with a rear lane. Stage, bathhouse and gate designs. Parking for 4,000 people, which this plan does not yet show and which will need 8 to 10 acres of field.</p></div>
+  </div>
+</section>
+
+<footer>
+  Terrain: USGS 3DEP lidar, project FL_Peninsular_Lake_2018, public domain. Buildings, roads, water and addresses: Overture Maps 2026-09-23.1, © OpenStreetMap contributors, Overture Maps Foundation (ODbL). Poster supplied by the project owner. Concept images generated with GPT Image 2.5 via Higgsfield. Coordinates EPSG:2236 ftUS, elevations NAVD88 ft. Files and scripts: <a href="https://github.com/Beardedfreedom/beardedfreedom.github.io/pull/2" target="_blank" rel="noopener">pull request on GitHub</a>.
+</footer>
+</div>
+</body>
+</html>

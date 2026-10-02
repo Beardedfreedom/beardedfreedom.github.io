@@ -1,1 +1,7 @@
 .DS_Store
+
+*.blend1
+reports/sausage-castle-base/mockup/blender/render.log
+__pycache__/
+reports/sausage-castle-base/mockup/present/build.log
+reports/sausage-castle-base/mockup/present/turntable/

@@ -1,0 +1,237 @@
+# Sausage Castle site base model (existing conditions, concept grade)
+
+**Property:** "The Sausage Castle", 22500 Robbins Road, Astatula, FL 34705 (Lake County). Listing data (Compass / Estately, MLS B4900949) describe a 5 bed / 7 bath, 6,277 sq ft house on 40 acres, parcel 09-21-26-000300004800, with two more parcels (-4600, -4900) for about 120 acres total, zoning A, sold 9/8/2022 for $2.3M. Press coverage describes an 80-acre estate with lakes, campsites, an arena and rides.
+
+**What this folder is:** a legal, public-data replacement for "export the Google Earth 3D model". It was generated entirely from USGS 3DEP lidar (public domain) and Overture Maps vectors (ODbL/CDLA), reprojected into the coordinate system a Florida civil drawing would use. It is not a survey and contains no parcel lines.
+
+## Location check
+
+The address point for 22501 Robbins Rd from Overture (National Address Database lineage) coincides with a 7,423 sq ft footprint at the south end of Robbins Road. Lidar gives that building a 28 ft roof height (two storeys). Southwest of it is a cleared compound with rectangular pads, circular features and a large rectangular enclosure; 1,200 to 1,500 ft north are two lakes with a loop track around the larger one. The lidar hillshade also shows straight land-use breaks on the Public Land Survey grid (a north-south break at about E 427,050 and an east-west break near N 1,578,500), consistent with the 40-acre quarter-quarter parcels named in the listing. Treat the parcel extent as unconfirmed until you pull the polygons from the Lake County Property Appraiser (lakecopropappr.com) or Lake County GIS (gis.lakecountyfl.gov), which this sandbox could not reach.
+
+A search-engine "answer" placed the address at 28.6813, -81.7272. That is 1.7 km west of the real road and was discarded after checking the address points.
+
+## Files
+
+| File | What it is | Open with |
+|---|---|---|
+| `sausage_castle_base_EPSG2236_ftUS.dxf` | CAD base (2.5 MB). Layers: `C-TOPO-MINR` 1 ft contours, `C-TOPO-MAJR` 5 ft contours (polylines carry their elevation), `A-BLDG-FTPT` 68 footprints at ground elevation, `A-BLDG-3D` extruded MESH solids with lidar-derived heights, `A-BLDG-ANNO` area/height labels, `C-ROAD-CNTR` road centrelines, `C-WATR-BNDY` lake outlines, `G-ANNO-ADDR` address points, `G-ANNO-TRGT` target marker, `G-ANNO-AOI` clip frame, `G-ANNO-NOTE` provenance note | AutoCAD, Civil 3D, BricsCAD, SketchUp, QGIS |
+| `sausage_castle_ground_pts_6ft_PNEZD.csv.gz` | 317,224 bare-earth points on a 6 ft grid, only where the lidar had real ground returns (lakes and building interiors excluded). Format PNEZD, comma delimited | Civil 3D: Surfaces > Create Surface > Definition > Point Files, format "PNEZD (comma delimited)" |
+| `sausage_castle_dtm_3ft_EPSG2236.asc.gz` | Bare-earth DTM raster, 3 ft cells, ESRI ASCII grid, NAVD88 ft. Lake surfaces filled from the nearest shore | QGIS (then export GeoTIFF for Civil 3D "Add DEM file"), GDAL, Global Mapper |
+| `sausage_castle_preview.jpg` | Hillshade from the lidar surface with buildings (red), roads (black), lakes (blue), address numbers (orange), target (magenta) | Any image viewer |
+| `sausage_castle_base_metadata.json` | Extents, grid, contour levels, per-building base/height, sources | Text editor |
+| `scripts/ept_clip.py` | Clips any USGS 3DEP Entwine dataset to a lon/lat box without PDAL | Python 3.11 + laspy, lazrs, pyproj |
+| `scripts/overture_pull.py` | Pulls Overture buildings / roads / water / addresses for a box straight from the public S3 bucket | Python + pyarrow, shapely |
+| `scripts/build_base.py` | Turns the clip and vectors into the files above |
+| `scripts/build_focus.py` | Builds the two full-resolution focus zones under `focus/` | Python + numpy, scipy, ezdxf, contourpy, matplotlib |
+
+The raw lidar clip (`sausage_site.laz`, 39.5 million points, 211 MB, EPSG:3857, Z in metres) is not in the repo because of its size. Re-create it in about five minutes with:
+
+```
+python3 scripts/ept_clip.py https://s3-us-west-2.amazonaws.com/usgs-lidar-public/FL_Peninsular_Lake_2018 -81.7205 28.6700 -81.7095 28.6810 sausage_site.laz
+```
+
+## Coordinate system and units
+
+- Horizontal: NAD83 / Florida East (US survey feet), EPSG:2236. Civil 3D code `FL83-EF`. The DXF header sets `$INSUNITS` = 21 (US survey feet).
+- Vertical: NAVD88 feet. The USGS point cloud is in metres; multiplied by 3.2808333.
+- Datum note: the Entwine copy is in Web Mercator on WGS84 and was reprojected to NAD83 without a datum shift, which is about 1 m horizontally. Fine for concept design; a survey resolves it.
+- Extent: E 425,119 to 428,674 ft, N 1,576,976 to 1,581,002 ft (about 3,550 by 4,025 ft, 328 acres). Ground elevations 64 to 91 ft.
+
+## Accuracy
+
+- Lidar: USGS 3DEP quality level 2 or better, nominal 10 cm RMSE vertical, 25 to 35 points per square metre in this clip. 2018 flight, so anything built since is missing.
+- Contours: computed from a 3 ft ground grid smoothed with a 1.5-cell Gaussian, then simplified to 0.6 ft. Good for grading concepts, not for permit drawings.
+- Building heights: 95th percentile of lidar height above ground inside each Overture footprint. Footprints are machine-derived and can be a few feet off.
+- Roads: Overture segment centrelines, not edges of pavement.
+
+## Loading into AutoCAD / Civil 3D
+
+1. Civil 3D: `Toolspace > Settings > Drawing Settings > Units and Zone`, pick "NAD83 Florida State Planes, East Zone, US Foot" (FL83-EF) before inserting anything.
+2. `INSERT` or `XREF` the DXF at 0,0, scale 1, no rotation.
+3. Build the existing-ground surface either from the PNEZD file (fastest) or from the DXF contours (`Surface > Definition > Contours > Add`, weeding 15 ft / 4 degrees). For the highest fidelity, convert the LAZ to RCP in ReCap and use `Create Surface from Point Cloud` with the ground class.
+4. Plain AutoCAD (no Civil 3D): the DXF is still a usable 2D/3D base. `A-BLDG-3D` meshes and contour polylines show in 3D views. Plex-Earth, CAD-Earth or BricsCAD Pro can build a TIN from the ground points if you need one without Civil 3D.
+5. Add the parcel polygons from Lake County, then design lots, pads and roads on new layers. Keep the base as an Xref.
+
+## Data sources and licences
+
+- USGS 3DEP lidar, project FL_Peninsular_Lake_2018, via the USGS Entwine Point Tile index on AWS (`s3://usgs-lidar-public`). US Government work, public domain.
+- Overture Maps release 2026-09-23.1, themes buildings, transportation, base (water), addresses. Buildings and transportation are ODbL (attribution required: "© OpenStreetMap contributors, Overture Maps Foundation"); addresses are from open government sources.
+- No Google data was used. Google's Map Tiles API policy forbids extracting, tracing or deriving 3D objects from Photorealistic 3D Tiles, and the Maps Platform terms forbid building terrain models from Elevation API values. See the research report one folder up.
+
+## Focus zones at full lidar resolution (`focus/`)
+
+Two sub-models were built at the finest resolution the point cloud supports, because the house and the lakes are the parts of the site that will be kept and designed around.
+
+| Zone | Extent (ftUS) | Contents |
+|---|---|---|
+| `focus/house/` | E 426,050 to 427,050, N 1,577,150 to 1,578,150 (23 acres) | Main house, the tall structure beside it, the 4,479 sq ft outbuilding, the pond, the pads, the ring feature and the big square enclosure southwest of the house |
+| `focus/lakes/` | E 425,750 to 427,050, N 1,578,350 to 1,579,550 (36 acres) | Both lakes, the loop track around the round lake, the orchard rows, and the 5,378 sq ft building south of the round lake |
+
+Each zone folder has:
+
+- `sausage_castle_<zone>_focus_EPSG2236_ftUS.dxf` with 0.5 ft (`C-TOPO-HALF`), 1 ft (`C-TOPO-MINR`) and 5 ft (`C-TOPO-MAJR`) contours from a 2 ft ground grid; a 5 ft terrain MESH (`C-TOPO-MESH-3D`) for plain AutoCAD 3D views; every building as a MESH whose roof is the 1 ft lidar surface inside the footprint, so hips, ridges and towers are real (`A-BLDG-ROOF-3D`), with an annotation giving area, approximate finished floor, eave and ridge heights; tree crowns as circles with height labels (`L-PLNT-TREE`, canopy-height local maxima over 12 ft); lake outlines derived from lidar no-return areas as closed polylines at the 2018 water surface elevation (`C-WATR-LIDAR`, usable as Civil 3D breaklines) next to the Overture outline (`C-WATR-OVERTURE`).
+- `<zone>_dsm_1ft.asc.gz` (first-return surface at 1 ft: roofs, trees, track), `<zone>_dtm_2ft.asc.gz` (bare earth at 2 ft), both hydro-flattened to the lake levels.
+- `<zone>_ground_pts_2ft_PNEZD.csv.gz` for a Civil 3D surface at full density.
+- `<zone>_preview.jpg` and `<zone>_metadata.json` (per-building base, eave and ridge, water areas and levels, tree counts).
+
+Measured from the lidar (2018): main house 7,423 sq ft footprint, base about 73.6 ft, eave about 14 ft, ridge about 31 ft above ground; the structure just west of it is 2,198 sq ft with a 43 ft ridge; the pond southwest of the house sits at about 68.8 ft; the elongated lake is about 1.6 acres at about 69.3 ft; the round lake is about 1.1 acres at about 70.0 ft. Ground across both zones runs 68 to 88 ft NAVD88. Contours at 0.5 ft are indicative only, since the lidar's own vertical error is about 0.33 ft.
+
+## 3D renders (`viewer/` and `focus/*/…_render3d.jpg`)
+
+- `viewer/index.html` is a self-contained three.js viewer of the lidar surfaces. It loads the heightmaps and land-cover textures in `viewer/data/` (surface and bare earth for the whole site at 6 ft, the house compound at 1 ft, the lakes at 2 ft), lets you orbit, tilt and zoom, switch between surface and bare earth, set vertical exaggeration and sun angle, toggle a 100 ft grid, click any point to read easting, northing and elevation, take a snapshot, and drape your own aerial image over the zone. It runs from GitHub Pages once this branch is merged (`/reports/sausage-castle-base/viewer/`) and is also published as a Claude artifact.
+- Heightmaps are RGB PNGs: elevation in feet = (R × 256 + G) × 0.01 + zmin, with zmin per zone in `viewer/data/meta.json`. Row 0 is north. Textures are synthetic land cover from canopy height (grass, shrub, trees by height), building footprints, road buffers and lidar water, shaded by the surface hillshade. They are not aerial photos; NAIP or a drone orthomosaic cropped to a zone's bounds can be draped instead.
+- `focus/house/house_render3d.jpg` and `focus/lakes/lakes_render3d.jpg` are static perspective renders produced by `scripts/render_static.py` from the same data.
+- `scripts/export_3d.py` regenerates `viewer/data/` from the lidar clip and the Overture files.
+
+## Lake zones concept (`focus/lakes/LAKE-ZONES-CONCEPT.md`)
+
+First design pass around the round lake: four equal-area zones (2.04 acres each) between a 50 ft no-build water buffer and a limit 250 ft from the water, using the existing 1,640 ft loop track as the lane, with 35 × 50 ft tiny-home pads set 20 ft off the lane and 15 ft apart. Outputs: `lake_zones_concept_EPSG2236_ftUS.dxf`, `lake_zones_plan.jpg`, `lake_zones_concept.json` (rules, metrics, pad corners), and a "Lake zones concept" overlay toggle in the 3D viewer. Regenerate with `scripts/lake_zones.py` (set `ZONE_LIMIT` in the environment to test other ring depths).
+
+## Tiny home concepts (`units/`)
+
+Three themed units designed for the 35 × 50 ft pads, as parametric massing models: the Amanita cottage (mushroom, 412 sq ft), Widow's Peak (haunted house, 564 sq ft) and the Cypress stilt cracker (Florida swamp, 702 sq ft including the screened porch). Each has a sheet with plan, elevations and axon views, a DXF in local feet (3D mesh parts by material layer plus 2D plan layers), and a spec with materials and Florida wind and flood notes. `units/tiny_homes_on_pads_EPSG2236_ftUS.dxf` defines the three as blocks and inserts them on all 22 lake-zone pads (A haunted, B swamp, C mushroom, D mixed), facing the lane at the lidar ground elevation. The 3D viewer's Lakes zone has a "Tiny homes (concept)" toggle showing the same placement. Regenerate with `scripts/tiny_homes.py`. See `units/README.md` for the specs.
+
+## Florida Freedom World (`brand/`, `masterplan/`, `index.html`)
+
+The project owner's poster (`brand/florida-freedom-world-poster.webp`) is the vision: a Florida theme park, festival ground and campground on the estate. `scripts/masterplan.py` maps each element of the poster to a programme area on the lidar base: Gator Gate and midway, the Castle, Freedom Arena, Gator Greens, the lakeside cabins, the Freedom Float lagoon, Butterfly Grove, the Goat Barn farm, Swamp Camp lodge, the RV and tent camp, the Landing Site tower, and the event barns; 12 areas on about 36 acres. Outputs: `masterplan/florida_freedom_world_masterplan.jpg` (plan over the hillshade), `..._EPSG2236_ftUS.dxf` (one layer per programme area plus the trail loop) and `masterplan.json`. `index.html` is the demo page in the poster's voice, also published as a Claude artifact.
+
+## Gator Greens: 18 holes in the free land (`masterplan/golf/`)
+
+`scripts/golf_course.py` tests whether an 18-hole course fits in what the master plan leaves free. With
+the estate assumed to be the south-west, north-west and south-east quarter-quarters (about 120 acres;
+parcel lines not confirmed), 59 acres are free after edge setbacks, the other plan areas, buildings and
+water. A regulation course needs 120 to 180 acres and an executive course 50 to 80, so neither fits; a
+par-3 course does: 18 holes, par 54, 2,860 yd on 21.5 acres of corridors, the Castle as clubhouse, two
+loops of nine. Outputs: `golf_course_plan.jpg`, `golf_course_EPSG2236_ftUS.dxf` (fairway corridors,
+greens, tees, centre lines, labels, free land), `golf_course.json` (scorecard with tee and green
+elevations, trees to clear, walks) and `GOLF-COURSE.md` (findings and assumptions). Options:
+`--parcels`, `--max4` (par-4 caps to try), `--time`, `--nodes`, `--seed`, `--setback`, `--out`.
+
+`scripts/golf_3d.py` then adds the hazards (water carries on five holes, sand carries on five, 45
+greenside bunkers), grades greens, tees, bunkers and ponds into the lidar ground and writes
+`golf_course_3d_EPSG2236_ftUS.dxf` (3D meshes per surface and hole, flags, outlines at elevation), the
+hazards plan, a yardage book and the hazard data in `golf_course.json`. `scripts/golf_render.py` renders the
+3D model with Cycles (`golf_3d_*.jpg`), and `scripts/game_world.py` puts the course into the game.
+
+For mock-up photos and video, `scripts/golf_polish.py` finishes the design (striped approach fairways,
+rough, collars, back and forward tees, cart paths, pond banks), grades it on a 2 ft grid and paints a
+0.5 ft per pixel surface map (`golf_course_map.jpg` at 1 ft, `golf_course_design_EPSG2236_ftUS.dxf`,
+`polish/design.json`); `scripts/golf_mockup.py` renders it with Cycles (lidar trees as live oaks, slash
+pines, cypress and palms; water with reeds and lily pads; clouds and haze) into `masterplan/golf/mockup/`:
+seven stills and a drone flyover. `golf_polish.py --extent estate` and `golf_mockup.py --polish polish_estate`
+do the same for the whole property (`estate_map.jpg`, and `golf_mockup_estate*.jpg`: a high drone view at midday
+and golden hour and a straight-down view, each with a labelled copy made by `scripts/estate_views.py`).
+See `masterplan/golf/GOLF-COURSE.md`.
+
+## Clearing, grading and the 3D mock-up (`focus/lakes/CLEARING-GRADING.md`, `mockup/`)
+
+`scripts/clear_and_grade.py` grades each of the 22 pads flat at its median existing grade (balanced cut and fill), blends to existing ground over 10 ft, sets an 8 ft clearing limit and lists every 2018 tree that has to come out: 82 trees, 2.24 acres cleared, 155.6 cu yd cut and 135.4 cu yd fill. Outputs: `focus/lakes/clearing_grading_EPSG2236_ftUS.dxf` (pads at finished grade, clearing limits, trees to remove with IDs, graded contours), the plan image, JSON and summary table. It also writes a cleared, graded surface for the 3D viewer ("Cleared and graded" toggle in the Lakes zone, cabins at finished grade) and `mockup/lakes_cleared_3d_mockup_EPSG2236_ftUS.dxf`, a graded terrain mesh with the cabin blocks inserted. `scripts/render_mockup.py` renders the perspective mock-ups in `mockup/`.
+
+## Blender scene (`scripts/blender_build.py`, `mockup/blender/`)
+
+`scripts/blender_build.py` builds the cleared, graded lake zones in Blender from the same data the web viewer uses: the terrain with the land-cover texture, the lakes as water, the kept trees as simple crowns, and all 22 cabins (four lands: haunted A, swamp B, mushroom C, UFO D) placed at finished grade with materials and glowing windows. It saves `mockup/blender/florida_freedom_world_lakes.blend` and `.glb`, sets up five cameras (overall plus one per zone) and renders them with Cycles. Run it inside Blender 3.6 or newer:
+
+```
+blender --background --python scripts/blender_build.py -- --base reports/sausage-castle-base --out reports/sausage-castle-base/mockup/blender --renders --samples 64
+```
+
+or with the pip `bpy` module on Python 3.11. Options: `--step 2` halves the terrain resolution, `--no-trees` skips the tree instances, `--views overall,C` limits the renders, `--res 1920x1080`.
+
+## Private review site (`/review/`)
+
+A password-protected copy of the demo for reviewers lives at the repo root in `review/`, built by
+`scripts/build_review.py`. It packs the demo page, the 3D viewer and every image and data file they
+use (42 files, 13.3 MB) into `review/bundle.enc`, encrypted with AES-256-GCM under a key derived
+from the review password (PBKDF2-SHA256, 600,000 rounds, random salt). The gate page
+(`review/index.html`) decrypts in the browser with WebCrypto and hands the files to a service
+worker (`review/sw.js`) that serves them under `review/app/`. Wrong passwords fail the
+authentication tag, so nothing is readable without the password, and the folder is safe on a public
+static host. Every unlocked page carries a "Private review · Lock" link that wipes the copy from
+the browser; opening the gate again also locks.
+
+Once this branch is on `main`, the gate is served at `https://beardedfreedom.github.io/review/`.
+`_config.yml` at the repo root keeps `reports/` and `research_notes/` out of the public Pages build,
+so the only published copy of the demo is the encrypted one. To rotate the password or rebuild after
+changing the demo:
+
+    REVIEW_PASSWORD='new passphrase' python3 reports/sausage-castle-base/scripts/build_review.py
+
+The password is never stored in the repository. Share it with reviewers out of band.
+
+For a real subdomain (for example `review.beardedfreedom.com`): point a DNS CNAME for `review` at
+`beardedfreedom.github.io`, put the `review/` files in their own public repository with a `CNAME`
+file naming the subdomain, and enable GitHub Pages on it. Only ciphertext is published, so the
+repository holding the review site does not need to be private.
+
+### Review PDF
+
+`review/florida-freedom-world-review.pdf` is the same demo as a 20-page landscape PDF (poster cover,
+then one section per page), encrypted with AES-256 under the same review password. The demo page
+carries a print stylesheet, so "Print / Save as PDF" in a browser gives the same layout. To rebuild:
+
+    npm install playwright-core @fontsource/anton @fontsource/barlow @fontsource/jetbrains-mono
+    node reports/sausage-castle-base/scripts/export_pdf.js /tmp/ffw.pdf
+    REVIEW_PASSWORD='the passphrase' python3 reports/sausage-castle-base/scripts/encrypt_pdf.py /tmp/ffw.pdf review/florida-freedom-world-review.pdf
+
+## Presentation model (`mockup/present/`, `viewer3d/`)
+
+The earlier mock-ups drew the trees straight from the lidar canopy, which reads as jagged blobs. The
+presentation model (`scripts/blender_present.py`) rebuilds the lake zones cleanly: the smoothed
+graded bare earth with painted land cover (grass, a sand ring at the shore, packed-sand loop lane
+and pads), a rounded lake at 69.3 ft with a gentle bed, the 22 cabins on their pad slabs with short
+paths to the lane, and the 610 kept trees as stylised oaks, pines and cypresses at the heights and
+crown sizes the lidar measured. Trees standing between a low camera and its subject are hidden per
+view so the cabins read clearly.
+
+Outputs: `mockup/present/render_{overall,A,B,C,D,lake,hero,hero_dusk}.jpg` (1920 × 1080, Cycles,
+128 samples); zone close-ups `render_close_{A,B,C,D}.jpg` (low drone over the two cabins nearest each
+zone centre, from the lake side), `render_ground_{A,B,C,D}.jpg` (a guest's eye level on the loop lane)
+and `render_ground_{A,B,C,D}_dusk.jpg`; `mockup/present/turntable.mp4` (a slow 240-frame orbit at
+1280 × 720, ten seconds a lap at 24 fps), the `.blend`, and
+`viewer3d/florida_freedom_world_lakes_present.glb` with `viewer3d/index.html`, an interactive page
+(orbit, zone view presets, tree toggle, shadows, snapshot) built on three.js. To rebuild:
+
+    python3 reports/sausage-castle-base/scripts/blender_present.py --base reports/sausage-castle-base --out reports/sausage-castle-base/mockup/present --renders --samples 128
+    python3 reports/sausage-castle-base/scripts/blender_present.py --base reports/sausage-castle-base --out reports/sausage-castle-base/mockup/present --renders --no-glb \
+        --views close_A,close_B,close_C,close_D,ground_A,ground_B,ground_C,ground_D,ground_A_dusk,ground_B_dusk,ground_C_dusk,ground_D_dusk \
+        --turntable 240 --tt-res 1280x720 --tt-samples 40
+    python3 reports/sausage-castle-base/scripts/make_turntable.py reports/sausage-castle-base/mockup/present --fps 24
+
+Options: `--views`, `--res`, `--step` (ground grid, 2 = 4 ft), `--tree-density`, `--no-trees`, `--seed`,
+`--turntable N` (frames per lap), `--tt-res`, `--tt-samples`, `--tt-radius`, `--tt-height`, `--tt-start`
+(resume a stopped orbit). On a 4-core CPU a close-up takes about 2 minutes and an orbit frame about
+20 seconds.
+
+## The walkabout game (`game/`)
+
+`game/index.html` is a browser game on the real property: first-person walking or a golf cart over the
+lidar ground, with all 68 lidar-measured buildings, 3,080 trees from the canopy height model, the roads,
+the trail loop, both lakes, the 22 cabins on their pads and the twelve master-plan attractions marked by
+beacons, signs and simple props (Ferris wheel and carousel at the gate, the stage, the golf greens, the
+lagoon, RV rows and tents, the observation tower, the mushroom garden). Objective: find all twelve.
+Keyboard and mouse on desktop (pointer lock, or drag to look where pointer lock is not allowed), a
+virtual stick and drag on phones; day and night; a minimap; R returns to the gate.
+
+`scripts/game_world.py` packs the world from the site heightmaps, the base and master-plan DXFs and the
+unit models into `game/data/world.json` (plus the ground and colour grids). Rebuild after changing the
+plan with:
+
+    python3 reports/sausage-castle-base/scripts/game_world.py
+
+## AI-built detail models (Meshy through Higgsfield)
+
+The game swaps its massing cabins for AI-generated meshes at runtime. Pipeline: a clean product-style
+reference image per cabin (GPT Image 2.5), Meshy 7 image-to-3D with PBR textures (about 38 credits
+each), then in the Higgsfield cloud sandbox `gltf-transform resize 1024 → webp → meshopt` (12 MB →
+about 1 MB per model), uploaded back to Higgsfield storage, which serves them with open CORS. The
+gator mascot is rigged and plays a wave clip (Meshy rigging, animation id 28); a second, static
+Meshy model of the mascot in its thumbs-up pose stands 24 ft tall on a stone plinth at the Gator Gate,
+facing the arrival point. Both mascot references were drawn to match the brand gator: crocodile-skin
+cowboy hat with a rattlesnake band, flag bandana, gold chain with a Florida pendant, fringed leopard
+vest and gold teeth. `game/index.html`
+lists the models in `MODELS` with a compressed URL and the full-size original as fallback, scales
+each to its design height (mushroom 26 ft, haunted 34 ft, swamp 28 ft, saucer 20 ft, gator 8.5 ft, statue 24 ft)
+and centres it on the pad; if a model cannot be fetched the massing model stays. The compressed
+files are not in the repository because the sandbox network policy blocks the model host; to bring
+them in, allow `d2ol7oe51mr4n9.cloudfront.net` and `d8j0ntlcm91z4.cloudfront.net` in the
+environment and download them into `game/models/`.

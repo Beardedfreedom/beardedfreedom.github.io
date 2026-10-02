@@ -1,0 +1,151 @@
+{
+ "generated": "2026-09-28",
+ "crs": "EPSG:2236 ftUS",
+ "programme": [
+  {
+   "key": "gate",
+   "name": "Gator Gate and midway",
+   "acres": 4.12,
+   "poster": "the gator mascot, rides, snake-skin airboat photo op",
+   "note": "entry plaza at the house drive; existing 200 ft ring becomes the carousel and putt-putt; food trucks along the drive",
+   "centroid": [
+    426815,
+    1577530
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "castle",
+   "name": "The Castle (existing house)",
+   "acres": 0.58,
+   "poster": "headquarters",
+   "note": "existing 7,423 sq ft house and 43 ft tower: office, VIP, first aid, radio room",
+   "centroid": [
+    426828,
+    1577904
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "arena",
+   "name": "Freedom Arena",
+   "acres": 4.65,
+   "poster": "the laser stage and crowd",
+   "note": "the existing 400 x 400 ft cleared square; stage on the north edge facing south; about 4,000 people on the lawn at 40 sq ft each",
+   "centroid": [
+    426410,
+    1577400
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "golf",
+   "name": "Gator Greens pitch and putt",
+   "acres": 3.33,
+   "poster": "the golfer",
+   "note": "nine short holes around the pond (68.8 ft) with the 4,479 sq ft outbuilding as the clubhouse and cart barn",
+   "centroid": [
+    426400,
+    1577815
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "cabins",
+   "name": "Lakeside cabins (four lands)",
+   "acres": 1.53,
+   "poster": "mushrooms, haunted hammock, swamp camp",
+   "note": "22 themed tiny homes on the loop track around the round lake; zone A haunted, B swamp, C mushroom, D mixed",
+   "centroid": [
+    426580,
+    1579201
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "lagoon",
+   "name": "Freedom Float lagoon",
+   "acres": 3.99,
+   "poster": "the girl on the float, the turtle",
+   "note": "the 1.6 ac long lake (water 69.3 ft) as a swim and float lagoon with a sand beach on the east bank; no motors",
+   "centroid": [
+    426007,
+    1578843
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "grove",
+   "name": "Butterfly Grove and mushroom garden",
+   "acres": 4.48,
+   "poster": "butterflies, sunflowers, toadstools",
+   "note": "the existing orchard rows kept as a walk-through pollinator garden and the mushroom-home showcase",
+   "centroid": [
+    426289,
+    1578690
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "barn",
+   "name": "Goat Barn petting farm",
+   "acres": 3.76,
+   "poster": "the goat",
+   "note": "the existing 1,869 sq ft barn plus the north-west orchard block as pasture",
+   "centroid": [
+    426088,
+    1579270
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "lodge",
+   "name": "Swamp Camp lodge",
+   "acres": 0.87,
+   "poster": "the tent and campfire",
+   "note": "the existing 5,378 sq ft building as bathhouse, laundry and camp store for the cabins; fire circle behind",
+   "centroid": [
+    426876,
+    1578711
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "rv",
+   "name": "RV and tent camp",
+   "acres": 5.79,
+   "poster": "the RV",
+   "note": "about 35 RV sites at 45 x 60 ft on two lanes plus a tent loop; hookups from the north drive",
+   "centroid": [
+    427220,
+    1579100
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "ufo",
+   "name": "Landing Site observation tower",
+   "acres": 1.04,
+   "poster": "the UFO and the sky",
+   "note": "a 40 ft steel tower on the knoll south-west of the lagoon for the night drone and laser show; the highest ground near the lakes",
+   "centroid": [
+    425850,
+    1578530
+   ],
+   "trees_note": ""
+  },
+  {
+   "key": "barns",
+   "name": "Event barns (ownership to confirm)",
+   "acres": 1.79,
+   "poster": "indoor stage and rain plan",
+   "note": "four existing barns of 6,300 to 7,600 sq ft; may sit on the neighbouring parcel",
+   "centroid": [
+    426795,
+    1579660
+   ],
+   "trees_note": ""
+  }
+ ],
+ "trail_ft": 18462
+}

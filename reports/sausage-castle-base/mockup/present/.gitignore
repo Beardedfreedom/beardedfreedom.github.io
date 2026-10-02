@@ -1,0 +1,4 @@
+# intermediate render outputs (converted to JPEG / MP4 by scripts/make_turntable.py)
+render_*.png
+turntable/
+build2.log

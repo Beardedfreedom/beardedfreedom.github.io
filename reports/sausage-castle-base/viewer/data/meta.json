@@ -1,0 +1,150 @@
+{
+ "crs": "EPSG:2236 NAD83 / Florida East (ftUS)",
+ "vertical": "NAVD88 ft",
+ "source": "USGS 3DEP FL_Peninsular_Lake_2018 + Overture Maps 2026-09-23.1",
+ "zones": {
+  "site": {
+   "title": "Whole site (328 ac)",
+   "cell_ft": 6,
+   "nx": 591,
+   "ny": 670,
+   "x0": 425120,
+   "y0": 1576977,
+   "width_ft": 3546,
+   "height_ft": 4020,
+   "surface": {
+    "file": "site_surface.png",
+    "zmin": 64.0,
+    "scale": 0.01
+   },
+   "ground": {
+    "file": "site_ground.png",
+    "zmin": 64.0,
+    "scale": 0.01
+   },
+   "color": "site_color.jpg",
+   "z_range": [
+    64.545654296875,
+    284.8419494628906
+   ],
+   "water": [
+    {
+     "acres": 0.12,
+     "wse": 68.8
+    },
+    {
+     "acres": 1.48,
+     "wse": 69.4
+    },
+    {
+     "acres": 1.02,
+     "wse": 70.0
+    },
+    {
+     "acres": 0.12,
+     "wse": 69.9
+    },
+    {
+     "acres": 0.08,
+     "wse": 71.5
+    },
+    {
+     "acres": 0.07,
+     "wse": 85.0
+    }
+   ],
+   "target": [
+    426828.1401845789,
+    1577904.4239360366
+   ]
+  },
+  "house": {
+   "title": "Main house and compound",
+   "cell_ft": 1,
+   "nx": 1000,
+   "ny": 1000,
+   "x0": 426050,
+   "y0": 1577150,
+   "width_ft": 1000,
+   "height_ft": 1000,
+   "surface": {
+    "file": "house_surface.png",
+    "zmin": 68.0,
+    "scale": 0.01
+   },
+   "ground": {
+    "file": "house_ground.png",
+    "zmin": 68.0,
+    "scale": 0.01
+   },
+   "color": "house_color.jpg",
+   "z_range": [
+    68.58395385742188,
+    154.3303985595703
+   ],
+   "water": [
+    {
+     "acres": 0.15,
+     "wse": 68.7
+    }
+   ],
+   "target": [
+    426828.1401845789,
+    1577904.4239360366
+   ]
+  },
+  "lakes": {
+   "title": "Lakes and loop track",
+   "cell_ft": 2,
+   "nx": 650,
+   "ny": 600,
+   "x0": 425750,
+   "y0": 1578350,
+   "width_ft": 1300,
+   "height_ft": 1200,
+   "surface": {
+    "file": "lakes_surface.png",
+    "zmin": 69.0,
+    "scale": 0.01
+   },
+   "ground": {
+    "file": "lakes_ground.png",
+    "zmin": 69.0,
+    "scale": 0.01
+   },
+   "color": "lakes_color.jpg",
+   "z_range": [
+    69.08565521240234,
+    154.9209442138672
+   ],
+   "water": [
+    {
+     "acres": 1.58,
+     "wse": 69.3
+    },
+    {
+     "acres": 1.11,
+     "wse": 70.0
+    }
+   ],
+   "target": null,
+   "overlay": "lakes_zones.jpg",
+   "overlay_label": "Lake zones concept",
+   "units": "units.json",
+   "cleared": {
+    "surface": {
+     "file": "lakes_cleared_surface.png",
+     "zmin": 69.0,
+     "scale": 0.01
+    },
+    "ground": {
+     "file": "lakes_cleared_ground.png",
+     "zmin": 69.0,
+     "scale": 0.01
+    },
+    "color": "lakes_cleared_color.jpg",
+    "label": "Cleared and graded"
+   }
+  }
+ }
+}
