@@ -13,7 +13,10 @@ physical sky with procedural clouds. Lighting presets: day and golden hour.
 Usage (pip bpy 5.x):
   python3 scripts/golf_mockup.py --views aerial,drone_day,drone_golden,hole13,tee17,green2,finish18
   python3 scripts/golf_mockup.py --flyover 288 --fps 12 --res 1280x720 --samples 16   # frames to mockup/flyover/
-Options: --samples, --res, --preview (quarter size, 8 samples), --start (resume a flyover).
+  python3 scripts/golf_mockup.py --polish polish_estate --views estate,estate_golden,estate_top --res 2560x1440
+      # the whole estate (needs golf_polish.py --extent estate first): the Castle, all 18 holes and the lakes,
+      # each also saved with labels (holes, the Castle, the lakes, the assumed estate edge)
+Options: --samples, --res, --preview (quarter size, 8 samples), --start (resume a flyover), --polish (ground folder).
 Outputs: masterplan/golf/mockup/*.jpg and mockup/flyover/f*.png.
 """
 import argparse, json, math, os, sys
@@ -26,11 +29,12 @@ ap = argparse.ArgumentParser(); ap.add_argument('--base', default=os.path.join(o
 ap.add_argument('--views', default=''); ap.add_argument('--samples', type=int, default=128); ap.add_argument('--res', default='1920x1080')
 ap.add_argument('--preview', action='store_true'); ap.add_argument('--flyover', type=int, default=0); ap.add_argument('--fps', type=int, default=12)
 ap.add_argument('--start', type=int, default=0); ap.add_argument('--end', type=int, default=0); ap.add_argument('--out', default=None); ap.add_argument('--seed', type=int, default=11)
+ap.add_argument('--polish', default='polish', help='ground folder under masterplan/golf: polish (the course) or polish_estate (the whole estate)')
 args = ap.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:])
-B = os.path.abspath(args.base); G = f'{B}/masterplan/golf'; PO = f'{G}/polish'; OUT = os.path.abspath(args.out) if args.out else f'{G}/mockup'; os.makedirs(OUT, exist_ok=True)
+B = os.path.abspath(args.base); G = f'{B}/masterplan/golf'; PO = f'{G}/{args.polish}'; OUT = os.path.abspath(args.out) if args.out else f'{G}/mockup'; os.makedirs(OUT, exist_ok=True)
 rng = np.random.default_rng(args.seed); FT = 0.3048
 T = np.load(f'{PO}/terrain.npz'); Z = T['Z'].astype(np.float64); X0, Y0, X1, Y1, g = float(T['X0']), float(T['Y0']), float(T['X1']), float(T['Y1']), float(T['grid'])
-D = json.load(open(f'{PO}/design.json')); world = json.load(open(f'{B}/game/data/world.json'))
+D = json.load(open(f'{G}/polish/design.json')); world = json.load(open(f'{B}/game/data/world.json'))
 CX, CY, ZB = (X0 + X1) / 2, (Y0 + Y1) / 2, 64.0
 def M(x, y, z): return ((x - CX) * FT, (y - CY) * FT, (z - ZB) * FT)
 nyg, nxg = Z.shape
@@ -92,7 +96,7 @@ print('terrain', len(V), 'verts', flush=True)
 
 # far ground to the horizon, lidar coloured from the land-cover map
 s_ = world['site']; lc = np.asarray(Image.open(f'{B}/viewer/data/site_color.jpg').convert('RGB'), np.float32) / 255.0
-fs = 12.0; pad = 1600; fx = np.arange(X0 - pad, X1 + pad + fs, fs); fy = np.arange(Y0 - pad, Y1 + pad + fs, fs); FX, FY = np.meshgrid(fx, fy); FZ = zd_arr(FX, FY) - 0.4
+fs = 12.0; pad = 3200; fx = np.arange(X0 - pad, X1 + pad + fs, fs); fy = np.arange(Y0 - pad, Y1 + pad + fs, fs); FX, FY = np.meshgrid(fx, fy); FZ = zd_arr(FX, FY) - 0.4
 inside = (FX > X0 + 2) & (FX < X1 - 2) & (FY > Y0 + 2) & (FY < Y1 - 2)
 FZ = np.where(inside, FZ - 3.0, FZ)                                                       # tuck under the near terrain
 Vf = np.stack([(FX - CX) * FT, (FY - CY) * FT, (FZ - ZB) * FT], -1).reshape(-1, 3); nfx = len(fx)
@@ -101,7 +105,15 @@ far = bpy.data.meshes.new('far'); far.vertices.add(len(Vf)); far.vertices.foreac
 far.polygons.add(len(Ff)); far.polygons.foreach_set('loop_start', (np.arange(len(Ff)) * 4).astype(np.int32)); far.update(calc_edges=True)
 ci = ((FX - s_['x0']) / s_['w'] * lc.shape[1]).astype(int).clip(0, lc.shape[1] - 1); cj = ((s_['y0'] + s_['h'] - FY) / s_['h'] * lc.shape[0]).astype(int).clip(0, lc.shape[0] - 1)
 cols = lc[cj, ci].reshape(-1, 3); offsite = ((FX < s_['x0']) | (FX > s_['x0'] + s_['w']) | (FY < s_['y0']) | (FY > s_['y0'] + s_['h'])).ravel()
-cols[offsite] = np.array([0.30, 0.36, 0.20])
+from scipy.ndimage import gaussian_filter as _gf, map_coordinates as _mc
+_wr = np.random.default_rng(args.seed + 101); _wg = 80.0; _wx0, _wy0 = fx[0], fy[0]                # woods and fields beyond the lidar site (a smooth noise field)
+_wn = _gf(_wr.random((int((fy[-1] - fy[0]) / _wg) + 3, int((fx[-1] - fx[0]) / _wg) + 3)), 3.0) * 0.7 + _gf(_wr.random((int((fy[-1] - fy[0]) / _wg) + 3, int((fx[-1] - fx[0]) / _wg) + 3)), 1.2) * 0.3
+_wn = (_wn - _wn.mean()) / (_wn.std() + 1e-9)
+def woods(X, Y): return np.clip((_mc(_wn, [(np.asarray(Y) - _wy0) / _wg, (np.asarray(X) - _wx0) / _wg], order=1, mode='nearest') + 0.15) / 0.7, 0, 1)
+_wv = woods(FX.ravel(), FY.ravel())[:, None]; _tex = np.clip(0.5 + 0.25 * _gf(_wr.standard_normal(FX.shape), 1.0).ravel(), 0, 1)[:, None]
+_off = np.array([0.62, 0.62, 0.40]) * (1 - _tex) + np.array([0.52, 0.56, 0.34]) * _tex                     # Bahia pasture
+_off = _off * (1 - _wv) + (np.array([0.36, 0.32, 0.22]) * (1 - _tex) + np.array([0.30, 0.34, 0.21]) * _tex) * _wv   # woodland floor
+cols[offsite] = _off[offsite]
 ca = far.color_attributes.new('Cover', 'FLOAT_COLOR', 'POINT'); ca.data.foreach_set('color', np.concatenate([cols ** 2.2, np.ones((len(cols), 1))], 1).astype(np.float32).ravel())
 fm = bpy.data.materials.new('far'); fm.use_nodes = True; fa = fm.node_tree.nodes.new('ShaderNodeAttribute'); fa.attribute_name = 'Cover'
 fm.node_tree.links.new(fa.outputs['Color'], fm.node_tree.nodes['Principled BSDF'].inputs['Base Color']); fm.node_tree.nodes['Principled BSDF'].inputs['Roughness'].default_value = 0.92
@@ -203,7 +215,13 @@ protos = {k: [make_tree(k, i) for i in range(3)] for k in ('oak', 'pine', 'cypre
 turf = prep(unary_union([Polygon(r_) for h in D['holes'] for r_ in h['rough']]).buffer(4))
 paths = prep(unary_union([LineString(p).buffer(7) for p in D['cart_paths']]))
 ponds = unary_union([Polygon(h['pond']) for h in D['holes'] if h['pond']])
+if 'lakes' in T.files and int(T['lakes']) > 0:                                             # existing lakes (their beds are dug by golf_polish.py --extent estate)
+    for w_ in world['water']:
+        lp = Polygon(list(zip(w_['pts'][0::2], w_['pts'][1::2]))).buffer(0)
+        if lp.intersects(ponds): continue
+        ring = list(lp.exterior.coords)[:-1]; mesh_from('lake', [M(x, y, float(w_['wse']) + 0.1) for x, y in ring], [tuple(range(len(ring)))], water, smooth=False)
 bx0, by0, bx1, by1 = X0 - 900, Y0 - 900, X1 + 900, Y1 + 900; ntree = 0
+lakes_u = unary_union([Polygon(list(zip(w_['pts'][0::2], w_['pts'][1::2]))).buffer(0) for w_ in world['water']])
 TREES = []
 def place(kind, x, y, h, r):
     global ntree
@@ -212,7 +230,7 @@ def place(kind, x, y, h, r):
     o.scale = (h * f * FT, h * f * FT, h * FT); ntree += 1; TREES.append((o, x, y, PROTO_R[kind] * h * f, h))
 for t in world['trees']:
     x, y, h, r, kind = t
-    if not (bx0 < x < bx1 and by0 < y < by1) or turf.contains(Point(x, y)) or paths.contains(Point(x, y)): continue
+    if not (bx0 < x < bx1 and by0 < y < by1) or turf.contains(Point(x, y)) or paths.contains(Point(x, y)) or lakes_u.contains(Point(x, y)): continue
     k = {0: 'oak', 1: 'pine', 2: 'cypress'}[kind]
     if k == 'cypress' and ponds.distance(Point(x, y)) > 80: k = 'oak'
     spread = {'oak': float(np.clip(max(r * 1.3, 0.42 * h), 8, 42)), 'pine': float(np.clip(0.2 * h, 5, 13)), 'cypress': float(np.clip(0.16 * h, 4, 10))}[k]
@@ -225,7 +243,17 @@ for h in D['holes']:                                    # cabbage palms on the p
             place('palm', p.x + vx / L * rng.uniform(10, 16), p.y + vy / L * rng.uniform(10, 16), rng.uniform(22, 32), rng.uniform(9, 11))
 for k in range(9):
     a = rng.uniform(0, 2 * np.pi); d_ = rng.uniform(60, 120); place('palm', D['clubhouse'][0] + d_ * math.cos(a), D['clubhouse'][1] + d_ * math.sin(a), rng.uniform(24, 34), 10)
-print('trees', ntree, flush=True)
+_tr = np.random.default_rng(args.seed + 202); n_off = 0; sx0, sy0, sx1, sy1 = s_['x0'], s_['y0'], s_['x0'] + s_['w'], s_['y0'] + s_['h']
+for yy in np.arange(sy0 - 2200, sy1 + 2200, 42.0):                                        # trees in those woods, beyond the lidar trees
+    for xx in np.arange(sx0 - 2200, sx1 + 2200, 42.0):
+        x, y = xx + _tr.uniform(-16, 16), yy + _tr.uniform(-16, 16)
+        if sx0 - 30 < x < sx1 + 30 and sy0 - 30 < y < sy1 + 30: continue
+        if _tr.random() > 0.92 * float(woods(np.array([x]), np.array([y]))[0]): continue
+        k = 'pine' if _tr.random() < 0.3 else 'oak'; h = float(_tr.uniform(32, 64))
+        o = bpy.data.objects.new(k, protos[k][int(_tr.integers(0, 3))]); sc.collection.objects.link(o); spread = float(np.clip(0.42 * h, 8, 30)) if k == 'oak' else float(np.clip(0.2 * h, 5, 13))
+        f = float(np.clip(spread / (PROTO_R[k] * h), 0.8, 1.3)); o.location = M(x, y, zg(x, y) - 0.3); o.rotation_euler = (0, 0, _tr.uniform(0, 2 * np.pi)); o.scale = (h * f * FT, h * f * FT, h * FT)
+        TREES.append((o, x, y, PROTO_R[k] * h * f, h)); n_off += 1
+print('trees', ntree, '+', n_off, 'beyond the site', flush=True)
 
 # ------------------------------------------------------------------ buildings (lidar meshes)
 wall = mat('wall', '#c8b99a', 0.8); roof = mat('roof', '#3d3b38', 0.6)
@@ -343,6 +371,57 @@ h18 = H[18]; cxh, cyh = D['clubhouse']; gx, gy = h18['pin']
 dxh, dyh = cxh - gx, cyh - gy; Lh = math.hypot(dxh, dyh); ex_, ey_ = dxh / Lh, dyh / Lh
 VIEWS['finish18'] = (dict(pos=(gx - ex_ * 230 - ey_ * 40, gy - ey_ * 230 + ex_ * 40, zg(gx, gy) + 70), tgt=(gx + ex_ * Lh * 0.55, gy + ey_ * Lh * 0.55, zg(cxh, cyh) + 10), lens=32), 'golden', None)
 
+E_BRK, N_BRK, QQ = 427050.0, 1578500.0, 1320.0                                              # the estate scripts/golf_course.py assumes
+_qq = {'SW': (E_BRK - QQ, N_BRK - QQ), 'NW': (E_BRK - QQ, N_BRK), 'NE': (E_BRK, N_BRK), 'SE': (E_BRK, N_BRK - QQ)}
+ESTATE = unary_union([Polygon([(a, b), (a + QQ, b), (a + QQ, b + QQ), (a, b + QQ)]) for a, b in (_qq[k] for k in json.load(open(f'{G}/golf_course.json')).get('parcels_assumed', ['SW', 'NW', 'SE']))])
+ec = (ESTATE.centroid.x, ESTATE.centroid.y); ez = zg(*ec)
+VIEWS['estate'] = (dict(pos=(ec[0] + 2150, ec[1] - 2400, ez + 2400), tgt=(ec[0] + 150, ec[1] - 150, ez), lens=34), 'day', None)
+VIEWS['estate_golden'] = (dict(pos=(ec[0] + 2150, ec[1] - 2400, ez + 2400), tgt=(ec[0] + 150, ec[1] - 150, ez), lens=34), 'golden', None)
+VIEWS['estate_top'] = (dict(pos=((X0 + X1) / 2, (Y0 + Y1) / 2, 4000), tgt=((X0 + X1) / 2, (Y0 + Y1) / 2 + 0.01, 0), lens=50, ortho=max(X1 - X0, Y1 - Y0) * FT), 'day', (int(X1 - X0), int(Y1 - Y0)))
+
+def annotate(name, co, w_, h_, src):
+    """a labelled copy: hole numbers on the greens, the Castle, the lakes and the assumed estate edge"""
+    from bpy_extras.object_utils import world_to_camera_view
+    from mathutils import Vector
+    from PIL import ImageDraw, ImageFont
+    def px(x, y, z):
+        v = world_to_camera_view(sc, co, Vector(M(x, y, z))); return (v.x * w_, (1 - v.y) * h_, v.z)
+    im = Image.open(src).convert('RGBA'); ov = Image.new('RGBA', im.size, (0, 0, 0, 0)); d = ImageDraw.Draw(ov); u = w_ / 100.0
+    try: fb = ImageFont.truetype('DejaVuSans-Bold.ttf', int(u * 1.15)); fs_ = ImageFont.truetype('DejaVuSans-Bold.ttf', int(u * 0.95)); fn = ImageFont.truetype('DejaVuSans-Bold.ttf', int(u * 0.9))
+    except OSError: fb = fs_ = fn = ImageFont.load_default()
+    ring = list(ESTATE.exterior.coords); pts = []                                            # the estate edge, dashed
+    for (ax, ay), (bx, by) in zip(ring[:-1], ring[1:]):
+        n = max(2, int(math.hypot(bx - ax, by - ay) / 15))
+        pts += [px(ax + (bx - ax) * t, ay + (by - ay) * t, zg(ax + (bx - ax) * t, ay + (by - ay) * t) + 3) for t in np.linspace(0, 1, n)]
+    for k in range(0, len(pts) - 1, 2):
+        if pts[k][2] > 0 and pts[k + 1][2] > 0: d.line([pts[k][:2], pts[k + 1][:2]], fill=(255, 255, 255, 215), width=max(2, int(u * 0.22)))
+    def tag(x, y, z, text, font, fill=(16, 22, 18, 200), fg=(255, 255, 255, 255)):
+        X, Y, Zc = px(x, y, z)
+        if Zc <= 0 or not (0 <= X < w_ and 0 <= Y < h_): return
+        tb = d.textbbox((0, 0), text, font=font); tw, th = tb[2] - tb[0], tb[3] - tb[1]; pad = u * 0.35
+        bx_, by_ = X - tw / 2 - pad, Y - th - 2 * pad - u * 0.9
+        d.line([(X, Y), (X, by_ + th + 2 * pad)], fill=(255, 255, 255, 230), width=max(1, int(u * 0.12))); d.ellipse([X - u * 0.22, Y - u * 0.22, X + u * 0.22, Y + u * 0.22], fill=(255, 255, 255, 240))
+        d.rounded_rectangle([bx_, by_, bx_ + tw + 2 * pad, by_ + th + 2 * pad], radius=u * 0.3, fill=fill); d.text((bx_ + pad - tb[0], by_ + pad - tb[1]), text, font=font, fill=fg)
+    for h in D['holes']:
+        x, y = h['pin']; X, Y, Zc = px(x, y, zg(x, y) + 4)
+        if Zc <= 0 or not (0 <= X < w_ and 0 <= Y < h_): continue
+        r = u * 0.75; d.ellipse([X - r, Y - r, X + r, Y + r], fill=(255, 198, 26, 240), outline=(20, 20, 20, 255), width=max(1, int(u * 0.1)))
+        t = str(h['n']); tb = d.textbbox((0, 0), t, font=fn); d.text((X - (tb[2] + tb[0]) / 2, Y - (tb[3] + tb[1]) / 2), t, font=fn, fill=(20, 20, 20, 255))
+    cxh, cyh = D['clubhouse']; tag(cxh, cyh, zg(cxh, cyh) + 45, 'THE CASTLE · clubhouse', fb, fill=(120, 24, 24, 220))
+    for w_l in world['water']:
+        lp = Polygon(list(zip(w_l['pts'][0::2], w_l['pts'][1::2])))
+        if lp.intersects(ponds) or lp.area < 20000: continue
+        rr = list(lp.minimum_rotated_rectangle.exterior.coords); a_, b_ = math.dist(rr[0], rr[1]), math.dist(rr[1], rr[2])
+        c = lp.centroid; tag(c.x, c.y, float(w_l['wse']), 'LONG LAKE' if max(a_, b_) > 2.2 * min(a_, b_) else 'ROUND LAKE', fs_, fill=(18, 60, 80, 210))
+    sw = min(ESTATE.exterior.coords, key=lambda p: p[0] + p[1])
+    tag(sw[0] + 420, sw[1] + 25, zg(sw[0] + 420, sw[1] + 25) + 3, 'ESTATE EDGE (ASSUMED, ABOUT 120 AC)', fs_, fill=(40, 40, 40, 190))
+    C = json.load(open(f'{G}/golf_course.json'))                                            # title box, top left
+    lines = [(f"SAUSAGE CASTLE ESTATE · ABOUT {C.get('estate_acres', 120):.0f} AC", fb), (f"Gator Greens: {len(D['holes'])} holes, par {C['par']}, {C['yards']:,} yd · the Castle is the clubhouse · yellow = greens", fs_)]
+    y0_ = u * 1.2; bw = max(d.textbbox((0, 0), t, font=f)[2] for t, f in lines) + u * 1.6; bh = sum(d.textbbox((0, 0), t, font=f)[3] for t, f in lines) + u * 1.9
+    d.rounded_rectangle([u * 1.2, y0_, u * 1.2 + bw, y0_ + bh], radius=u * 0.4, fill=(16, 22, 18, 205)); yy = y0_ + u * 0.7
+    for t, f in lines: d.text((u * 2.0, yy), t, font=f, fill=(255, 255, 255, 255)); yy += d.textbbox((0, 0), t, font=f)[3] + u * 0.5
+    out = Image.alpha_composite(im, ov).convert('RGB'); out.save(src.replace('.jpg', '_labeled.jpg'), quality=90); print('labelled', name, flush=True)
+
 def cull(spec, on):
     (cx_, cy_, _), (tx_, ty_, _) = spec['pos'], spec['tgt']; L = math.hypot(tx_ - cx_, ty_ - cy_) or 1; ux, uy = (tx_ - cx_) / L, (ty_ - cy_) / L; n = 0
     for o, x, y, r, h in TREES:
@@ -351,13 +430,15 @@ def cull(spec, on):
         o.hide_render = hide; n += hide
     return n
 def render_still(name):
-    spec, preset, size = VIEWS[name]; lighting(preset); set_fog(1e9 if name == 'aerial' else (5200 if preset == 'golden' else 3600), preset); co = cam(name, **spec); sc.camera = co
-    if name != 'aerial': print('  culled', cull(spec, True), 'trees', flush=True)
+    spec, preset, size = VIEWS[name]; lighting(preset); co = cam(name, **spec); sc.camera = co; top = name in ('aerial', 'estate_top'); est = name.startswith('estate')
+    set_fog(1e9 if top else (14000 if est else (5200 if preset == 'golden' else 3600)), preset)
+    if not top and not est: print('  culled', cull(spec, True), 'trees', flush=True)
     w_, h_ = size if size else map(int, args.res.split('x'))
     if args.preview: w_, h_ = w_ // 4, h_ // 4
-    sc.render.resolution_x, sc.render.resolution_y = w_, h_; sc.cycles.samples = 8 if args.preview else (48 if name == 'aerial' else args.samples)
+    sc.render.resolution_x, sc.render.resolution_y = w_, h_; sc.cycles.samples = 8 if args.preview else (48 if top else args.samples)
     fp = f'{OUT}/golf_mockup_{name}.png'; sc.render.filepath = fp; bpy.ops.render.render(write_still=True)
     Image.open(fp).convert('RGB').save(fp[:-4] + '.jpg', quality=90); os.remove(fp); cull(spec, False); print('rendered', name, flush=True)
+    if est: annotate(name, co, w_, h_, fp[:-4] + '.jpg')
 for v in [v for v in args.views.split(',') if v]: render_still(v)
 
 # ------------------------------------------------------------------ flyover: a slow drone glide over the front nine to the Castle

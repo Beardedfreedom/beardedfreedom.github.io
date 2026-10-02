@@ -22,6 +22,8 @@ Outputs (masterplan/golf/polish/):
   design.json             every design polygon and the cart paths  (committed)
   golf_course_design_EPSG2236_ftUS.dxf   2D design layers at their elevations (committed)
 Usage: python3 scripts/golf_polish.py [--res 0.5] [--seed 7]
+       python3 scripts/golf_polish.py --extent estate   # the whole estate for the estate views: writes
+           polish_estate/ (terrain and surface, git-ignored) and estate_map.jpg; the course files are untouched
 """
 import argparse, gzip, json, math, os
 import numpy as np
@@ -35,8 +37,9 @@ import ezdxf
 ap = argparse.ArgumentParser(); ap.add_argument('--base', default=os.path.join(os.path.dirname(__file__), '..'))
 ap.add_argument('--res', type=float, default=0.5, help='surface map resolution (ft/px)'); ap.add_argument('--grid', type=float, default=2.0, help='terrain grid (ft)')
 ap.add_argument('--margin', type=float, default=320.0); ap.add_argument('--seed', type=int, default=7)
-args = ap.parse_args()
-B = os.path.abspath(args.base); G = f'{B}/masterplan/golf'; OUT = f'{G}/polish'; os.makedirs(OUT, exist_ok=True)
+ap.add_argument('--extent', choices=('course', 'estate'), default='course', help='course: the course and its margin; estate: the whole assumed estate, with the lakes')
+args = ap.parse_args(); ESTATE = args.extent == 'estate'
+B = os.path.abspath(args.base); G = f'{B}/masterplan/golf'; OUT = f'{G}/polish_estate' if ESTATE else f'{G}/polish'; os.makedirs(OUT, exist_ok=True)
 rng = np.random.default_rng(args.seed)
 course = json.load(open(f'{G}/golf_course.json')); H = course['holes']; club = tuple(course['clubhouse'])
 
@@ -121,7 +124,16 @@ ponds_u = unary_union([x['pond'] for x in holes if x['pond'] is not None]); bank
 
 # ------------------------------------------------------------------ extent, lidar ground
 mx0, my0, mx1, my1 = unary_union([turf, path_poly]).bounds; M_ = args.margin
-_s = json.load(open(f'{B}/game/data/world.json'))['site']
+_w = json.load(open(f'{B}/game/data/world.json')); _s = _w['site']
+E_BRK, N_BRK, QQ = 427050.0, 1578500.0, 1320.0                                              # the quarter-quarters scripts/golf_course.py assumes
+QQS = {'SW': box(E_BRK - QQ, N_BRK - QQ, E_BRK, N_BRK), 'NW': box(E_BRK - QQ, N_BRK, E_BRK, N_BRK + QQ), 'NE': box(E_BRK, N_BRK, E_BRK + QQ, N_BRK + QQ), 'SE': box(E_BRK, N_BRK - QQ, E_BRK + QQ, N_BRK)}
+estate = unary_union([QQS[k] for k in course.get('parcels_assumed', ['SW', 'NW', 'SE'])])
+lakes = []
+if ESTATE:
+    ex0, ey0, ex1, ey1 = estate.buffer(200).bounds; mx0, my0, mx1, my1 = min(mx0, ex0 + M_), min(my0, ey0 + M_), max(mx1, ex1 - M_), max(my1, ey1 - M_)
+    for w_ in _w['water']:                                                                  # existing lakes (the course ponds are drawn per hole)
+        lp = Polygon(list(zip(w_['pts'][0::2], w_['pts'][1::2]))).buffer(0)
+        if not lp.intersects(unary_union([x['pond'] for x in holes if x['pond'] is not None])): lakes.append((lp, float(w_['wse'])))
 X0, Y0 = max(math.floor((mx0 - M_) / 10) * 10, _s['x0'] + 40), max(math.floor((my0 - M_) / 10) * 10, _s['y0'] + 40)
 X1, Y1 = min(math.ceil((mx1 + M_) / 10) * 10, _s['x0'] + _s['w'] - 40), min(math.ceil((my1 + M_) / 10) * 10, _s['y0'] + _s['h'] - 40)
 with gzip.open(f'{B}/sausage_castle_dtm_3ft_EPSG2236.asc.gz', 'rt') as f:
@@ -168,8 +180,11 @@ for x in holes:
         bed = np.maximum(wl + 0.4 - d_in / 4.0, wl - 5.0)
         Z = np.where(m > 0.5, np.minimum(Z, bed), Z)
         bankw = ss(1 - d_out / 12.0) * (m < 0.5); Z = Z * (1 - bankw) + np.minimum(Z, wl + 0.5 + d_out / 12.0 * 1.5) * bankw
+for lp, wl in lakes:                                                                        # existing lakes: the lidar ground sits at the water, so give them a bed
+    m = gmask(lp); d_in = distance_transform_edt(m > 0.5) * g
+    Z = np.where(m > 0.5, np.minimum(Z, np.maximum(wl + 0.3 - d_in / 5.0, wl - 6.0)), Z)
 cut = float(np.sum(np.clip(Z0 - Z, 0, None)) * g * g / 27); fill = float(np.sum(np.clip(Z - Z0, 0, None)) * g * g / 27)
-np.savez_compressed(f'{OUT}/terrain.npz', Z=Z.astype(np.float32), X0=X0, Y0=Y0, X1=X1, Y1=Y1, grid=g)
+np.savez_compressed(f'{OUT}/terrain.npz', Z=Z.astype(np.float32), X0=X0, Y0=Y0, X1=X1, Y1=Y1, grid=g, lakes=np.array(len(lakes)))
 print(f'terrain {nxg} x {nyg} at {g} ft; cut {cut:,.0f} cy, fill {fill:,.0f} cy')
 
 # ------------------------------------------------------------------ painted surface map (row 0 = north)
@@ -236,7 +251,7 @@ mC = tmask(collars, 0.5); lay(mC, lin('#5f9a33')[None, None, :] * (1 + 0.02 * N3
 mG = tmask(greens, 0.5); stG = stripes([(x['green'], x['frame']) for x in holes], 7.0, 0.035, cross=True)
 lay(mG, lin('#74b23e')[None, None, :] * (1 + stG[..., None] + 0.012 * N3[..., None]))
 mBk = tmask(banks_u, 1.0); lay(mBk * 0.85, lin('#6b5a3c')[None, None, :] * (1 + 0.08 * N2[..., None]))
-mP = tmask(ponds_u, 0.8); lay(mP, lin('#3b3424')[None, None, :] * (1 + 0.05 * N2[..., None]))                    # pond bed (under the water plane)
+mP = tmask(unary_union([ponds_u] + [lp for lp, _ in lakes]), 0.8); lay(mP, lin('#3b3424')[None, None, :] * (1 + 0.05 * N2[..., None]))                    # pond bed (under the water plane)
 mB = tmask(bunkers_u, 0.5); rake = 0.025 * np.sin(PX * 2.1 + PY * 0.7 + 3 * N2)
 lay(mB, lin('#e9dcb5')[None, None, :] * (1 + 0.04 * N2[..., None] + 0.03 * N3[..., None] + rake[..., None]))
 lip = np.clip(gaussian_filter(mB, 2.5) - mB, 0, 1) * 1.6; lay(np.clip(lip, 0, 0.55), lin('#4e7a2a')[None, None, :])
@@ -246,8 +261,12 @@ out = np.clip(img, 0, 1)
 Image.fromarray((out * 255).astype(np.uint8)).save(f'{OUT}/surface_0p5ft.jpg', quality=92)
 wcol = lin('#24505a')[None, None, :] * (1 + 0.05 * N1[..., None] + 0.03 * N2[..., None]); glint = np.clip(0.25 * gaussian_filter(np.clip(N3, 1.6, None) - 1.6, 1.0), 0, 0.3)
 mp = mP[..., None]; outm = np.clip(out * (1 - mp) + (wcol + glint[..., None]) * mp, 0, 1)
-small = Image.fromarray((outm * 255).astype(np.uint8)).resize((int(W_ * R), int(H_ * R)), Image.LANCZOS); small.save(f'{G}/golf_course_map.jpg', quality=90)
+small = Image.fromarray((outm * 255).astype(np.uint8)).resize((int(W_ * R), int(H_ * R)), Image.LANCZOS)
+small.save(f'{G}/estate_map.jpg' if ESTATE else f'{G}/golf_course_map.jpg', quality=90)
 print(f'surface map {W_} x {H_} at {R} ft/px; map at 1 ft/px {small.size}')
+if ESTATE:
+    json.dump({'extent': [X0, Y0, X1, Y1], 'estate': [[round(x, 1), round(y, 1)] for x, y in estate.exterior.coords], 'lakes': len(lakes)}, open(f'{OUT}/estate.json', 'w'))
+    raise SystemExit(0)                                                                     # the course design files come from the course extent only
 
 # ------------------------------------------------------------------ design data and CAD
 def coords(gm): return [[[round(x, 1), round(y, 1)] for x, y in p.exterior.coords] for p in getattr(gm, 'geoms', [gm]) if p.geom_type == 'Polygon' and not p.is_empty]
