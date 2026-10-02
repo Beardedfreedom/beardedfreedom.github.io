@@ -70,6 +70,18 @@ ground with their trees cleared, and every tee has a sign and every green a flag
 - These renders are meant as the base for mock-ups: they hold the true layout, so an image or video
   model can restyle them into photographs without moving a hole.
 
+Photoreal test pass (Higgsfield, Nano Banana Pro, image to image at 2752 x 1536, prompted to keep the
+exact layout and camera): the results are held in Higgsfield, not in this repo. A check against the
+renders found no shift in framing (phase correlation 0 to 1 px at 320 px wide) and edge correlation of
+0.37 to 0.52, so the holes stay where the design puts them; the golden-hour shot recolours the turf.
+
+| Render | Photoreal version |
+|---|---|
+| `golf_mockup_drone_day.jpg` | [drone, midday](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_4e8c23d6-93b2-4e35-b717-b4f03a7e681c.png) |
+| `golf_mockup_hole13.jpg` | [hole 13 water carry](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_6cafad0b-b9ba-44b2-9305-9e11e92943f5.png) |
+| `golf_mockup_tee17.jpg` | [17th tee](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_4e1c8834-c9a9-4ace-8a0a-e70f8c98ce78.png) |
+| `golf_mockup_finish18.jpg` | [18 toward the Castle, golden hour](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_015120_74121d39-0a4a-4da8-99b1-8ab298f1d033.png) |
+
 Rebuild:
 
     python3 scripts/golf_polish.py

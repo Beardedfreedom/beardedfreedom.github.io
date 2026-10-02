@@ -375,13 +375,24 @@ if args.flyover:
         for t in np.linspace(0, 1, 60, endpoint=False): dense.append(cr_(pts[i - 1], pts[i], pts[i + 1], pts[i + 2], t))
     dense.append(way[-1]); seg = np.array(dense); dist = np.concatenate([[0], np.cumsum(np.hypot(np.diff(seg[:, 0]), np.diff(seg[:, 1])))])
     co = cam('fly', (seg[0][0], seg[0][1], seg[0][2] + 70), (seg[5][0], seg[5][1], 70), 26); sc.camera = co
-    N = args.flyover
-    for f in range(args.start, args.end or N):
+    def along(d):                                                                       # point at arc length d, interpolated (no stepping)
+        k = min(max(int(np.searchsorted(dist, d)), 1), len(seg) - 1); a = min(max((d - dist[k - 1]) / max(dist[k] - dist[k - 1], 1e-6), 0.0), 1.0)
+        return seg[k - 1] + (seg[k] - seg[k - 1]) * a
+    def gsmooth(v, s):                                                                  # Gaussian low-pass across frames, edges held
+        r = int(3 * s); k = np.exp(-0.5 * (np.arange(-r, r + 1) / s) ** 2); k /= k.sum()
+        return np.convolve(np.pad(v, r, mode='edge'), k, mode='valid')
+    N = args.flyover; P, T = [], []
+    for f in range(N):                                                                  # the whole camera path first, so it can be smoothed
         u = f / (N - 1); u_e = 0.5 - 0.5 * math.cos(math.pi * u)                       # ease in and out
-        d = u_e * dist[-1]; k = int(np.searchsorted(dist, d)); k = min(max(k, 1), len(seg) - 1); a = (d - dist[k - 1]) / max(dist[k] - dist[k - 1], 1e-6)
-        x, y, alt = seg[k - 1] + (seg[k] - seg[k - 1]) * a; ground = zg(x, y)
-        d2 = min(d + 420, dist[-1] + 1); k2 = min(int(np.searchsorted(dist, d2)), len(seg) - 1); tx_, ty_ = seg[k2][0], seg[k2][1]
-        bl = max(0.0, (u - 0.78) / 0.22); tx_, ty_ = tx_ * (1 - bl) + cxh * bl, ty_ * (1 - bl) + cyh * bl     # last fifth: settle on the Castle
-        co.location = M(x, y, ground + alt); look(co, M(tx_, ty_, zg(tx_, ty_) + 8))
+        d = u_e * dist[-1]; P.append(along(d))
+        tx_, ty_ = np.mean([along(min(d + o, dist[-1]))[:2] for o in (360, 420, 480)], axis=0)   # aim about 420 ft ahead
+        bl = min(max((u - 0.68) / 0.22, 0.0), 1.0); bl = bl * bl * (3 - 2 * bl)      # then turn to the Castle and hold on it
+        T.append((tx_ * (1 - bl) + cxh * bl, ty_ * (1 - bl) + cyh * bl))
+    P, T = np.array(P), np.array(T)
+    yaw = gsmooth(np.unwrap(np.arctan2(T[:, 1] - P[:, 1], T[:, 0] - P[:, 0])), 16)    # heading and look-down distance smoothed over
+    hd = np.exp(gsmooth(np.log(np.maximum(np.hypot(*(T - P[:, :2]).T), 150)), 16))     # about 2 s, so pans stay under 2 degrees a frame
+    for f in range(args.start, args.end or N):
+        x, y, alt = P[f]; tx_, ty_ = x + hd[f] * math.cos(yaw[f]), y + hd[f] * math.sin(yaw[f])
+        co.location = M(x, y, zg(x, y) + alt); look(co, M(tx_, ty_, zg(tx_, ty_) + 8))
         sc.render.filepath = f'{FO}/f{f:04d}.png'; bpy.ops.render.render(write_still=True); print('frame', f, flush=True)
     print('flyover done', flush=True)
