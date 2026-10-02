@@ -1,1 +1,6 @@
 golf_3d_*.png
+polish/terrain.npz
+polish/surface_0p5ft.jpg
+mockup/flyover/
+mockup/*.png
+mockup/_probe_*
