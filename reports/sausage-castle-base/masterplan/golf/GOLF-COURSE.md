@@ -88,6 +88,14 @@ Two 10-second photoreal drone clips (Kling 3.0, 1928 x 1076, 24 fps, no cuts) st
 and [push-in over the hole 13 water carry](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_103615_48e648e8-b556-4a0b-b463-730ce187f196.mp4).
 They are AI motion from a single frame, so treat what comes into view late in each clip as illustrative.
 
+[Photoreal flyover](https://d8j0ntlcm91z4.cloudfront.net/user_2wsk3cZly6RNm78yXXjuBOafIhT/hf_20261002_122338_9387ae28-287f-4972-a9c7-ac93773cac2a.mp4)
+(Kling 3.0 Omni Edit, 1920 x 1080, 10 s): seconds 7 to 17 of `golf_flyover.mp4`, the hole 13 water
+carry to the 18th, restyled into drone footage with the midday photoreal still as the style reference.
+Because it follows the rendered flight, the camera path and the layout come from the design (coarse
+layout correlation 0.83 to 0.90 against the render in every second, no cuts); trees, turf and the house
+are the model's. The prompt has to ask for the CG trees, grass and house to be replaced: asked only to
+"keep everything exactly", the edit came back nearly identical to the render.
+
 Rebuild:
 
     python3 scripts/golf_polish.py
