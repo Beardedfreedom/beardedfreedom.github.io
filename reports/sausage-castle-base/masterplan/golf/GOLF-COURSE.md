@@ -93,6 +93,11 @@ Rebuild:
     python3 scripts/golf_polish.py
     python3 scripts/golf_mockup.py --views aerial,drone_day,drone_golden,hole13,tee17,green2,finish18
     python3 scripts/golf_mockup.py --flyover 200 --fps 8 --res 1280x720 --samples 16
+    python3 scripts/golf_flyover_video.py       # 200 frames at 8 fps, motion-interpolated to 24 fps
+
+The interpolation leaves faint ghosting on near tree crowns where parallax is strongest. For a clean
+master, render every frame (`--flyover 600`, about four hours on 4 CPU cores) and assemble it with
+`golf_flyover_video.py --fps-in 24 --fps-out 24`.
 
 ## Rules used
 
