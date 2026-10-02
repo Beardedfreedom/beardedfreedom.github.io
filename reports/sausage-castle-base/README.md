@@ -118,7 +118,10 @@ rough, collars, back and forward tees, cart paths, pond banks), grades it on a 2
 0.5 ft per pixel surface map (`golf_course_map.jpg` at 1 ft, `golf_course_design_EPSG2236_ftUS.dxf`,
 `polish/design.json`); `scripts/golf_mockup.py` renders it with Cycles (lidar trees as live oaks, slash
 pines, cypress and palms; water with reeds and lily pads; clouds and haze) into `masterplan/golf/mockup/`:
-seven stills and a drone flyover. See `masterplan/golf/GOLF-COURSE.md`.
+seven stills and a drone flyover. `golf_polish.py --extent estate` and `golf_mockup.py --polish polish_estate`
+do the same for the whole property (`estate_map.jpg`, and `golf_mockup_estate*.jpg`: a high drone view at midday
+and golden hour and a straight-down view, each with a labelled copy made by `scripts/estate_views.py`).
+See `masterplan/golf/GOLF-COURSE.md`.
 
 ## Clearing, grading and the 3D mock-up (`focus/lakes/CLEARING-GRADING.md`, `mockup/`)
 

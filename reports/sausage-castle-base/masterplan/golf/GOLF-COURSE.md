@@ -70,6 +70,25 @@ ground with their trees cleared, and every tee has a sign and every green a flag
 - These renders are meant as the base for mock-ups: they hold the true layout, so an image or video
   model can restyle them into photographs without moving a hole.
 
+### The whole property
+
+To see the course with the house and the rest of the estate, the same pipeline runs over the whole
+assumed estate (the three quarter-quarters, about 120 ac):
+
+    python3 scripts/golf_polish.py --extent estate        # polish_estate/ (git-ignored) and estate_map.jpg
+    python3 scripts/golf_mockup.py --polish polish_estate --views estate,estate_golden,estate_top --res 2560x1440
+
+- `estate_map.jpg`: the whole estate painted at 1 ft per pixel (the course, the Castle compound, both lakes).
+- `mockup/golf_mockup_estate.jpg` and `_golden`: the whole property from a high drone (2,400 ft up, south-east of
+  the estate, looking north-west), at midday and golden hour.
+- `mockup/golf_mockup_estate_top.jpg`: straight down at 1 ft per pixel.
+- Each has a `_labeled` copy (yellow numbers on the greens, the Castle, the long and round lakes, a dashed
+  line on the assumed estate edge, a title box), drawn by `scripts/estate_views.py`. It relabels finished
+  renders without Blender: `python3 scripts/estate_views.py --relabel`.
+- The two existing lakes get beds dug under their water (the lidar ground sits at the water), so the estate
+  run reports a larger cut; that is not course earthwork. Land beyond the lidar site is filled with woods and
+  pasture from a noise field so the views do not end at a flat edge.
+
 Photoreal test pass (Higgsfield, Nano Banana Pro, image to image at 2752 x 1536, prompted to keep the
 exact layout and camera): the results are held in Higgsfield, not in this repo. A check against the
 renders found no shift in framing (phase correlation 0 to 1 px at 320 px wide) and edge correlation of
