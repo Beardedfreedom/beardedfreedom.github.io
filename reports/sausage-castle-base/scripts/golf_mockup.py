@@ -371,56 +371,15 @@ h18 = H[18]; cxh, cyh = D['clubhouse']; gx, gy = h18['pin']
 dxh, dyh = cxh - gx, cyh - gy; Lh = math.hypot(dxh, dyh); ex_, ey_ = dxh / Lh, dyh / Lh
 VIEWS['finish18'] = (dict(pos=(gx - ex_ * 230 - ey_ * 40, gy - ey_ * 230 + ex_ * 40, zg(gx, gy) + 70), tgt=(gx + ex_ * Lh * 0.55, gy + ey_ * Lh * 0.55, zg(cxh, cyh) + 10), lens=32), 'golden', None)
 
-E_BRK, N_BRK, QQ = 427050.0, 1578500.0, 1320.0                                              # the estate scripts/golf_course.py assumes
-_qq = {'SW': (E_BRK - QQ, N_BRK - QQ), 'NW': (E_BRK - QQ, N_BRK), 'NE': (E_BRK, N_BRK), 'SE': (E_BRK, N_BRK - QQ)}
-ESTATE = unary_union([Polygon([(a, b), (a + QQ, b), (a + QQ, b + QQ), (a, b + QQ)]) for a, b in (_qq[k] for k in json.load(open(f'{G}/golf_course.json')).get('parcels_assumed', ['SW', 'NW', 'SE']))])
-ec = (ESTATE.centroid.x, ESTATE.centroid.y); ez = zg(*ec)
-VIEWS['estate'] = (dict(pos=(ec[0] + 2150, ec[1] - 2400, ez + 2400), tgt=(ec[0] + 150, ec[1] - 150, ez), lens=34), 'day', None)
-VIEWS['estate_golden'] = (dict(pos=(ec[0] + 2150, ec[1] - 2400, ez + 2400), tgt=(ec[0] + 150, ec[1] - 150, ez), lens=34), 'golden', None)
-VIEWS['estate_top'] = (dict(pos=((X0 + X1) / 2, (Y0 + Y1) / 2, 4000), tgt=((X0 + X1) / 2, (Y0 + Y1) / 2 + 0.01, 0), lens=50, ortho=max(X1 - X0, Y1 - Y0) * FT), 'day', (int(X1 - X0), int(Y1 - Y0)))
-
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import estate_views          # whole-estate cameras and labels
+VIEWS.update(estate_views.estate_cameras(G, zg, X0, Y0, X1, Y1))
 def annotate(name, co, w_, h_, src):
     """a labelled copy: hole numbers on the greens, the Castle, the lakes and the assumed estate edge"""
     from bpy_extras.object_utils import world_to_camera_view
     from mathutils import Vector
-    from PIL import ImageDraw, ImageFont
-    def px(x, y, z):
-        v = world_to_camera_view(sc, co, Vector(M(x, y, z))); return (v.x * w_, (1 - v.y) * h_, v.z)
-    im = Image.open(src).convert('RGBA'); ov = Image.new('RGBA', im.size, (0, 0, 0, 0)); d = ImageDraw.Draw(ov); u = w_ / 100.0
-    try: fb = ImageFont.truetype('DejaVuSans-Bold.ttf', int(u * 1.15)); fs_ = ImageFont.truetype('DejaVuSans-Bold.ttf', int(u * 0.95)); fn = ImageFont.truetype('DejaVuSans-Bold.ttf', int(u * 0.9))
-    except OSError: fb = fs_ = fn = ImageFont.load_default()
-    ring = list(ESTATE.exterior.coords); pts = []                                            # the estate edge, dashed
-    for (ax, ay), (bx, by) in zip(ring[:-1], ring[1:]):
-        n = max(2, int(math.hypot(bx - ax, by - ay) / 15))
-        pts += [px(ax + (bx - ax) * t, ay + (by - ay) * t, zg(ax + (bx - ax) * t, ay + (by - ay) * t) + 3) for t in np.linspace(0, 1, n)]
-    for k in range(0, len(pts) - 1, 2):
-        if pts[k][2] > 0 and pts[k + 1][2] > 0: d.line([pts[k][:2], pts[k + 1][:2]], fill=(255, 255, 255, 215), width=max(2, int(u * 0.22)))
-    def tag(x, y, z, text, font, fill=(16, 22, 18, 200), fg=(255, 255, 255, 255)):
-        X, Y, Zc = px(x, y, z)
-        if Zc <= 0 or not (0 <= X < w_ and 0 <= Y < h_): return
-        tb = d.textbbox((0, 0), text, font=font); tw, th = tb[2] - tb[0], tb[3] - tb[1]; pad = u * 0.35
-        bx_, by_ = X - tw / 2 - pad, Y - th - 2 * pad - u * 0.9
-        d.line([(X, Y), (X, by_ + th + 2 * pad)], fill=(255, 255, 255, 230), width=max(1, int(u * 0.12))); d.ellipse([X - u * 0.22, Y - u * 0.22, X + u * 0.22, Y + u * 0.22], fill=(255, 255, 255, 240))
-        d.rounded_rectangle([bx_, by_, bx_ + tw + 2 * pad, by_ + th + 2 * pad], radius=u * 0.3, fill=fill); d.text((bx_ + pad - tb[0], by_ + pad - tb[1]), text, font=font, fill=fg)
-    for h in D['holes']:
-        x, y = h['pin']; X, Y, Zc = px(x, y, zg(x, y) + 4)
-        if Zc <= 0 or not (0 <= X < w_ and 0 <= Y < h_): continue
-        r = u * 0.75; d.ellipse([X - r, Y - r, X + r, Y + r], fill=(255, 198, 26, 240), outline=(20, 20, 20, 255), width=max(1, int(u * 0.1)))
-        t = str(h['n']); tb = d.textbbox((0, 0), t, font=fn); d.text((X - (tb[2] + tb[0]) / 2, Y - (tb[3] + tb[1]) / 2), t, font=fn, fill=(20, 20, 20, 255))
-    cxh, cyh = D['clubhouse']; tag(cxh, cyh, zg(cxh, cyh) + 45, 'THE CASTLE · clubhouse', fb, fill=(120, 24, 24, 220))
-    for w_l in world['water']:
-        lp = Polygon(list(zip(w_l['pts'][0::2], w_l['pts'][1::2])))
-        if lp.intersects(ponds) or lp.area < 20000: continue
-        rr = list(lp.minimum_rotated_rectangle.exterior.coords); a_, b_ = math.dist(rr[0], rr[1]), math.dist(rr[1], rr[2])
-        c = lp.centroid; tag(c.x, c.y, float(w_l['wse']), 'LONG LAKE' if max(a_, b_) > 2.2 * min(a_, b_) else 'ROUND LAKE', fs_, fill=(18, 60, 80, 210))
-    sw = min(ESTATE.exterior.coords, key=lambda p: p[0] + p[1])
-    tag(sw[0] + 420, sw[1] + 25, zg(sw[0] + 420, sw[1] + 25) + 3, 'ESTATE EDGE (ASSUMED, ABOUT 120 AC)', fs_, fill=(40, 40, 40, 190))
-    C = json.load(open(f'{G}/golf_course.json'))                                            # title box, top left
-    lines = [(f"SAUSAGE CASTLE ESTATE · ABOUT {C.get('estate_acres', 120):.0f} AC", fb), (f"Gator Greens: {len(D['holes'])} holes, par {C['par']}, {C['yards']:,} yd · the Castle is the clubhouse · yellow = greens", fs_)]
-    y0_ = u * 1.2; bw = max(d.textbbox((0, 0), t, font=f)[2] for t, f in lines) + u * 1.6; bh = sum(d.textbbox((0, 0), t, font=f)[3] for t, f in lines) + u * 1.9
-    d.rounded_rectangle([u * 1.2, y0_, u * 1.2 + bw, y0_ + bh], radius=u * 0.4, fill=(16, 22, 18, 205)); yy = y0_ + u * 0.7
-    for t, f in lines: d.text((u * 2.0, yy), t, font=f, fill=(255, 255, 255, 255)); yy += d.textbbox((0, 0), t, font=f)[3] + u * 0.5
-    out = Image.alpha_composite(im, ov).convert('RGB'); out.save(src.replace('.jpg', '_labeled.jpg'), quality=90); print('labelled', name, flush=True)
+    def project(x, y, z):
+        v = world_to_camera_view(sc, co, Vector(M(x, y, z))); return v.x * w_, (1 - v.y) * h_, v.z
+    estate_views.draw_labels(src, src.replace('.jpg', '_labeled.jpg'), project, G, D, world, ponds, zg); print('labelled', name, flush=True)
 
 def cull(spec, on):
     (cx_, cy_, _), (tx_, ty_, _) = spec['pos'], spec['tgt']; L = math.hypot(tx_ - cx_, ty_ - cy_) or 1; ux, uy = (tx_ - cx_) / L, (ty_ - cy_) / L; n = 0
